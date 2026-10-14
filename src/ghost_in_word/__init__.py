@@ -5,7 +5,7 @@ from .assessment import Assessment, validate_assessment_document
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
 from .matrix import build_translation_matrix
-from .review import build_review_key, select_review_items, summarize_reviews
+from .review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from .reference import ReferenceEstimate, distance_to_reference, estimate_reference
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
 from .sources import edition_to_dict, load_editions
@@ -36,10 +36,12 @@ __all__ = [
     "parse_usfm",
     "parse_reference",
     "select_review_items",
+    "select_natural_benchmark",
     "build_review_key",
     "score_units",
     "summarize_units",
     "summarize_reviews",
+    "validate_review_packet",
     "tokenize",
     "wording_distance",
     "validate_assessment_document",

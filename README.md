@@ -191,6 +191,7 @@ using the fields in `benchmarks/REVIEW_RUBRIC.md`. Aggregate those documents wit
 ```sh
 PYTHONPATH=src python3 scripts/evaluate_reviews.py \
   benchmarks/reviews/reviewer-1.json benchmarks/reviews/reviewer-2.json \
+  --packet benchmarks/review-packet.json \
   --key benchmarks/review-key.json \
   --output benchmarks/reports/natural-review.json
 ```
@@ -198,13 +199,35 @@ PYTHONPATH=src python3 scripts/evaluate_reviews.py \
 Keep the key private: it lets the evaluator separate the highest-ranked 30 items from
 the seeded random sample without exposing that selection to reviewers. The report
 retains per-item votes, disagreement, and uncertain judgments, and reports usefulness
-and agreement by selection bucket. It does not convert review usefulness into a
-translation-faithfulness grade.
+and agreement by selection bucket. Supplying `--packet` checks every response against
+the exact blinded item IDs, rejects score/rank leakage, reports review coverage, and
+marks the natural-evaluation gate ineligible until at least two reviewers have judged
+every one of the 30 top-ranked items. It does not convert review usefulness into a translation-faithfulness
+grade. Validate a packet independently with:
 
-`benchmarks/natural-review-packet.example.json` is a checked-in, score-blinded 60-item
-packet generated from the full WEB/BSB corpus. Its private selection key is deliberately
-kept outside the repository; independent reviewers and the evaluator must receive it
-through separate channels.
+```sh
+PYTHONPATH=src python3 scripts/validate_review_packet.py \
+  benchmarks/natural-review-packet.example.json
+```
+
+`benchmarks/natural-review-packet.example.json` is a checked-in, score-blinded 200-item
+candidate generated from the full WEB/BSB corpus. It contains 30 globally highest-ranked
+leads plus 170 seeded background passages balanced across narrative, poetry, law, and
+argument, with short and long renderings mixed within each genre. Recreate it (and keep
+the private key outside the repository) with:
+
+```sh
+PYTHONPATH=src python3 scripts/build_natural_benchmark.py \
+  data/derived/webp-bsb-full.json \
+  --count 200 --seed 20261014 --metric lexicalDistance \
+  --output benchmarks/natural-review-packet.example.json \
+  --key-output /tmp/natural-review-key.json
+```
+
+The private selection key is deliberately kept outside the repository; independent
+reviewers and the evaluator must receive it through separate channels. The checked-in
+packet is a review candidate, not evidence that any item is useful until independent
+labels are collected.
 
 Source-conditioned judgments use a separate validated schema so the source edition,
 reviewer/model origin, evidence, uncertainty, and disagreement remain attached to each

@@ -2,6 +2,10 @@
 
 Use this form for a blind review of a ranked list of translation differences. Reviewers should see the reference, both renderings, and the comparison method label, but should not see the model rank or the other reviewer’s judgment.
 
+The natural benchmark packet contains 30 highest-ranked leads and a seeded background
+sample. Treat every item as an independent close-reading question; the packet order is
+not meaningful and the background sample is not a control label.
+
 For each item, record:
 
 | Field | Values |
@@ -37,4 +41,6 @@ not add a model score or rank to the response:
 ```
 
 Use `uncertain` when the reviewer cannot make a useful/not-useful judgment. The
-aggregation script reports this separately and preserves each reviewer’s vote.
+aggregation script reports this separately and preserves each reviewer’s vote. The
+natural-evaluation gate is eligible only after two reviewers have judged every one of
+the 30 top-ranked items; a useful-rate result before that point is descriptive only.

@@ -8,7 +8,7 @@ from ghost_in_word.assessment import Assessment, validate_assessment_document
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
-from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews
+from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.sources import load_editions
@@ -392,6 +392,75 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(report["consensusItems"], 0)
         self.assertEqual(report["items"][1]["majorityUseful"], "uncertain")
         self.assertEqual(report["items"][0]["votes"][0]["evidence"], "wording differs")
+
+    def test_review_packet_validation_rejects_score_leaks(self) -> None:
+        comparison = {
+            "metadata": {
+                "leftEdition": {"id": "a"},
+                "rightEdition": {"id": "b"},
+                "metric": {"id": "lexical-baseline", "label": "Lexical"},
+            },
+            "units": [
+                {
+                    "id": "JHN-1-1",
+                    "reference": "JHN 1:1",
+                    "book": "JHN",
+                    "chapter": 1,
+                    "verse": "1",
+                    "status": "matched",
+                    "leftText": "one",
+                    "rightText": "uno",
+                    "lexicalDistance": 0.9,
+                },
+            ],
+        }
+        packet = select_review_items(comparison, count=1, metric_field="lexicalDistance", seed=7)
+        summary = validate_review_packet(packet)
+        self.assertEqual(summary["itemCount"], 1)
+        self.assertNotIn("lexicalDistance", packet["items"][0])
+        packet["items"][0]["rank"] = 1
+        with self.assertRaisesRegex(ValueError, "forbidden"):
+            validate_review_packet(packet)
+
+    def test_review_evaluation_checks_packet_ids_and_reports_gate_status(self) -> None:
+        comparison = {
+            "metadata": {
+                "leftEdition": {"id": "a"},
+                "rightEdition": {"id": "b"},
+                "metric": {"id": "lexical-baseline", "label": "Lexical"},
+            },
+            "units": [
+                {"id": "a", "reference": "JHN 1:1", "book": "JHN", "chapter": 1, "verse": "1", "status": "matched", "leftText": "one", "rightText": "uno", "lexicalDistance": 0.9},
+                {"id": "b", "reference": "JHN 1:2", "book": "JHN", "chapter": 1, "verse": "2", "status": "matched", "leftText": "two", "rightText": "dos", "lexicalDistance": 0.8},
+                {"id": "c", "reference": "JHN 1:3", "book": "JHN", "chapter": 1, "verse": "3", "status": "matched", "leftText": "three", "rightText": "tres", "lexicalDistance": 0.1},
+            ],
+        }
+        packet = select_review_items(comparison, count=2, metric_field="lexicalDistance", seed=7)
+        key = build_review_key(comparison, count=2, metric_field="lexicalDistance", seed=7)
+        response = {
+            "schemaVersion": 1,
+            "reviewerId": "r1",
+            "items": [
+                {"id": item["id"], "useful": "yes", "differenceType": "wording", "confidence": "high", "evidence": "visible wording"}
+                for item in packet["items"]
+            ],
+        }
+        report = summarize_reviews([response], selection_key=key, packet=packet)
+        self.assertEqual(report["packet"]["reviewedItemCount"], 2)
+        self.assertFalse(report["naturalEvaluation"]["eligible"])
+        response["items"][0]["id"] = "outside-packet"
+        with self.assertRaisesRegex(ValueError, "unknown packet item"):
+            summarize_reviews([response], selection_key=key, packet=packet)
+
+    def test_committed_natural_benchmark_is_score_blinded(self) -> None:
+        packet = json.loads(
+            (Path(__file__).parents[1] / "benchmarks/natural-review-packet.example.json").read_text(encoding="utf-8")
+        )
+        summary = validate_review_packet(packet)
+        self.assertEqual(summary["itemCount"], 200)
+        self.assertEqual(packet["selection"]["topCount"], 30)
+        self.assertEqual(packet["selection"]["backgroundCount"], 170)
+        self.assertTrue(all(not set(item).intersection({"rank", "score", "lexicalDistance", "embeddingDistance", "wordingDistance"}) for item in packet["items"]))
 
     def test_committed_browser_fixture_uses_public_schema(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-bsb.json").read_text(encoding="utf-8"))
