@@ -113,6 +113,75 @@ def validate_review_packet(packet: Mapping[str, object]) -> dict[str, object]:
     }
 
 
+def validate_natural_benchmark_packet(
+    packet: Mapping[str, object],
+    *,
+    expected_count: int = 200,
+    require_holdout_scope: bool = False,
+    excluded_books: Iterable[str] = (),
+) -> dict[str, object]:
+    """Validate the stronger shape required by a natural benchmark handoff."""
+
+    if expected_count < 30:
+        raise ValueError("natural benchmark expected_count must be at least 30")
+    summary = validate_review_packet(packet)
+    selection = packet.get("selection")
+    if not isinstance(selection, Mapping) or selection.get("strategy") != "natural-genre-stratified-top-plus-random":
+        raise ValueError("packet is not a natural genre-stratified benchmark")
+    if summary["itemCount"] != expected_count:
+        raise ValueError(f"natural benchmark needs {expected_count} items, found {summary['itemCount']}")
+    if selection.get("selectedCount") != expected_count or selection.get("requestedCount") != expected_count:
+        raise ValueError("natural benchmark selection counts must match expected_count")
+    top_count = selection.get("topCount")
+    background_count = selection.get("backgroundCount")
+    if top_count != 30 or background_count != expected_count - 30:
+        raise ValueError("natural benchmark must contain 30 top-ranked and the remaining background items")
+    genres = selection.get("genres")
+    if not isinstance(genres, Mapping) or set(genres) != set(NATURAL_GENRE_BOOKS):
+        raise ValueError("natural benchmark must declare narrative, poetry, law, and argument quotas")
+    if any(isinstance(value, bool) or not isinstance(value, int) or value <= 0 for value in genres.values()):
+        raise ValueError("natural benchmark genre quotas must be positive integers")
+    if sum(int(value) for value in genres.values()) != background_count:
+        raise ValueError("natural benchmark genre quotas must cover the background count")
+
+    requested_excluded = {str(book).upper() for book in excluded_books}
+    scope = selection.get("scope")
+    scope = scope if isinstance(scope, Mapping) else None
+    scope_excluded = scope.get("excludeBooks", []) if scope is not None else []
+    scope_included = scope.get("includeBooks", []) if scope is not None else []
+    if not isinstance(scope_excluded, list):
+        scope_excluded = []
+    if not isinstance(scope_included, list):
+        scope_included = []
+    declared_excluded = {str(book).upper() for book in scope_excluded if str(book).strip()}
+    declared_included = {str(book).upper() for book in scope_included if str(book).strip()}
+    if require_holdout_scope and not (declared_excluded or declared_included):
+        raise ValueError("holdout natural benchmark needs a non-empty includeBooks or excludeBooks scope")
+    if requested_excluded and not requested_excluded.issubset(declared_excluded):
+        missing = ", ".join(sorted(requested_excluded - declared_excluded))
+        raise ValueError(f"natural benchmark does not declare requested excluded books: {missing}")
+    packet_books = {
+        str(item.get("book", "")).upper()
+        for item in packet.get("items", [])
+        if isinstance(item, Mapping)
+    }
+    leaked_books = sorted(packet_books.intersection(declared_excluded))
+    if leaked_books:
+        raise ValueError(f"natural benchmark contains excluded books: {', '.join(leaked_books)}")
+    genre_counts = Counter(_genre_for_book(str(item.get("book", "")).upper()) for item in packet["items"] if isinstance(item, Mapping))
+    return {
+        **summary,
+        "natural": True,
+        "expectedCount": expected_count,
+        "topCount": top_count,
+        "backgroundCount": background_count,
+        "declaredGenres": dict(genres),
+        "packetGenreCounts": dict(sorted(genre_counts.items())),
+        "holdoutScopeDeclared": bool(declared_excluded or declared_included),
+        "excludedBooks": sorted(declared_excluded),
+    }
+
+
 def select_review_items(
     comparison: Mapping[str, object],
     *,

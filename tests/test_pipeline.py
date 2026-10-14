@@ -19,7 +19,14 @@ from ghost_in_word.mapping_review import (
     validate_mapping_document,
     validate_mapping_review_packet,
 )
-from ghost_in_word.review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
+from ghost_in_word.review import (
+    build_review_key,
+    select_natural_benchmark,
+    select_review_items,
+    summarize_reviews,
+    validate_natural_benchmark_packet,
+    validate_review_packet,
+)
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.sources import comparison_edition_metadata, load_editions
@@ -892,6 +899,23 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(packet["selection"]["topCount"], 30)
         self.assertEqual(packet["selection"]["backgroundCount"], 170)
         self.assertTrue(all(not set(item).intersection({"rank", "score", "lexicalDistance", "embeddingDistance", "wordingDistance"}) for item in packet["items"]))
+
+    def test_natural_benchmark_validator_enforces_holdout_scope(self) -> None:
+        root = Path(__file__).parents[1] / "benchmarks"
+        development = json.loads((root / "natural-review-packet.example.json").read_text(encoding="utf-8"))
+        heldout = json.loads((root / "natural-review-heldout.example.json").read_text(encoding="utf-8"))
+        self.assertFalse(validate_natural_benchmark_packet(development)["holdoutScopeDeclared"])
+        with self.assertRaisesRegex(ValueError, "holdout"):
+            validate_natural_benchmark_packet(development, require_holdout_scope=True)
+        report = validate_natural_benchmark_packet(
+            heldout,
+            require_holdout_scope=True,
+            excluded_books=["GEN", "JHN"],
+        )
+        self.assertTrue(report["holdoutScopeDeclared"])
+        self.assertEqual(report["excludedBooks"], ["GEN", "JHN"])
+        with self.assertRaisesRegex(ValueError, "does not declare"):
+            validate_natural_benchmark_packet(heldout, require_holdout_scope=True, excluded_books=["MAT"])
 
     def test_natural_benchmark_can_scope_to_held_out_books(self) -> None:
         comparison = {

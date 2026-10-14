@@ -362,6 +362,19 @@ PYTHONPATH=src python3 scripts/validate_review_packet.py \
   benchmarks/natural-review-packet.example.json
 ```
 
+Before sending a final holdout packet to reviewers, validate the stronger benchmark
+shape and its declared scope:
+
+```sh
+PYTHONPATH=src python3 scripts/validate_natural_benchmark.py \
+  benchmarks/natural-review-heldout.example.json \
+  --require-holdout-scope \
+  --exclude-book GEN --exclude-book JHN
+```
+
+This checks the 200-item layout, the 30 top-ranked versus 170 background split, all
+four genre quotas, and that excluded books do not appear in the packet.
+
 `benchmarks/natural-review-packet.example.json` is a checked-in, score-blinded 200-item
 candidate generated from the full WEB/BSB corpus. It contains 30 globally highest-ranked
 leads plus 170 seeded background passages balanced across narrative, poetry, law, and
