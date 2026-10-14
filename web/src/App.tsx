@@ -1,0 +1,291 @@
+import { useEffect, useMemo, useState } from "react";
+import type { ComparisonData, ComparisonUnit } from "./types";
+
+const DATA_URL = "/data/john-webp-bsb.json";
+
+const bookNames: Record<string, string> = {
+  JHN: "John",
+};
+
+function displayBook(book: string) {
+  return bookNames[book] ?? book;
+}
+
+function parseInitialRef() {
+  return new URLSearchParams(window.location.search).get("ref");
+}
+
+function formatScore(score: number | null) {
+  return score === null ? "—" : score.toFixed(3);
+}
+
+function normalizedWords(text: string) {
+  return text.toLocaleLowerCase().match(/[\p{L}\p{N}’'-]+/gu) ?? [];
+}
+
+function MarkedText({ text, other }: { text: string | null; other: string | null }) {
+  if (!text) return <span className="missing-copy">No aligned text</span>;
+  const otherWords = new Set(normalizedWords(other ?? ""));
+  return (
+    <>
+      {text.split(/(\s+)/).map((part, index) => {
+        const word = part.match(/[\p{L}\p{N}’'-]+/u)?.[0]?.toLocaleLowerCase();
+        return word && !otherWords.has(word) ? (
+          <mark className="word-change" key={`${part}-${index}`}>{part}</mark>
+        ) : (
+          <span key={`${part}-${index}`}>{part}</span>
+        );
+      })}
+    </>
+  );
+}
+
+function updateUrl(unit: ComparisonUnit | undefined, chapter: string, search: string) {
+  const params = new URLSearchParams(window.location.search);
+  if (unit) params.set("ref", unit.id);
+  if (chapter === "all") params.delete("chapter");
+  else params.set("chapter", chapter);
+  if (search) params.set("q", search);
+  else params.delete("q");
+  window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+}
+
+function DivergenceChart({
+  units,
+  selectedId,
+  onSelect,
+  maxScore,
+}: {
+  units: ComparisonUnit[];
+  selectedId: string | undefined;
+  onSelect: (unit: ComparisonUnit) => void;
+  maxScore: number;
+}) {
+  const width = 1000;
+  const height = 292;
+  const padding = { left: 56, right: 22, top: 22, bottom: 42 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const valid = units.filter((unit) => unit.lexicalDistance !== null);
+  const xFor = (unit: ComparisonUnit) => padding.left + (unit.order / Math.max(1, units.length - 1)) * plotWidth;
+  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (unit.lexicalDistance ?? 0) / maxScore) * plotHeight;
+  const gridValues = [0, maxScore / 2, maxScore];
+
+  return (
+    <div className="chart-shell">
+      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="divergence-title divergence-description">
+        <title id="divergence-title">Lexical divergence across the selected book</title>
+        <desc id="divergence-description">Each point is a matched verse. Higher points have less character n-gram overlap between the selected editions.</desc>
+        {gridValues.map((value) => {
+          const y = padding.top + (1 - value / maxScore) * plotHeight;
+          return (
+            <g key={value}>
+              <line className="grid-line" x1={padding.left} x2={width - padding.right} y1={y} y2={y} />
+              <text className="axis-label" x={padding.left - 10} y={y + 4} textAnchor="end">{value.toFixed(2)}</text>
+            </g>
+          );
+        })}
+        <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
+        <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
+        <text className="axis-title" x={padding.left} y={height - 10}>John · verse order</text>
+        <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>lexical distance</text>
+        {valid.map((unit) => {
+          const selected = unit.id === selectedId;
+          return (
+            <circle
+              className={selected ? "point selected-point" : "point"}
+              cx={xFor(unit)}
+              cy={yFor(unit)}
+              key={unit.id}
+              r={selected ? 6 : 3.8}
+              tabIndex={0}
+              role="button"
+              aria-label={`${unit.reference}, lexical distance ${formatScore(unit.lexicalDistance)}`}
+              onClick={() => onSelect(unit)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelect(unit);
+                }
+              }}
+            />
+          );
+        })}
+      </svg>
+      <div className="chart-note"><span className="legend-dot" /> matched verse <span className="legend-ring" /> selected verse <span className="chart-count">{valid.length} scored units</span></div>
+    </div>
+  );
+}
+
+function ScatterPlot({ units, selectedId, onSelect }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void }) {
+  const width = 1000;
+  const height = 266;
+  const padding = { left: 58, right: 24, top: 20, bottom: 42 };
+  const plotWidth = width - padding.left - padding.right;
+  const plotHeight = height - padding.top - padding.bottom;
+  const valid = units.filter((unit) => unit.lexicalDistance !== null && unit.wordingDistance !== null);
+  const xFor = (unit: ComparisonUnit) => padding.left + (unit.wordingDistance ?? 0) * plotWidth;
+  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (unit.lexicalDistance ?? 0)) * plotHeight;
+  return (
+    <div className="chart-shell compact-chart">
+      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="scatter-title scatter-description">
+        <title id="scatter-title">Wording change compared with lexical distance</title>
+        <desc id="scatter-description">Each point is a verse. Points farther right use less shared vocabulary; points higher have less character n-gram overlap.</desc>
+        {[0, 0.5, 1].map((value) => <line className="grid-line" key={`h-${value}`} x1={padding.left} x2={width - padding.right} y1={padding.top + (1 - value) * plotHeight} y2={padding.top + (1 - value) * plotHeight} />)}
+        {[0, 0.5, 1].map((value) => <line className="grid-line" key={`v-${value}`} x1={padding.left + value * plotWidth} x2={padding.left + value * plotWidth} y1={padding.top} y2={height - padding.bottom} />)}
+        <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
+        <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
+        <text className="axis-title" x={width / 2} y={height - 10} textAnchor="middle">wording distance</text>
+        <text className="axis-title" x={17} y={height / 2} transform={`rotate(-90 17 ${height / 2})`}>lexical distance</text>
+        {valid.map((unit) => (
+          <circle
+            className={unit.id === selectedId ? "point selected-point" : "point scatter-point"}
+            key={unit.id}
+            cx={xFor(unit)}
+            cy={yFor(unit)}
+            r={unit.id === selectedId ? 6 : 3.6}
+            tabIndex={0}
+            role="button"
+            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, lexical distance ${formatScore(unit.lexicalDistance)}`}
+            onClick={() => onSelect(unit)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelect(unit);
+              }
+            }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function App() {
+  const [data, setData] = useState<ComparisonData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [chapter, setChapter] = useState(new URLSearchParams(window.location.search).get("chapter") ?? "all");
+  const [search, setSearch] = useState(new URLSearchParams(window.location.search).get("q") ?? "");
+  const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
+
+  useEffect(() => {
+    fetch(DATA_URL)
+      .then((response) => {
+        if (!response.ok) throw new Error(`Could not load comparison data (${response.status})`);
+        return response.json() as Promise<ComparisonData>;
+      })
+      .then(setData)
+      .catch((reason: Error) => setError(reason.message));
+  }, []);
+
+  const chapters = useMemo(() => data ? [...new Set(data.units.map((unit) => unit.chapter))].sort((a, b) => a - b) : [], [data]);
+  const filtered = useMemo(() => {
+    if (!data) return [];
+    const query = search.trim().toLocaleLowerCase();
+    return data.units.filter((unit) => {
+      const inChapter = chapter === "all" || unit.chapter === Number(chapter);
+      const inSearch = !query || unit.reference.toLocaleLowerCase().includes(query) || (unit.leftText ?? "").toLocaleLowerCase().includes(query) || (unit.rightText ?? "").toLocaleLowerCase().includes(query);
+      return inChapter && inSearch;
+    });
+  }, [chapter, data, search]);
+  const selected = filtered.find((unit) => unit.id === selectedId) ?? filtered.find((unit) => unit.status === "matched") ?? filtered[0];
+  const maxScore = Math.max(0.1, ...filtered.map((unit) => unit.lexicalDistance ?? 0));
+  const ranked = [...filtered].filter((unit) => unit.lexicalDistance !== null).sort((a, b) => (b.lexicalDistance ?? 0) - (a.lexicalDistance ?? 0)).slice(0, 8);
+  const selectedIndex = selected ? data?.units.findIndex((unit) => unit.id === selected.id) ?? -1 : -1;
+  const previous = data && selectedIndex > 0 ? data.units[selectedIndex - 1] : undefined;
+  const next = data && selectedIndex >= 0 ? data.units[selectedIndex + 1] : undefined;
+
+  useEffect(() => {
+    if (selected) {
+      setSelectedId((current) => current ?? selected.id);
+      updateUrl(selected, chapter, search);
+    }
+  }, [chapter, search, selected]);
+
+  const selectUnit = (unit: ComparisonUnit) => {
+    setSelectedId(unit.id);
+    updateUrl(unit, chapter, search);
+  };
+
+  if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
+  if (!data) return <main className="app loading-state"><div className="loading-orb" /><p>Loading the comparison atlas…</p></main>;
+
+  const leftName = data.metadata.leftEdition.name;
+  const rightName = data.metadata.rightEdition.name;
+  const metric = data.metadata.metric;
+
+  return (
+    <main className="app">
+      <header className="topbar">
+        <div className="brand"><span className="brand-mark">✦</span><span>Ghost in the Word</span></div>
+        <div className="topbar-meta"><span className="status-pip" /> live comparison atlas <span className="slash">/</span> {data.summary.scoredUnits.toLocaleString()} scored verses</div>
+      </header>
+
+      <section className="hero">
+        <div className="hero-copy">
+          <p className="eyebrow">TRANSLATION ATLAS · PILOT</p>
+          <h1>Where the words<br /><em>move apart.</em></h1>
+          <p className="lede">A verse-by-verse view of how the World English Bible and Berean Standard Bible render John. Find an unusual point, then read the text that made it move.</p>
+        </div>
+        <div className="hero-stamp"><span>01</span><span>JOHN</span><span>·</span><span>VERSE</span><span>MAP</span></div>
+      </section>
+
+      <section className="controls panel">
+        <div className="translation-pair">
+          <label><span>translation A</span><strong>{leftName}</strong></label>
+          <span className="pair-arrow">→</span>
+          <label><span>translation B</span><strong>{rightName}</strong></label>
+        </div>
+        <div className="filter-grid">
+          <label className="field"><span>book</span><select value="JHN" aria-label="Book"><option value="JHN">John</option></select></label>
+          <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => setChapter(event.target.value)}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
+          <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Reference or phrase" /></label>
+        </div>
+      </section>
+
+      <section className="summary-grid">
+        <div className="summary-card"><span className="summary-label">scope</span><strong>{filtered.length.toLocaleString()}</strong><span>visible verses</span></div>
+        <div className="summary-card"><span className="summary-label">highest distance</span><strong>{formatScore(ranked[0]?.lexicalDistance ?? null)}</strong><span>{ranked[0]?.reference ?? "No match"}</span></div>
+        <div className="summary-card summary-card-wide"><span className="summary-label">alignment coverage</span><div className="coverage-bar"><i style={{ width: `${(data.summary.matchedUnits / data.summary.totalUnits) * 100}%` }} /></div><span>{data.summary.matchedUnits.toLocaleString()} matched · {data.summary.totalUnits.toLocaleString()} total</span></div>
+      </section>
+
+      <section className="panel chart-panel">
+        <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS JOHN</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
+        <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have less character n-gram overlap. This is a lexical baseline for navigation—not a semantic or faithfulness score.</p>
+        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} />
+      </section>
+
+      <div className="two-column">
+        <section className="panel reader-panel">
+          <div className="panel-heading reader-heading"><div><p className="eyebrow">02 · LINKED READER</p><h2>{selected?.reference ?? "Select a verse"}</h2></div><div className="reader-nav"><button aria-label="Previous verse" disabled={!previous} onClick={() => previous && selectUnit(previous)}>←</button><button aria-label="Next verse" disabled={!next} onClick={() => next && selectUnit(next)}>→</button></div></div>
+          {selected ? <>
+            <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · verse {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
+            <div className="translation-columns">
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p></article>
+            </div>
+            <div className="score-row"><div><span>lexical distance</span><strong>{formatScore(selected.lexicalDistance)}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
+          </> : <p className="empty-state">No verses match this filter.</p>}
+        </section>
+
+        <section className="panel ranked-panel">
+          <div className="panel-heading"><div><p className="eyebrow">03 · RANKED DIFFERENCES</p><h2>Start with a lead.</h2></div></div>
+          <p className="panel-intro">The largest baseline distances in the current view. Select one to sync the chart and reader.</p>
+          <div className="ranked-list">{ranked.map((unit, index) => <button className={unit.id === selected?.id ? "ranked-item active" : "ranked-item"} key={unit.id} onClick={() => selectUnit(unit)}><span className="rank-number">{String(index + 1).padStart(2, "0")}</span><span className="rank-ref">{unit.reference}<small>{unit.leftText?.slice(0, 68)}{(unit.leftText?.length ?? 0) > 68 ? "…" : ""}</small></span><strong>{formatScore(unit.lexicalDistance)}</strong></button>)}{ranked.length === 0 && <p className="empty-state">No scored verses in this view.</p>}</div>
+        </section>
+      </div>
+
+      <section className="panel scatter-panel">
+        <div className="panel-heading"><div><p className="eyebrow">04 · WORDING / DISTANCE</p><h2>Different words don’t always mean different things.</h2></div></div>
+        <p className="panel-intro">The same baseline shown two ways: horizontal movement is token overlap; vertical movement is character n-gram overlap. Use this as an investigation map, not a classification.</p>
+        <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} />
+      </section>
+
+      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Embedding runs will be added as a separately identified metric after model evaluation.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
+
+      <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href="https://ebible.org/find/details.php?id=engwebp" target="_blank" rel="noreferrer">WEB</a> + <a href="https://berean.bible/downloads.htm" target="_blank" rel="noreferrer">BSB</a></span><span>{metric.id}</span></footer>
+    </main>
+  );
+}
+
+export { App };

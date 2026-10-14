@@ -1,6 +1,6 @@
 # Ghost in the Word — project plan
 
-Draft · October 14, 2026 · Planning only; no application or model experiments implemented.
+Living specification · October 14, 2026 · Corpus/alignment pipeline and John pilot UI are implemented; embedding experiments remain pending.
 
 Build an interactive translation comparison tool that helps a reader find where Bible translations diverge, inspect the language behind those differences, and eventually investigate their relationship to source texts.
 

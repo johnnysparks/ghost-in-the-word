@@ -6,3 +6,5 @@ dist/
 *.egg-info/
 data/raw/
 data/derived/
+web/node_modules/
+web/dist/

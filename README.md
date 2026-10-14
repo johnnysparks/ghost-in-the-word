@@ -20,3 +20,23 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
 Raw downloads and generated reports are ignored by Git. The manifest in `sources.json`
 records the edition URLs and licenses; verify snapshots and checksums before publishing
 derived data.
+
+The first interactive slice is in `web/`. It serves a committed John pilot fixture and
+keeps the selected verse, chapter, search, and reader state in the URL:
+
+```sh
+cd web
+npm install
+npm run dev
+```
+
+From the repository root, rebuild the committed pilot fixture after refreshing corpus data:
+
+```sh
+PYTHONPATH=src python3 scripts/build_comparison.py \
+  data/derived/webp-bsb.json --book JHN \
+  --left-id webp --right-id bsb \
+  --left-name "World English Bible Protestant Edition" \
+  --right-name "Berean Standard Bible" \
+  --output web/public/data/john-webp-bsb.json
+```

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ghost_in_word.alignment import align_segments
 from ghost_in_word.models import TextSegment
+from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.usfm import parse_usfm
 
 
@@ -37,6 +38,22 @@ class PipelineTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(ValueError, "duplicate segment reference"):
             align_segments(segments, [])
+
+    def test_lexical_baselines_are_bounded_and_deterministic(self) -> None:
+        left = "For God so loved the world"
+        right = "Because God loved the world so much"
+        self.assertEqual(wording_distance(left, left), 0.0)
+        self.assertEqual(lexical_distance(left, left), 0.0)
+        self.assertGreaterEqual(wording_distance(left, right), 0.0)
+        self.assertLessEqual(wording_distance(left, right), 1.0)
+        self.assertGreaterEqual(lexical_distance(left, right), 0.0)
+        self.assertLessEqual(lexical_distance(left, right), 1.0)
+
+    def test_missing_units_have_null_scores(self) -> None:
+        left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
+        right = [TextSegment("b", "JHN", 3, "17", "For God did not send the Son.")]
+        scored = score_units(align_segments(left, right))
+        self.assertTrue(all(unit["lexicalDistance"] is None for unit in scored))
 
 
 if __name__ == "__main__":
