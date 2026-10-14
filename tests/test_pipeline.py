@@ -12,6 +12,7 @@ from ghost_in_word.assessment_attachment import attach_assessment_document
 from ghost_in_word.embeddings import cosine_distance, embedding_cache_key, embedding_storage_bytes, encode_texts, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
+from ghost_in_word.mapping_review import validate_mapping_document
 from ghost_in_word.review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
@@ -184,6 +185,40 @@ class PipelineTests(unittest.TestCase):
                     AlignmentMapping((segment.key,), (segment.key,)),
                 ],
             )
+
+    def test_mapping_review_report_requires_evidence_and_binds_alignment(self) -> None:
+        left = [TextSegment("a", "ROM", 14, "24", "A reviewed span.")]
+        right = [TextSegment("b", "ROM", 16, "25", "The corresponding span.")]
+        records = [{
+            "left": ["ROM 14:24"],
+            "right": ["ROM 16:25"],
+            "method": "reviewed-verse-bridge",
+            "review": {
+                "reviewer": "reviewer-1",
+                "reviewType": "snapshot-comparison",
+                "evidence": "Edition note checked against both pinned snapshots.",
+            },
+        }]
+        report = validate_mapping_document(records, left, right)
+        self.assertEqual(report["summary"]["mappingCount"], 1)
+        self.assertEqual(report["summary"]["reviewedCount"], 1)
+        self.assertEqual(report["summary"]["mappingTypes"], {"one-to-one": 1})
+        self.assertEqual(report["mappings"][0]["left"], ["ROM 14:24"])
+
+        records[0]["review"] = {"reviewer": "reviewer-1"}
+        with self.assertRaisesRegex(ValueError, "reviewType"):
+            validate_mapping_document(records, left, right)
+
+    def test_committed_mapping_records_declare_review_provenance(self) -> None:
+        records = json.loads(
+            (Path(__file__).parents[1] / "mappings/webp-bsb-reviewed.json").read_text(encoding="utf-8")
+        )
+        self.assertGreater(len(records), 0)
+        for record in records:
+            self.assertIn("review", record)
+            self.assertTrue(record["review"].get("reviewer"))
+            self.assertTrue(record["review"].get("reviewType"))
+            self.assertTrue(record["review"].get("evidence"))
 
     def test_lexical_baselines_are_bounded_and_deterministic(self) -> None:
         left = "For God so loved the world"

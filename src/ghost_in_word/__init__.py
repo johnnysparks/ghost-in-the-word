@@ -14,6 +14,7 @@ from .embeddings import (
 )
 from .models import Edition, TextSegment
 from .matrix import build_translation_matrix
+from .mapping_review import validate_mapping_document
 from .review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from .reference import ReferenceEstimate, distance_to_reference, estimate_reference
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
@@ -32,6 +33,7 @@ __all__ = [
     "ReferenceEstimate",
     "TextSegment",
     "build_translation_matrix",
+    "validate_mapping_document",
     "align_segments",
     "align_with_mappings",
     "alignment_method",

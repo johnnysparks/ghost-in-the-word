@@ -44,6 +44,7 @@ score:
     "method": "reviewed-verse-bridge",
     "review": {
       "reviewer": "source-reviewer-1",
+      "reviewType": "snapshot-comparison",
       "evidence": "Reference checked against the edition notes."
     }
   }
@@ -55,6 +56,18 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
   data/raw/webp data/raw/bsb \
   --left-id webp --right-id bsb \
   --mapping mappings/webp-bsb.json
+```
+
+Before applying a reviewed mapping, bind it to the exact parsed snapshots and their
+content hashes. The validator requires reviewer, review-type, and evidence fields by
+default; `--allow-unreviewed` is available only for exploratory mappings. The report
+does not prove reviewer independence, so that remains an external review responsibility:
+
+```sh
+PYTHONPATH=src python3 scripts/validate_mapping.py \
+  data/raw/webp data/raw/bsb mappings/webp-bsb-reviewed.json \
+  --left-id webp --right-id bsb \
+  --output data/derived/webp-bsb-mapping-review.json
 ```
 
 Raw downloads and generated reports are ignored by Git. The manifest in `sources.json`
