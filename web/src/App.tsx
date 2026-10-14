@@ -296,7 +296,7 @@ function App() {
     <main className="app">
       <header className="topbar">
         <div className="brand"><span className="brand-mark">✦</span><span>Ghost in the Word</span></div>
-        <div className="topbar-meta"><span className="status-pip" /> live comparison atlas <span className="slash">/</span> {data.summary.scoredUnits.toLocaleString()} scored verses</div>
+        <div className="topbar-meta"><span className="status-pip" /> live comparison atlas <span className="slash">/</span> {(manifest?.summary.scoredUnits ?? data.summary.scoredUnits).toLocaleString()} scored verses in corpus</div>
       </header>
 
       <section className="hero">
@@ -316,7 +316,7 @@ function App() {
         </div>
         <div className="filter-grid">
           <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
-          <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name}</option>)}</select></label>
+          <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name} · {entry.totalUnits.toLocaleString()} · {Math.round(entry.coverage * 100)}%</option>)}</select></label>
           <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => setChapter(event.target.value)}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
           <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Reference or phrase" /></label>
         </div>

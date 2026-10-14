@@ -47,6 +47,7 @@ export type ComparisonManifest = {
     alignment: ComparisonData["metadata"]["alignment"];
     scope: { books: string[]; unit: string };
   };
+  summary: { totalUnits: number; matchedUnits: number; scoredUnits: number };
   books: Array<{
     id: string;
     name: string;

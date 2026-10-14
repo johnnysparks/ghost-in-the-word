@@ -76,6 +76,7 @@ def main() -> None:
             "alignment": comparison["metadata"]["alignment"],
             "scope": {"books": [book["id"] for book in books], "unit": "verse"},
         },
+        "summary": comparison["summary"],
         "books": books,
     }
     book_order = {book: index for index, book in enumerate(BOOK_NAMES)}
