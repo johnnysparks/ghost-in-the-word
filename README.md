@@ -47,6 +47,16 @@ PYTHONPATH=src python3 scripts/evaluate_challenge.py benchmarks/challenge.json
 Recorded E5-small and BGE-M3 reports are kept in `benchmarks/reports/`; both are below
 the provisional gate and therefore remain research evidence rather than product labels.
 
+Book/chapter aggregates can be generated from any comparison artifact for a future
+whole-Bible overview. Missing units stay in coverage counts and are excluded from score
+statistics:
+
+```sh
+PYTHONPATH=src python3 scripts/build_summary.py \
+  data/derived/webp-bsb-full.json \
+  --output data/derived/webp-bsb-summary.json
+```
+
 The first interactive slice is in `web/`. It serves a committed John pilot fixture and
 keeps the selected comparison pair, verse, chapter, search, and reader state in the URL.
 The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded

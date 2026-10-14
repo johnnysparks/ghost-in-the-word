@@ -6,6 +6,7 @@ from ghost_in_word.alignment import align_segments
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
+from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 
 
@@ -55,6 +56,18 @@ class PipelineTests(unittest.TestCase):
         right = [TextSegment("b", "JHN", 3, "17", "For God did not send the Son.")]
         scored = score_units(align_segments(left, right))
         self.assertTrue(all(unit["lexicalDistance"] is None for unit in scored))
+
+    def test_summary_excludes_missing_scores(self) -> None:
+        units = [
+            {"book": "JHN", "chapter": 3, "status": "matched", "lexicalDistance": 0.2},
+            {"book": "JHN", "chapter": 3, "status": "missing-right", "lexicalDistance": None},
+            {"book": "JHN", "chapter": 4, "status": "matched", "lexicalDistance": 0.6},
+        ]
+        summary = summarize_units(units, "lexicalDistance")
+        self.assertEqual(summary["overall"]["totalUnits"], 3)
+        self.assertEqual(summary["overall"]["matchedUnits"], 2)
+        self.assertEqual(summary["overall"]["scoredUnits"], 2)
+        self.assertEqual(summary["chapters"][0]["coverage"], 0.5)
 
     def test_embedding_primitives_are_deterministic(self) -> None:
         self.assertEqual(cosine_distance([1.0, 0.0], [1.0, 0.0]), 0.0)
