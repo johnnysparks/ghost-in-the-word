@@ -29,6 +29,8 @@ class AlignmentUnit:
     left_references: tuple[str, ...] = ()
     right_references: tuple[str, ...] = ()
     mapping_method: str = "exact-reference"
+    left_notes: tuple[str, ...] = ()
+    right_notes: tuple[str, ...] = ()
 
     @property
     def reference(self) -> str:
@@ -55,6 +57,8 @@ class AlignmentUnit:
                     "mapping_method": self.mapping_method,
                 }
             )
+        if self.left_notes or self.right_notes:
+            record.update({"left_notes": list(self.left_notes), "right_notes": list(self.right_notes)})
         return record
 
 
@@ -101,6 +105,8 @@ def align_segments(left: Iterable[TextSegment], right: Iterable[TextSegment]) ->
                 left_text=left_segment.text if left_segment else None,
                 right_text=right_segment.text if right_segment else None,
                 status=status,
+                left_notes=left_segment.notes if left_segment else (),
+                right_notes=right_segment.notes if right_segment else (),
             )
         )
     return units
@@ -156,18 +162,46 @@ def align_with_mappings(
                 left_references=tuple(segment.reference for segment in left_segments),
                 right_references=tuple(segment.reference for segment in right_segments),
                 mapping_method=mapping.method,
+                left_notes=tuple(note for segment in left_segments for note in segment.notes),
+                right_notes=tuple(note for segment in right_segments for note in segment.notes),
             )
         )
 
     for key, segment in left_by_key.items():
         if key not in consumed_left:
             units.append(
-                AlignmentUnit(segment.book, segment.chapter, segment.verse, left_edition, right_edition, segment.text, None, "missing-right", "missing", (segment.reference,), (), "unmapped")
+                AlignmentUnit(
+                    book=segment.book,
+                    chapter=segment.chapter,
+                    verse=segment.verse,
+                    left_edition=left_edition,
+                    right_edition=right_edition,
+                    left_text=segment.text,
+                    right_text=None,
+                    status="missing-right",
+                    mapping_type="missing",
+                    left_references=(segment.reference,),
+                    mapping_method="unmapped",
+                    left_notes=segment.notes,
+                )
             )
     for key, segment in right_by_key.items():
         if key not in consumed_right:
             units.append(
-                AlignmentUnit(segment.book, segment.chapter, segment.verse, left_edition, right_edition, None, segment.text, "missing-left", "missing", (), (segment.reference,), "unmapped")
+                AlignmentUnit(
+                    book=segment.book,
+                    chapter=segment.chapter,
+                    verse=segment.verse,
+                    left_edition=left_edition,
+                    right_edition=right_edition,
+                    left_text=None,
+                    right_text=segment.text,
+                    status="missing-left",
+                    mapping_type="missing",
+                    right_references=(segment.reference,),
+                    mapping_method="unmapped",
+                    right_notes=segment.notes,
+                )
             )
     return sorted(units, key=lambda unit: (unit.book, unit.chapter, _verse_sort_key(unit.verse)))
 

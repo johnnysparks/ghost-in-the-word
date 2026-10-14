@@ -85,6 +85,16 @@ function MarkedText({ text, other }: { text: string | null; other: string | null
   );
 }
 
+function TranslationNotes({ notes }: { notes?: string[] }) {
+  if (!notes?.length) return null;
+  return (
+    <details className="translation-notes">
+      <summary>Notes ({notes.length})</summary>
+      <ul>{notes.map((note, index) => <li key={`${index}-${note}`}>{note}</li>)}</ul>
+    </details>
+  );
+}
+
 type UnitRange = { start: number; end: number };
 
 function parseInitialRange(): UnitRange | null {
@@ -424,8 +434,8 @@ function App() {
           {selected ? <>
             <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · verse {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
             <div className="translation-columns">
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p></article>
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p><TranslationNotes notes={selected.leftNotes} /></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p><TranslationNotes notes={selected.rightNotes} /></article>
             </div>
             <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
           </> : <p className="empty-state">No verses match this filter.</p>}

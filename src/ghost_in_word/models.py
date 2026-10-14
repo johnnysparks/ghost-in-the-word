@@ -25,6 +25,7 @@ class TextSegment:
     verse: str
     text: str
     source_file: str = ""
+    notes: tuple[str, ...] = ()
 
     @property
     def key(self) -> tuple[str, int, str]:

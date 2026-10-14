@@ -48,6 +48,10 @@ def main() -> None:
             record["rightReferences"] = unit["right_references"]
         if "mapping_method" in unit:
             record["mappingMethod"] = unit["mapping_method"]
+        if "left_notes" in unit:
+            record["leftNotes"] = unit["left_notes"]
+        if "right_notes" in unit:
+            record["rightNotes"] = unit["right_notes"]
         record["id"] = f"{unit['book']}-{unit['chapter']}-{unit['verse']}"
         record["order"] = index
         if unit["status"] == "matched" and unit["left_text"] is not None and unit["right_text"] is not None:

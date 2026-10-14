@@ -36,6 +36,19 @@ class PipelineTests(unittest.TestCase):
 
         self.assertEqual(segments[0].text, "In the beginning was the Word.")
 
+    def test_usfm_parser_preserves_cleaned_notes_separately(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "JHN.SFM"
+            path.write_text(
+                '\\id JHN\n\\c 1\n\\v 1 Text.\\f + \\fr 1:1 \\ft A translator note.\\f*\n',
+                encoding="utf-8",
+            )
+            segments = parse_usfm(path, "webp")
+
+        self.assertEqual(segments[0].text, "Text.")
+        self.assertEqual(len(segments[0].notes), 1)
+        self.assertIn("A translator note.", segments[0].notes[0])
+
     def test_alignment_exposes_missing_references(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
         right = [TextSegment("b", "JHN", 3, "17", "For God did not send the Son.")]

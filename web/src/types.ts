@@ -16,6 +16,8 @@ export type ComparisonUnit = {
   leftReferences?: string[];
   rightReferences?: string[];
   mappingMethod?: string;
+  leftNotes?: string[];
+  rightNotes?: string[];
   wordingDistance: number | null;
   lexicalDistance: number | null;
   embeddingDistance?: number | null;

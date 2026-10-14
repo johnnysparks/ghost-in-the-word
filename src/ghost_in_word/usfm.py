@@ -24,6 +24,17 @@ def _clean_text(text: str) -> str:
     return _WHITESPACE.sub(" ", text).strip()
 
 
+def _extract_notes(text: str) -> tuple[str, ...]:
+    notes = []
+    for note in _NOTE.findall(text):
+        without_open = re.sub(r"^\\(?:f|x)\s*", "", note)
+        without_close = re.sub(r"\\(?:f|x)\*\s*$", "", without_open)
+        cleaned = _clean_text(re.sub(r"^\+\s*", "", without_close))
+        if cleaned:
+            notes.append(cleaned)
+    return tuple(notes)
+
+
 def parse_usfm(path: str | Path, edition_id: str) -> list[TextSegment]:
     """Parse verse records from one USFM file.
 
@@ -53,14 +64,16 @@ def parse_usfm(path: str | Path, edition_id: str) -> list[TextSegment]:
         if not verse_matches or not book or chapter is None:
             continue
         for verse_match in verse_matches:
+            verse_text = verse_match.group(2)
             segments.append(
                 TextSegment(
                     edition_id=edition_id,
                     book=book,
                     chapter=chapter,
                     verse=verse_match.group(1),
-                    text=_clean_text(verse_match.group(2)),
+                    text=_clean_text(verse_text),
                     source_file=source_path.name,
+                    notes=_extract_notes(verse_text),
                 )
             )
 
