@@ -163,6 +163,45 @@ function AtlasOverview({
   );
 }
 
+function ResultsTable({
+  units,
+  selectedId,
+  onSelect,
+  distanceField,
+  distanceLabel,
+  sameLanguage,
+}: {
+  units: ComparisonUnit[];
+  selectedId: string | undefined;
+  onSelect: (unit: ComparisonUnit) => void;
+  distanceField: string;
+  distanceLabel: string;
+  sameLanguage: boolean;
+}) {
+  return (
+    <section className="panel results-table-panel" aria-labelledby="results-table-title">
+      <div className="panel-heading"><div><p className="eyebrow">05 · ACCESSIBLE RESULTS</p><h2 id="results-table-title">Read every visible point.</h2></div><span className="table-count">{units.length.toLocaleString()} rows</span></div>
+      <p className="panel-intro">This table mirrors the current book, chapter, search, and brush filters. Use the reference buttons to select a row and synchronize the chart and reader.</p>
+      <div className="results-table-wrap">
+        <table>
+          <caption className="sr-only">Filtered translation comparison results</caption>
+          <thead><tr><th scope="col">Reference</th><th scope="col">Status</th><th scope="col">{distanceLabel}</th><th scope="col">Wording</th><th scope="col">Translation A</th><th scope="col">Translation B</th></tr></thead>
+          <tbody>{units.map((unit) => (
+            <tr className={unit.id === selectedId ? "selected-row" : undefined} key={unit.id}>
+              <th scope="row"><button className="table-ref" onClick={() => onSelect(unit)}>{unit.reference}</button></th>
+              <td><span className={`table-status ${unit.status}`}>{unit.status === "matched" ? "matched" : unit.status.replace("missing-", "missing ")}</span></td>
+              <td>{formatScore(distanceFor(unit, distanceField))}</td>
+              <td>{sameLanguage ? formatScore(unit.wordingDistance) : "n/a"}</td>
+              <td>{unit.leftText ?? "No aligned text"}</td>
+              <td>{unit.rightText ?? "No aligned text"}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 type UnitRange = { start: number; end: number };
 
 function parseInitialRange(): UnitRange | null {
@@ -552,6 +591,8 @@ function App() {
         <p className="panel-intro">The same comparison shown two ways: horizontal movement is wording distance; vertical movement is the selected comparison metric. Use this as an investigation map, not a classification.</p>
         <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>}
+
+      <ResultsTable units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} sameLanguage={sameLanguage} />
 
       <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd>{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd></>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
 
