@@ -59,6 +59,20 @@ function formatScore(score: number | null) {
   return score === null ? "—" : score.toFixed(3);
 }
 
+function downloadText(filename: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function csvCell(value: unknown) {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
 function distanceFor(unit: ComparisonUnit, field: string) {
   const value = unit[field as keyof ComparisonUnit];
   return typeof value === "number" ? value : null;
@@ -387,6 +401,16 @@ function App() {
   const alignmentNote = data.metadata.alignment.method === "exact-book-chapter-verse"
     ? "The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches."
     : "The chart preserves missing and unresolved passages as gaps and only scores reviewed mappings marked matched.";
+  const exportCurrentView = (format: "json" | "csv") => {
+    const filename = `${pair.id}-${book}-${brushRange ? `range-${brushRange.start}-${brushRange.end}` : "view"}.${format}`;
+    if (format === "json") {
+      downloadText(filename, JSON.stringify({ metadata: data.metadata, summary: data.summary, filters: { chapter, search, range: brushRange }, units: visibleUnits }, null, 2), "application/json");
+      return;
+    }
+    const header = ["reference", "status", "leftText", "rightText", data.metadata.metric.distanceField, "wordingDistance"];
+    const rows = visibleUnits.map((unit) => [unit.reference, unit.status, unit.leftText, unit.rightText, distanceFor(unit, distanceField), unit.wordingDistance].map(csvCell).join(","));
+    downloadText(filename, [header.join(","), ...rows].join("\n") + "\n", "text/csv;charset=utf-8");
+  };
 
   return (
     <main className="app">
@@ -460,7 +484,7 @@ function App() {
         <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>}
 
-      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
+      <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd>{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd></>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
 
       <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>

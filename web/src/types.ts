@@ -37,6 +37,13 @@ export type ComparisonData = {
       wordingField: keyof ComparisonUnit;
       description: string;
     };
+    embeddingRun?: {
+      modelId: string;
+      dimensions: number;
+      maxSeqLength: number;
+      inputHash: string;
+      prefix: string;
+    };
     source: { alignment: string };
   };
   units: ComparisonUnit[];
