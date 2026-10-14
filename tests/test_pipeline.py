@@ -157,6 +157,13 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(all("lexicalDistance" not in item and "rank" not in item for item in packet["items"]))
         self.assertEqual(packet, select_review_items(comparison, count=2, metric_field="lexicalDistance", seed=7))
 
+        comparison["units"] = [
+            {"id": "JHN-1-1", "reference": "JHN 1:1", "status": "matched", "leftText": "one", "rightText": "uno", "lexicalDistance": 0.9},
+            {"id": "JHN-1-2", "reference": "JHN 1:2", "status": "matched", "leftText": "two", "rightText": "dos", "lexicalDistance": 0.8},
+        ]
+        camel_packet = select_review_items(comparison, count=1, metric_field="lexicalDistance", seed=7)
+        self.assertEqual(camel_packet["items"][0]["leftText"], "one")
+
     def test_review_summary_preserves_uncertainty_and_disagreement(self) -> None:
         report = summarize_reviews(
             [

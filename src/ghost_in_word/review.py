@@ -9,6 +9,10 @@ DIFFERENCE_TYPES = {"wording", "likely meaning", "source-text issue", "alignment
 CONFIDENCE_VALUES = {"low", "medium", "high"}
 
 
+def _unit_value(unit: Mapping[str, object], camel: str, snake: str) -> object:
+    return unit[camel] if camel in unit else unit.get(snake)
+
+
 def select_review_items(
     comparison: Mapping[str, object],
     *,
@@ -35,8 +39,8 @@ def select_review_items(
         if isinstance(unit, Mapping)
         and unit.get("status") == "matched"
         and isinstance(unit.get(metric_field), (int, float))
-        and unit.get("left_text") is not None
-        and unit.get("right_text") is not None
+        and _unit_value(unit, "leftText", "left_text") is not None
+        and _unit_value(unit, "rightText", "right_text") is not None
     ]
     if not candidates:
         raise ValueError(f"comparison contains no matched units with numeric {metric_field}")
@@ -66,8 +70,8 @@ def select_review_items(
                 "book": unit.get("book"),
                 "chapter": unit.get("chapter"),
                 "verse": unit.get("verse"),
-                "leftText": unit.get("left_text"),
-                "rightText": unit.get("right_text"),
+                "leftText": _unit_value(unit, "leftText", "left_text"),
+                "rightText": _unit_value(unit, "rightText", "right_text"),
             }
         )
     return {

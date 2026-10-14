@@ -44,7 +44,25 @@ def main() -> None:
     distances = {id(unit): cosine_distance(left_vectors[index], right_vectors[index]) for index, unit in enumerate(matched)}
     scored: list[dict[str, object]] = []
     for index, unit in enumerate(alignment):
-        record = dict(unit)
+        record: dict[str, object] = {
+            "book": unit["book"],
+            "chapter": unit["chapter"],
+            "verse": unit["verse"],
+            "leftEdition": unit["left_edition"],
+            "rightEdition": unit["right_edition"],
+            "leftText": unit["left_text"],
+            "rightText": unit["right_text"],
+            "status": unit["status"],
+            "reference": unit["reference"],
+        }
+        if "mapping_type" in unit:
+            record["mappingType"] = unit["mapping_type"]
+        if "left_references" in unit:
+            record["leftReferences"] = unit["left_references"]
+        if "right_references" in unit:
+            record["rightReferences"] = unit["right_references"]
+        if "mapping_method" in unit:
+            record["mappingMethod"] = unit["mapping_method"]
         record["id"] = f"{unit['book']}-{unit['chapter']}-{unit['verse']}"
         record["order"] = index
         if unit["status"] == "matched" and unit["left_text"] and unit["right_text"]:
