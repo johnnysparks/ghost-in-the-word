@@ -1,0 +1,34 @@
+{
+  "editions": [
+    {
+      "id": "webp",
+      "name": "World English Bible Protestant Edition",
+      "language": "en",
+      "source": "https://ebible.org/find/details.php?id=engwebp",
+      "download": "https://ebible.org/Scriptures/engwebp_usfm.zip",
+      "format": "usfm",
+      "license": "public-domain",
+      "canon": "protestant-66"
+    },
+    {
+      "id": "bsb",
+      "name": "Berean Standard Bible",
+      "language": "en",
+      "source": "https://berean.bible/downloads.htm",
+      "download": "https://bereanbible.com/bsb_usfm.zip",
+      "format": "usfm",
+      "license": "public-domain",
+      "canon": "protestant-66"
+    },
+    {
+      "id": "asv",
+      "name": "American Standard Version (1901)",
+      "language": "en",
+      "source": "https://ebible.org/find/details.php?id=eng-asv",
+      "download": "https://ebible.org/Scriptures/eng-asv_usfm.zip",
+      "format": "usfm",
+      "license": "public-domain",
+      "canon": "protestant-66"
+    }
+  ]
+}
