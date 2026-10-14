@@ -211,6 +211,29 @@ class PipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reviewType"):
             validate_mapping_document(records, left, right)
 
+    def test_mapping_review_can_require_a_declared_independent_panel(self) -> None:
+        left = [TextSegment("a", "ROM", 14, "24", "A reviewed span.")]
+        right = [TextSegment("b", "ROM", 16, "25", "The corresponding span.")]
+        records = [{
+            "left": ["ROM 14:24"],
+            "right": ["ROM 16:25"],
+            "method": "reviewed-verse-bridge",
+            "review": {
+                "reviewer": "independent-review-panel",
+                "reviewers": ["reviewer-1", "reviewer-2"],
+                "reviewType": "independent-mapping-review",
+                "independence": "declared",
+                "evidence": "Both reviewers checked the pinned snapshots independently.",
+            },
+        }]
+        report = validate_mapping_document(records, left, right, require_independent_review=True)
+        self.assertEqual(report["summary"]["independentReviewCount"], 1)
+        self.assertTrue(report["summary"]["independentReviewEligible"])
+
+        records[0]["review"]["reviewers"] = ["reviewer-1"]
+        with self.assertRaisesRegex(ValueError, "at least two"):
+            validate_mapping_document(records, left, right, require_independent_review=True)
+
     def test_mapping_snapshot_binding_requires_matching_inventory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

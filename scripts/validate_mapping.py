@@ -25,12 +25,25 @@ def main() -> None:
         action="store_true",
         help="Permit mapping records without reviewer, reviewType, and evidence fields",
     )
+    parser.add_argument(
+        "--require-independent",
+        action="store_true",
+        help="Require at least two distinct declared reviewers on every mapping record",
+    )
     args = parser.parse_args()
 
     left = parse_usfm_directory(args.left, args.left_id)
     right = parse_usfm_directory(args.right, args.right_id)
     records = json.loads(args.mapping.read_text(encoding="utf-8"))
-    report = validate_mapping_document(records, left, right, require_review=not args.allow_unreviewed)
+    if args.require_independent and args.allow_unreviewed:
+        raise SystemExit("--require-independent cannot be combined with --allow-unreviewed")
+    report = validate_mapping_document(
+        records,
+        left,
+        right,
+        require_review=not args.allow_unreviewed,
+        require_independent_review=args.require_independent,
+    )
     report["mappingFile"] = {
         "path": str(args.mapping),
         "sha256": hashlib.sha256(args.mapping.read_bytes()).hexdigest(),

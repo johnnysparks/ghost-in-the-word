@@ -17,14 +17,21 @@ def validate_mapping_document(
     right: Iterable[TextSegment],
     *,
     require_review: bool = True,
+    require_independent_review: bool = False,
 ) -> dict[str, object]:
     """Validate an exception mapping and return an auditable compact report.
 
     The source segments are supplied by the caller so reference existence,
     duplicate consumption, and the resulting alignment are checked against the
     exact pinned snapshots being reviewed. This validates declared reviewer
-    evidence; it cannot establish a reviewer's independence or expertise.
+    evidence; it cannot establish a reviewer's independence or expertise. When
+    ``require_independent_review`` is enabled, each record must carry at least
+    two distinct reviewer IDs and the explicit ``independence: declared``
+    marker. That is a schema gate, not proof of real-world independence.
     """
+
+    if require_independent_review and not require_review:
+        raise ValueError("independent mapping review requires reviewer evidence")
 
     if not isinstance(records, list):
         raise ValueError("mapping document must contain a JSON array")
@@ -47,6 +54,17 @@ def validate_mapping_document(
             for field in ("reviewer", "reviewType", "evidence"):
                 if not str(review.get(field, "")).strip():
                     raise ValueError(f"mapping record {index} review needs {field}")
+            if require_independent_review:
+                reviewers = review.get("reviewers")
+                if not isinstance(reviewers, list):
+                    raise ValueError(f"mapping record {index} independent review needs a reviewers array")
+                normalized_reviewers = [str(reviewer).strip() for reviewer in reviewers]
+                if len(normalized_reviewers) < 2 or any(not reviewer for reviewer in normalized_reviewers):
+                    raise ValueError(f"mapping record {index} independent review needs at least two non-empty reviewers")
+                if len(normalized_reviewers) != len(set(normalized_reviewers)):
+                    raise ValueError(f"mapping record {index} independent review reviewers must be distinct")
+                if review.get("independence") != "declared":
+                    raise ValueError(f"mapping record {index} independent review needs independence: declared")
         mapping_type = _mapping_type(len(mapping.left), len(mapping.right))
         status = mapping.status if mapping.status != "matched" else (
             "matched" if mapping.left and mapping.right else ("missing-right" if mapping.left else "missing-left")
@@ -67,6 +85,14 @@ def validate_mapping_document(
         )
 
     units = align_with_mappings(left, right, parsed)
+    independent_count = sum(
+        1
+        for mapping in parsed
+        if isinstance(mapping.review, Mapping)
+        and isinstance(mapping.review.get("reviewers"), list)
+        and len({str(reviewer).strip() for reviewer in mapping.review["reviewers"] if str(reviewer).strip()}) >= 2
+        and mapping.review.get("independence") == "declared"
+    )
     return {
         "schemaVersion": 1,
         "kind": "alignment-review-report",
@@ -77,6 +103,9 @@ def validate_mapping_document(
             "statuses": dict(sorted(statuses.items())),
             "mappingTypes": dict(sorted(mapping_types.items())),
             "alignedUnitCount": len(units),
+            "independentReviewCount": independent_count,
+            "independentReviewRequired": require_independent_review,
+            "independentReviewEligible": bool(parsed) and independent_count == len(parsed) if require_independent_review else None,
         },
         "mappings": entries,
     }

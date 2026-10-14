@@ -66,6 +66,24 @@ PYTHONPATH=src python3 scripts/validate_mapping.py \
   --output data/derived/webp-bsb-mapping-review.json
 ```
 
+When an independently reviewed mapping file is ready, enforce its declared review
+panel before applying it to the snapshots:
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/edition-a data/raw/edition-b \
+  --left-id edition-a --right-id edition-b \
+  --mapping mappings/edition-a-edition-b-independent.json \
+  --require-independent \
+  --output data/derived/edition-a-edition-b-alignment.json \
+  --mapping-report data/derived/edition-a-edition-b-mapping-review.json
+```
+
+Each mapping record must retain `reviewers` with at least two distinct IDs and
+`independence: "declared"` in its review object. This is an auditable input
+requirement, not proof that the people were actually independent; the mapping report
+records both the declared panel count and whether every record met the gate.
+
 Raw downloads and generated reports are ignored by Git. The manifest in `sources.json`
 records the edition URLs and licenses; verify snapshots and checksums before publishing
 derived data.
