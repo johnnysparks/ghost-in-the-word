@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from typing import Iterable
+from dataclasses import dataclass
+from typing import Iterable, Mapping
 
 from .models import TextSegment
+
+ReferenceKey = tuple[str, int, str]
 
 
 @dataclass(frozen=True)
@@ -23,13 +25,47 @@ class AlignmentUnit:
     left_text: str | None
     right_text: str | None
     status: str
+    mapping_type: str = "one-to-one"
+    left_references: tuple[str, ...] = ()
+    right_references: tuple[str, ...] = ()
+    mapping_method: str = "exact-reference"
 
     @property
     def reference(self) -> str:
         return f"{self.book} {self.chapter}:{self.verse}"
 
     def to_dict(self) -> dict[str, object]:
-        return {**asdict(self), "reference": self.reference}
+        record: dict[str, object] = {
+            "book": self.book,
+            "chapter": self.chapter,
+            "verse": self.verse,
+            "left_edition": self.left_edition,
+            "right_edition": self.right_edition,
+            "left_text": self.left_text,
+            "right_text": self.right_text,
+            "status": self.status,
+            "reference": self.reference,
+        }
+        if self.mapping_type != "one-to-one" or self.left_references or self.right_references or self.mapping_method != "exact-reference":
+            record.update(
+                {
+                    "mapping_type": self.mapping_type,
+                    "left_references": list(self.left_references),
+                    "right_references": list(self.right_references),
+                    "mapping_method": self.mapping_method,
+                }
+            )
+        return record
+
+
+@dataclass(frozen=True)
+class AlignmentMapping:
+    """A reviewed mapping from one or more source references on each side."""
+
+    left: tuple[ReferenceKey, ...]
+    right: tuple[ReferenceKey, ...]
+    status: str = "matched"
+    method: str = "curated"
 
 
 def align_segments(left: Iterable[TextSegment], right: Iterable[TextSegment]) -> list[AlignmentUnit]:
@@ -70,6 +106,97 @@ def align_segments(left: Iterable[TextSegment], right: Iterable[TextSegment]) ->
     return units
 
 
+def align_with_mappings(
+    left: Iterable[TextSegment],
+    right: Iterable[TextSegment],
+    mappings: Iterable[AlignmentMapping],
+) -> list[AlignmentUnit]:
+    """Apply explicit one-to-many/many-to-one mappings.
+
+    Every segment must be consumed by at most one mapping. Unmentioned
+    segments become explicit missing units, while mappings marked unresolved
+    remain visible but receive no score downstream.
+    """
+
+    left_by_key = _index(left)
+    right_by_key = _index(right)
+    left_edition = _edition_id(left_by_key)
+    right_edition = _edition_id(right_by_key)
+    consumed_left: set[ReferenceKey] = set()
+    consumed_right: set[ReferenceKey] = set()
+    units: list[AlignmentUnit] = []
+
+    for mapping in mappings:
+        if not mapping.left and not mapping.right:
+            raise ValueError("alignment mapping must contain a left or right reference")
+        if consumed_left.intersection(mapping.left) or consumed_right.intersection(mapping.right):
+            raise ValueError("alignment mapping reuses a segment reference")
+        missing_left = [key for key in mapping.left if key not in left_by_key]
+        missing_right = [key for key in mapping.right if key not in right_by_key]
+        if missing_left or missing_right:
+            raise ValueError(f"alignment mapping references unknown segments: left={missing_left}, right={missing_right}")
+        consumed_left.update(mapping.left)
+        consumed_right.update(mapping.right)
+        primary = (mapping.left or mapping.right)[0]
+        left_segments = [left_by_key[key] for key in mapping.left]
+        right_segments = [right_by_key[key] for key in mapping.right]
+        mapping_type = _mapping_type(len(mapping.left), len(mapping.right))
+        status = mapping.status if mapping.status != "matched" else ("matched" if mapping.left and mapping.right else ("missing-left" if mapping.left else "missing-right"))
+        units.append(
+            AlignmentUnit(
+                book=primary[0],
+                chapter=primary[1],
+                verse=primary[2],
+                left_edition=left_edition,
+                right_edition=right_edition,
+                left_text=" ".join(segment.text for segment in left_segments) or None,
+                right_text=" ".join(segment.text for segment in right_segments) or None,
+                status=status,
+                mapping_type=mapping_type,
+                left_references=tuple(segment.reference for segment in left_segments),
+                right_references=tuple(segment.reference for segment in right_segments),
+                mapping_method=mapping.method,
+            )
+        )
+
+    for key, segment in left_by_key.items():
+        if key not in consumed_left:
+            units.append(
+                AlignmentUnit(segment.book, segment.chapter, segment.verse, left_edition, right_edition, segment.text, None, "missing-right", "missing", (segment.reference,), (), "unmapped")
+            )
+    for key, segment in right_by_key.items():
+        if key not in consumed_right:
+            units.append(
+                AlignmentUnit(segment.book, segment.chapter, segment.verse, left_edition, right_edition, None, segment.text, "missing-left", "missing", (), (segment.reference,), "unmapped")
+            )
+    return sorted(units, key=lambda unit: (unit.book, unit.chapter, _verse_sort_key(unit.verse)))
+
+
+def mapping_from_dict(record: Mapping[str, object]) -> AlignmentMapping:
+    """Parse a JSON mapping record with references like ``JHN 1:1``."""
+
+    def parse_many(value: object) -> tuple[ReferenceKey, ...]:
+        if not isinstance(value, list):
+            raise ValueError("mapping left/right values must be lists")
+        return tuple(parse_reference(str(reference)) for reference in value)
+
+    return AlignmentMapping(
+        left=parse_many(record.get("left", [])),
+        right=parse_many(record.get("right", [])),
+        status=str(record.get("status", "matched")),
+        method=str(record.get("method", "curated")),
+    )
+
+
+def parse_reference(reference: str) -> ReferenceKey:
+    book_and_verse = reference.strip().split()
+    if len(book_and_verse) != 2 or ":" not in book_and_verse[1]:
+        raise ValueError(f"invalid Bible reference: {reference}")
+    book, chapter_verse = book_and_verse
+    chapter, verse = chapter_verse.split(":", 1)
+    return book.upper(), int(chapter), verse
+
+
 def _index(segments: Iterable[TextSegment]) -> dict[tuple[str, int, str], TextSegment]:
     indexed: dict[tuple[str, int, str], TextSegment] = {}
     for segment in segments:
@@ -86,3 +213,13 @@ def _edition_id(indexed: dict[tuple[str, int, str], TextSegment]) -> str:
 def _verse_sort_key(verse: str) -> tuple[int, int]:
     start, _, end = verse.partition("-")
     return int(start), int(end or start)
+
+
+def _mapping_type(left_count: int, right_count: int) -> str:
+    if left_count == 1 and right_count == 1:
+        return "one-to-one"
+    if left_count == 1:
+        return "one-to-many"
+    if right_count == 1:
+        return "many-to-one"
+    return "many-to-many"

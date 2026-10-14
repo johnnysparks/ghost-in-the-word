@@ -17,6 +17,28 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
   --left-id webp --right-id bsb
 ```
 
+For a versification exception or a reviewed verse bridge, pass a JSON mapping file.
+Each mapping consumes one or more references on either side; omitted segments remain
+explicitly missing. A mapping marked `unresolved` is retained for review and receives
+no semantic score:
+
+```json
+[
+  {
+    "left": ["JHN 3:16", "JHN 3:17"],
+    "right": ["JHN 3:16"],
+    "method": "reviewed-verse-bridge"
+  }
+]
+```
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/webp data/raw/bsb \
+  --left-id webp --right-id bsb \
+  --mapping mappings/webp-bsb.json
+```
+
 Raw downloads and generated reports are ignored by Git. The manifest in `sources.json`
 records the edition URLs and licenses; verify snapshots and checksums before publishing
 derived data.

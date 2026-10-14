@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ghost_in_word.alignment import align_segments
+from ghost_in_word.alignment import AlignmentMapping, align_segments, align_with_mappings
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
@@ -40,6 +40,51 @@ class PipelineTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(ValueError, "duplicate segment reference"):
             align_segments(segments, [])
+
+    def test_reviewed_mapping_can_merge_multiple_references(self) -> None:
+        left = [
+            TextSegment("a", "JHN", 3, "16", "For God so loved the world."),
+            TextSegment("a", "JHN", 3, "17", "He sent his Son."),
+        ]
+        right = [TextSegment("b", "JHN", 3, "16", "For God loved the world and sent his Son.")]
+
+        units = align_with_mappings(
+            left,
+            right,
+            [AlignmentMapping((left[0].key, left[1].key), (right[0].key,))],
+        )
+
+        self.assertEqual(len(units), 1)
+        self.assertEqual(units[0].mapping_type, "many-to-one")
+        self.assertEqual(units[0].left_references, ("JHN 3:16", "JHN 3:17"))
+        self.assertEqual(units[0].right_references, ("JHN 3:16",))
+        self.assertEqual(units[0].status, "matched")
+        self.assertIn("He sent his Son.", units[0].left_text)
+
+    def test_unresolved_mapping_is_retained_without_a_score(self) -> None:
+        left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
+        right = [TextSegment("b", "JHN", 3, "16", "For God loved the world.")]
+
+        units = align_with_mappings(
+            left,
+            right,
+            [AlignmentMapping((left[0].key,), (right[0].key,), status="unresolved", method="review")],
+        )
+
+        self.assertEqual(units[0].status, "unresolved")
+        self.assertIsNone(score_units(units)[0]["lexicalDistance"])
+
+    def test_reviewed_mapping_rejects_reused_reference(self) -> None:
+        segment = TextSegment("a", "JHN", 3, "16", "one")
+        with self.assertRaisesRegex(ValueError, "reuses"):
+            align_with_mappings(
+                [segment],
+                [TextSegment("b", "JHN", 3, "16", "one")],
+                [
+                    AlignmentMapping((segment.key,), (segment.key,)),
+                    AlignmentMapping((segment.key,), (segment.key,)),
+                ],
+            )
 
     def test_lexical_baselines_are_bounded_and_deterministic(self) -> None:
         left = "For God so loved the world"

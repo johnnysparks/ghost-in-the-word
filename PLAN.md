@@ -1,6 +1,6 @@
 # Ghost in the Word — project plan
 
-Living specification · October 14, 2026 · Corpus/alignment pipeline and John pilot UI are implemented; embedding experiments remain pending.
+Living specification · October 14, 2026 · Corpus/alignment pipeline, embedding experiments, and the first atlas UI are implemented; evaluation remains pending.
 
 Build an interactive translation comparison tool that helps a reader find where Bible translations diverge, inspect the language behind those differences, and eventually investigate their relationship to source texts.
 
@@ -183,4 +183,5 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** one `multilingual-e5-small` John pilot run is available as a separate UI mode, with 384 dimensions, a 512-token maximum, and recorded input hash. Its synthetic challenge result was 3/6 (50%), below the provisional 80% gate.
 - **Implemented:** the synthetic challenge has been run with `multilingual-e5-small` (50%) and `BAAI/bge-m3` (66.7%); neither clears the provisional 80% gate, so the pilot does not promote either score to a faithfulness claim.
 - **Implemented:** the default WEB↔BSB atlas now loads a 66-book partition manifest and one book payload at a time; the backend produces book/chapter coverage and score summaries.
-- **Pending:** held-out evaluation; independently reviewed natural-difference benchmark; one-to-many alignment review; cross-language and source-text modes.
+- **Implemented:** explicit reviewed one-to-many, many-to-one, and many-to-many alignment mappings, with unresolved and unmapped statuses preserved without semantic scores.
+- **Pending:** held-out evaluation; independently reviewed natural-difference benchmark; applying reviewed mappings to source snapshots; cross-language and source-text modes.
