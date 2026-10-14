@@ -119,7 +119,8 @@ function DivergenceChart({
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
   const valid = units.filter((unit) => distanceFor(unit, distanceField) !== null);
-  const xFor = (unit: ComparisonUnit) => padding.left + (unit.order / Math.max(1, units.length - 1)) * plotWidth;
+  const visibleIndex = new Map(units.map((unit, index) => [unit.id, index]));
+  const xFor = (unit: ComparisonUnit) => padding.left + ((visibleIndex.get(unit.id) ?? 0) / Math.max(1, units.length - 1)) * plotWidth;
   const yFor = (unit: ComparisonUnit) => padding.top + (1 - (distanceFor(unit, distanceField) ?? 0) / maxScore) * plotHeight;
   const gridValues = [0, maxScore / 2, maxScore];
 
@@ -152,7 +153,7 @@ function DivergenceChart({
               r={selected ? 6 : 3.8}
               tabIndex={0}
               role="button"
-              aria-label={`${unit.reference}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}`}
+              aria-label={`${unit.reference}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}. A: ${unit.leftText ?? "No aligned text"}. B: ${unit.rightText ?? "No aligned text"}`}
               onClick={() => onSelect(unit)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -160,7 +161,9 @@ function DivergenceChart({
                   onSelect(unit);
                 }
               }}
-            />
+            >
+              <title>{`${unit.reference}\n${distanceLabel}: ${formatScore(distanceFor(unit, distanceField))}\nA: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`}</title>
+            </circle>
           );
         })}
       </svg>
@@ -198,7 +201,7 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
             r={unit.id === selectedId ? 6 : 3.6}
             tabIndex={0}
             role="button"
-            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}`}
+            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}. A: ${unit.leftText ?? "No aligned text"}. B: ${unit.rightText ?? "No aligned text"}`}
             onClick={() => onSelect(unit)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -206,7 +209,9 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
                 onSelect(unit);
               }
             }}
-          />
+          >
+            <title>{`${unit.reference}\nwording distance: ${formatScore(unit.wordingDistance)}\n${distanceLabel}: ${formatScore(distanceFor(unit, distanceField))}\nA: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`}</title>
+          </circle>
         ))}
       </svg>
     </div>
@@ -291,6 +296,9 @@ function App() {
   const rightName = data.metadata.rightEdition.name;
   const metric = data.metadata.metric;
   const bookName = displayBook(book);
+  const alignmentNote = data.metadata.alignment.method === "exact-book-chapter-verse"
+    ? "The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches."
+    : "The chart preserves missing and unresolved passages as gaps and only scores reviewed mappings marked matched.";
 
   return (
     <main className="app">
@@ -360,7 +368,7 @@ function App() {
         <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>
 
-      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
+      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
 
       <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>

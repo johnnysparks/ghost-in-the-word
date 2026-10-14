@@ -1,0 +1,117 @@
+{
+  "metric": "embedding",
+  "run": {
+    "modelId": "BAAI/bge-m3",
+    "dimensions": 1024,
+    "maxSeqLength": 8192,
+    "inputHash": "b34113af369e55e87d216dac3059b234a549796b8a3529af97ce1397a949113a",
+    "prefix": "query: "
+  },
+  "cases": [
+    {
+      "id": "heldout-negation",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.134703,
+      "changedDistance": 0.222425,
+      "margin": 0.087722,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-participant",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.014306,
+      "changedDistance": 0.011848,
+      "margin": -0.002458,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "heldout-modality",
+      "genre": "law",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.088421,
+      "changedDistance": 0.240448,
+      "margin": 0.152027,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-quantity",
+      "genre": "law",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.026641,
+      "changedDistance": 0.047393,
+      "margin": 0.020752,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-poetry",
+      "genre": "poetry",
+      "kind": "meaning-preserving-paraphrase",
+      "preservedDistance": 0.141531,
+      "changedDistance": 0.227368,
+      "margin": 0.085837,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-argument",
+      "genre": "argument",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.081478,
+      "changedDistance": 0.146646,
+      "margin": 0.065168,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-tense",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.033051,
+      "changedDistance": 0.059875,
+      "margin": 0.026824,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-register",
+      "genre": "poetry",
+      "kind": "meaning-preserving-paraphrase",
+      "preservedDistance": 0.080874,
+      "changedDistance": 0.286914,
+      "margin": 0.20604,
+      "changedRanksFarther": true
+    }
+  ],
+  "passed": 7,
+  "total": 8,
+  "passRate": 0.875,
+  "meanMargin": 0.080239,
+  "byGenre": {
+    "argument": {
+      "passed": 1,
+      "total": 1,
+      "passRate": 1.0,
+      "meanMargin": 0.065168
+    },
+    "law": {
+      "passed": 2,
+      "total": 2,
+      "passRate": 1.0,
+      "meanMargin": 0.086389
+    },
+    "narrative": {
+      "passed": 2,
+      "total": 3,
+      "passRate": 0.666667,
+      "meanMargin": 0.037363
+    },
+    "poetry": {
+      "passed": 2,
+      "total": 2,
+      "passRate": 1.0,
+      "meanMargin": 0.145938
+    }
+  },
+  "threshold": 0.8,
+  "gatePassed": true,
+  "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."
+}

@@ -66,6 +66,22 @@ an embedding model separately:
 PYTHONPATH=src python3 scripts/evaluate_challenge.py benchmarks/challenge.json
 ```
 
+The separate held-out synthetic set is never mixed into the original challenge report.
+It adds genre slices and a changed-versus-preserved distance margin for reproducible
+model comparison:
+
+```sh
+PYTHONPATH=src python3 scripts/evaluate_challenge.py \
+  benchmarks/heldout_synthetic.json --metric embedding \
+  --model intfloat/multilingual-e5-small \
+  --output benchmarks/reports/e5-small-heldout.json
+```
+
+The recorded held-out runs are `e5-small-heldout.json` (4/8) and
+`bge-m3-heldout.json` (7/8). BGE-M3 clears the provisional synthetic ranking gate in
+this small slice; these are still zero-shot synthetic checks and do not replace
+held-out natural translation judgments by independent reviewers.
+
 Recorded E5-small and BGE-M3 reports are kept in `benchmarks/reports/`; both are below
 the provisional gate and therefore remain research evidence rather than product labels.
 

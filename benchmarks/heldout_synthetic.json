@@ -1,0 +1,66 @@
+[
+  {
+    "id": "heldout-negation",
+    "genre": "narrative",
+    "kind": "controlled-meaning-change",
+    "anchor": "The priest opened the gate.",
+    "meaning_preserving": "The priest unlatched the entrance.",
+    "meaning_changed": "The priest did not open the gate."
+  },
+  {
+    "id": "heldout-participant",
+    "genre": "narrative",
+    "kind": "controlled-meaning-change",
+    "anchor": "Naomi sent the letter to Ruth.",
+    "meaning_preserving": "Naomi mailed Ruth the letter.",
+    "meaning_changed": "Ruth sent the letter to Naomi."
+  },
+  {
+    "id": "heldout-modality",
+    "genre": "law",
+    "kind": "controlled-meaning-change",
+    "anchor": "The witness must remain silent.",
+    "meaning_preserving": "The witness is required to say nothing.",
+    "meaning_changed": "The witness may speak freely."
+  },
+  {
+    "id": "heldout-quantity",
+    "genre": "law",
+    "kind": "controlled-meaning-change",
+    "anchor": "Bring seven baskets of grain.",
+    "meaning_preserving": "Carry seven grain baskets.",
+    "meaning_changed": "Bring seventeen baskets of grain."
+  },
+  {
+    "id": "heldout-poetry",
+    "genre": "poetry",
+    "kind": "meaning-preserving-paraphrase",
+    "anchor": "My heart rests beneath the shadow of your wings.",
+    "meaning_preserving": "I find refuge under the shelter of your wings.",
+    "meaning_changed": "My heart trembles beneath the sword of your enemy."
+  },
+  {
+    "id": "heldout-argument",
+    "genre": "argument",
+    "kind": "controlled-meaning-change",
+    "anchor": "If grace is given, no debt remains.",
+    "meaning_preserving": "When grace is granted, the debt is no longer counted.",
+    "meaning_changed": "If grace is given, the debt remains fully due."
+  },
+  {
+    "id": "heldout-tense",
+    "genre": "narrative",
+    "kind": "controlled-meaning-change",
+    "anchor": "The disciples crossed the lake before dawn.",
+    "meaning_preserving": "Before sunrise, the disciples went across the lake.",
+    "meaning_changed": "The disciples will cross the lake after dawn."
+  },
+  {
+    "id": "heldout-register",
+    "genre": "poetry",
+    "kind": "meaning-preserving-paraphrase",
+    "anchor": "Sing a new song to the Lord.",
+    "meaning_preserving": "Make fresh music for the Lord.",
+    "meaning_changed": "Do not sing or speak to the Lord."
+  }
+]

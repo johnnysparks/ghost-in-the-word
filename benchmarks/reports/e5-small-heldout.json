@@ -1,0 +1,117 @@
+{
+  "metric": "embedding",
+  "run": {
+    "modelId": "intfloat/multilingual-e5-small",
+    "dimensions": 384,
+    "maxSeqLength": 512,
+    "inputHash": "b34113af369e55e87d216dac3059b234a549796b8a3529af97ce1397a949113a",
+    "prefix": "query: "
+  },
+  "cases": [
+    {
+      "id": "heldout-negation",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.087487,
+      "changedDistance": 0.055763,
+      "margin": -0.031724,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "heldout-participant",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.011284,
+      "changedDistance": 0.001714,
+      "margin": -0.00957,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "heldout-modality",
+      "genre": "law",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.073569,
+      "changedDistance": 0.09851,
+      "margin": 0.024941,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-quantity",
+      "genre": "law",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.025793,
+      "changedDistance": 0.023035,
+      "margin": -0.002758,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "heldout-poetry",
+      "genre": "poetry",
+      "kind": "meaning-preserving-paraphrase",
+      "preservedDistance": 0.061223,
+      "changedDistance": 0.074951,
+      "margin": 0.013728,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-argument",
+      "genre": "argument",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.030382,
+      "changedDistance": 0.043216,
+      "margin": 0.012834,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "heldout-tense",
+      "genre": "narrative",
+      "kind": "controlled-meaning-change",
+      "preservedDistance": 0.037463,
+      "changedDistance": 0.029333,
+      "margin": -0.00813,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "heldout-register",
+      "genre": "poetry",
+      "kind": "meaning-preserving-paraphrase",
+      "preservedDistance": 0.052158,
+      "changedDistance": 0.096516,
+      "margin": 0.044358,
+      "changedRanksFarther": true
+    }
+  ],
+  "passed": 4,
+  "total": 8,
+  "passRate": 0.5,
+  "meanMargin": 0.00546,
+  "byGenre": {
+    "argument": {
+      "passed": 1,
+      "total": 1,
+      "passRate": 1.0,
+      "meanMargin": 0.012834
+    },
+    "law": {
+      "passed": 1,
+      "total": 2,
+      "passRate": 0.5,
+      "meanMargin": 0.011092
+    },
+    "narrative": {
+      "passed": 0,
+      "total": 3,
+      "passRate": 0.0,
+      "meanMargin": -0.016475
+    },
+    "poetry": {
+      "passed": 2,
+      "total": 2,
+      "passRate": 1.0,
+      "meanMargin": 0.029043
+    }
+  },
+  "threshold": 0.8,
+  "gatePassed": false,
+  "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."
+}

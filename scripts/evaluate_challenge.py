@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import defaultdict
 from pathlib import Path
 
 from ghost_in_word.embeddings import EmbeddingBackendUnavailable, cosine_distance, encode_texts
@@ -17,6 +18,7 @@ def main() -> None:
     parser.add_argument("--metric", choices=("lexical", "embedding"), default="lexical")
     parser.add_argument("--model", help="Required for --metric embedding")
     parser.add_argument("--threshold", type=float, default=0.8)
+    parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     cases = json.loads(args.challenge.read_text(encoding="utf-8"))
 
@@ -40,12 +42,27 @@ def main() -> None:
     for case, (preserved_distance, changed_distance) in zip(cases, distances):
         results.append({
             "id": case["id"],
+            "genre": case.get("genre", "unspecified"),
+            "kind": case.get("kind", "unspecified"),
             "preservedDistance": preserved_distance,
             "changedDistance": changed_distance,
+            "margin": round(changed_distance - preserved_distance, 6),
             "changedRanksFarther": changed_distance > preserved_distance,
         })
     passed = sum(1 for result in results if result["changedRanksFarther"])
     pass_rate = passed / len(results) if results else 0.0
+    by_slice: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for result in results:
+        by_slice[str(result["genre"])].append(result)
+    slices = {}
+    for name, slice_results in sorted(by_slice.items()):
+        slice_passed = sum(1 for result in slice_results if result["changedRanksFarther"])
+        slices[name] = {
+            "passed": slice_passed,
+            "total": len(slice_results),
+            "passRate": round(slice_passed / len(slice_results), 6) if slice_results else 0.0,
+            "meanMargin": round(sum(float(result["margin"]) for result in slice_results) / len(slice_results), 6) if slice_results else None,
+        }
     report = {
         "metric": args.metric,
         "run": run_metadata,
@@ -53,11 +70,17 @@ def main() -> None:
         "passed": passed,
         "total": len(results),
         "passRate": round(pass_rate, 6),
+        "meanMargin": round(sum(float(result["margin"]) for result in results) / len(results), 6) if results else None,
+        "byGenre": slices,
         "threshold": args.threshold,
         "gatePassed": pass_rate >= args.threshold,
         "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture.",
     }
-    print(json.dumps(report, indent=2))
+    encoded = json.dumps(report, indent=2) + "\n"
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(encoded, encoding="utf-8")
+    print(encoded, end="")
 
 
 if __name__ == "__main__":

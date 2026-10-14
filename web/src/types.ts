@@ -1,4 +1,4 @@
-export type UnitStatus = "matched" | "missing-left" | "missing-right";
+export type UnitStatus = "matched" | "missing-left" | "missing-right" | "unresolved";
 
 export type ComparisonUnit = {
   id: string;
@@ -12,6 +12,10 @@ export type ComparisonUnit = {
   leftEdition: string;
   rightEdition: string;
   status: UnitStatus;
+  mappingType?: string;
+  leftReferences?: string[];
+  rightReferences?: string[];
+  mappingMethod?: string;
   wordingDistance: number | null;
   lexicalDistance: number | null;
   embeddingDistance?: number | null;
