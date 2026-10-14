@@ -842,6 +842,16 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
         self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
 
+    def test_third_english_pair_fixture_uses_public_schema(self) -> None:
+        fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-bsb-asv.json").read_text(encoding="utf-8"))
+        self.assertEqual(fixture["metadata"]["leftEdition"]["id"], "bsb")
+        self.assertEqual(fixture["metadata"]["rightEdition"]["id"], "asv")
+        self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
+        self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
+        self.assertEqual(fixture["metadata"]["metric"]["distanceField"], "lexicalDistance")
+        self.assertEqual(fixture["summary"]["scoredUnits"], 878)
+        self.assertIn("missing-left", fixture["metadata"]["alignment"]["statuses"])
+
     def test_public_full_atlas_declares_reviewed_mapping_method(self) -> None:
         manifest = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["comparison"]["alignment"]["method"], "explicit-reviewed-mapping")

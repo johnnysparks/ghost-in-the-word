@@ -41,6 +41,13 @@ const PAIRS: PairConfig[] = [
     rightSource: "https://ebible.org/find/details.php?id=eng-asv",
   },
   {
+    id: "bsb-asv",
+    label: "BSB ↔ ASV 1901",
+    dataUrl: publicDataUrl("data/john-bsb-asv.json"),
+    leftSource: "https://berean.bible/downloads.htm",
+    rightSource: "https://ebible.org/find/details.php?id=eng-asv",
+  },
+  {
     id: "webp-bsb-e5-small",
     label: "WEB ↔ BSB · E5 small",
     dataUrl: publicDataUrl("data/john-e5-small-webp-bsb.json"),

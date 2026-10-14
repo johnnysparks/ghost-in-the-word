@@ -419,7 +419,7 @@ translation.
 Shareable URLs include the pair, selected metric, embedding run when present, passage,
 granularity, filters, and chart range so a selection can be reopened against the same
 artifact.
-The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded
+The pair menu includes WEB↔BSB, WEB↔ASV, and BSB↔ASV lexical baselines, plus the recorded
 `multilingual-e5-small` WEB↔BSB run:
 
 ```sh
@@ -437,6 +437,23 @@ PYTHONPATH=src python3 scripts/build_comparison.py \
   --left-name "World English Bible Protestant Edition" \
   --right-name "Berean Standard Bible" \
   --output web/public/data/john-webp-bsb.json
+```
+
+The third-English-edition pilot is built from the pinned BSB and ASV snapshots in the
+same way:
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/bsb data/raw/asv \
+  --left-id bsb --right-id asv \
+  --output data/derived/bsb-asv-alignment.json
+PYTHONPATH=src python3 scripts/build_comparison.py \
+  data/derived/bsb-asv-alignment.json --book JHN \
+  --left-id bsb --right-id asv \
+  --left-name "Berean Standard Bible" \
+  --right-name "American Standard Version (1901)" \
+  --manifest sources.json \
+  --output web/public/data/john-bsb-asv.json
 ```
 
 ## Deployment
