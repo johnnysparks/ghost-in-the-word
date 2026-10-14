@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ghost_in_word.alignment import AlignmentMapping, align_segments, align_with_mappings
+from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.review import select_review_items, summarize_reviews
@@ -72,6 +72,13 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(units[0].right_references, ("JHN 3:16",))
         self.assertEqual(units[0].status, "matched")
         self.assertIn("He sent his Son.", units[0].left_text)
+        self.assertEqual(alignment_method([units[0].to_dict()]), "explicit-reviewed-mapping")
+
+    def test_reviewed_mapping_with_one_side_empty_is_missing(self) -> None:
+        left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
+        units = align_with_mappings(left, [], [AlignmentMapping((left[0].key,), ())])
+        self.assertEqual(units[0].mapping_type, "missing")
+        self.assertEqual(units[0].status, "missing-right")
 
     def test_unresolved_mapping_is_retained_without_a_score(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]

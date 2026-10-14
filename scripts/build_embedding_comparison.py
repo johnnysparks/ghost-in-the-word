@@ -7,6 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
+from ghost_in_word.alignment import alignment_method
 from ghost_in_word.embeddings import EmbeddingBackendUnavailable, cosine_distance, encode_texts
 from ghost_in_word.scoring import lexical_distance, wording_distance
 
@@ -65,7 +66,7 @@ def main() -> None:
             "leftEdition": {"id": args.left_id, "name": args.left_name},
             "rightEdition": {"id": args.right_id, "name": args.right_name},
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
-            "alignment": {"method": "exact-book-chapter-verse", "statuses": statuses},
+            "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {
                 "id": f"embedding:{args.model}",
                 "label": f"Embedding distance · {args.model}",

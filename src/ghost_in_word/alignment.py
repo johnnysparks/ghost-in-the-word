@@ -141,7 +141,7 @@ def align_with_mappings(
         left_segments = [left_by_key[key] for key in mapping.left]
         right_segments = [right_by_key[key] for key in mapping.right]
         mapping_type = _mapping_type(len(mapping.left), len(mapping.right))
-        status = mapping.status if mapping.status != "matched" else ("matched" if mapping.left and mapping.right else ("missing-left" if mapping.left else "missing-right"))
+        status = mapping.status if mapping.status != "matched" else ("matched" if mapping.left and mapping.right else ("missing-right" if mapping.left else "missing-left"))
         units.append(
             AlignmentUnit(
                 book=primary[0],
@@ -197,6 +197,15 @@ def parse_reference(reference: str) -> ReferenceKey:
     return book.upper(), int(chapter), verse
 
 
+def alignment_method(units: Iterable[Mapping[str, object]]) -> str:
+    """Describe whether a report used exact keys or reviewed mappings."""
+
+    for unit in units:
+        if unit.get("mapping_method", "exact-reference") != "exact-reference" or unit.get("mapping_type", "one-to-one") != "one-to-one":
+            return "explicit-reviewed-mapping"
+    return "exact-book-chapter-verse"
+
+
 def _index(segments: Iterable[TextSegment]) -> dict[tuple[str, int, str], TextSegment]:
     indexed: dict[tuple[str, int, str], TextSegment] = {}
     for segment in segments:
@@ -216,6 +225,8 @@ def _verse_sort_key(verse: str) -> tuple[int, int]:
 
 
 def _mapping_type(left_count: int, right_count: int) -> str:
+    if not left_count or not right_count:
+        return "missing"
     if left_count == 1 and right_count == 1:
         return "one-to-one"
     if left_count == 1:

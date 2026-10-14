@@ -1,6 +1,6 @@
 """Data primitives for the Ghost in the Word corpus pipeline."""
 
-from .alignment import AlignmentMapping, AlignmentUnit, align_segments, align_with_mappings, mapping_from_dict, parse_reference
+from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_segments, align_with_mappings, mapping_from_dict, parse_reference
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
 from .review import select_review_items, summarize_reviews
@@ -17,6 +17,7 @@ __all__ = [
     "TextSegment",
     "align_segments",
     "align_with_mappings",
+    "alignment_method",
     "cosine_distance",
     "encode_texts",
     "input_hash",

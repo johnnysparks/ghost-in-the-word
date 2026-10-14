@@ -7,6 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
+from ghost_in_word.alignment import alignment_method
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("alignment", type=Path)
@@ -52,7 +54,7 @@ def main() -> None:
             "leftEdition": {"id": args.left_id, "name": args.left_name},
             "rightEdition": {"id": args.right_id, "name": args.right_name},
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
-            "alignment": {"method": "exact-book-chapter-verse", "statuses": statuses},
+            "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {
                 "id": "lexical-baseline",
                 "label": "Lexical baseline",
