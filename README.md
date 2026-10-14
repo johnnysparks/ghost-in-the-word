@@ -354,8 +354,9 @@ PYTHONPATH=src python3 scripts/build_summary.py \
   --output data/derived/webp-bsb-summary.json
 ```
 
-The default atlas uses the partitioned WEB↔BSB corpus. Rebuild its one-book-at-a-time
-payloads from the reviewed full comparison artifact with:
+The atlas uses one-book-at-a-time partition manifests for the three English pairs
+WEB↔BSB, WEB↔ASV, and BSB↔ASV. Rebuild the reviewed default WEB↔BSB payloads from the
+full comparison artifact with:
 
 ```sh
 PYTHONPATH=src python3 scripts/build_alignment.py \
@@ -395,7 +396,7 @@ Windows containing missing or unresolved verses remain visible with null scores;
 window artifact does not replace verse-level scores.
 
 The first interactive slice is in `web/`. It serves a committed John pilot fixture,
-loads the full WEB↔BSB atlas one book at a time, and keeps the selected comparison pair,
+loads the full English pair atlases one book at a time, and keeps the selected comparison pair,
 unit granularity, passage, chapter, search, brush range, and reader state in the URL. The
 WEB↔BSB pair offers a verse view and a separate non-overlapping two-verse passage view;
 the latter is built from joined text and has its own metric and coverage summaries. Drag

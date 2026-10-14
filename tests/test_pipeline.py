@@ -859,6 +859,21 @@ class PipelineTests(unittest.TestCase):
         bridge = next(unit for unit in rom["units"] if unit["reference"] == "ROM 14:24")
         self.assertEqual(bridge["mappingMethod"], "reviewed-verse-bridge")
 
+    def test_all_english_pairs_have_full_partition_manifests(self) -> None:
+        root = Path(__file__).parents[1] / "web/public/data"
+        expected = {
+            "webp-bsb": ("webp", "bsb", 31103),
+            "webp-asv": ("webp", "asv", 31105),
+            "bsb-asv": ("bsb", "asv", 31102),
+        }
+        for pair, (left_id, right_id, total_units) in expected.items():
+            manifest = json.loads((root / pair / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(len(manifest["books"]), 66)
+            self.assertEqual(manifest["comparison"]["leftEdition"]["id"], left_id)
+            self.assertEqual(manifest["comparison"]["rightEdition"]["id"], right_id)
+            self.assertEqual(manifest["summary"]["totalUnits"], total_units)
+            self.assertEqual(sum(book["totalUnits"] for book in manifest["books"]), total_units)
+
     def test_cross_language_fixture_suppresses_lexical_fields(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-rv1909-e5-small.json").read_text(encoding="utf-8"))
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
