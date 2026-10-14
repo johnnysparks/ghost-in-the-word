@@ -1,12 +1,15 @@
 import tempfile
 import unittest
 import json
+import sys
+import types
 from pathlib import Path
+from unittest.mock import patch
 
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.assessment import Assessment, validate_assessment_document
 from ghost_in_word.assessment_attachment import attach_assessment_document
-from ghost_in_word.embeddings import cosine_distance, embedding_storage_bytes, input_hash
+from ghost_in_word.embeddings import cosine_distance, embedding_cache_key, embedding_storage_bytes, encode_texts, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
 from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews, validate_review_packet
@@ -215,7 +218,58 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(cosine_distance([1.0, 0.0], [0.0, 1.0]), 1.0)
         self.assertEqual(input_hash(["one", "two"]), input_hash(["one", "two"]))
         self.assertNotEqual(input_hash(["one", "two"]), input_hash(["two", "one"]))
+        self.assertNotEqual(
+            embedding_cache_key(["one"], "model", model_revision="rev-a"),
+            embedding_cache_key(["one"], "model", model_revision="rev-b"),
+        )
         self.assertEqual(embedding_storage_bytes(10, 3, 384), 46080)
+
+    def test_embedding_cache_reuses_exact_recipe_and_invalidates_inputs(self) -> None:
+        class FakeModel:
+            calls = 0
+            max_seq_length = 512
+
+            def __init__(self, model_id: str) -> None:
+                self.model_id = model_id
+
+            def encode(self, texts, **kwargs):
+                type(self).calls += 1
+                class Encoded(list):
+                    def tolist(self):
+                        return list(self)
+
+                return Encoded([[float(len(text)), 1.0] for text in texts])
+
+        fake_module = types.ModuleType("sentence_transformers")
+        fake_module.SentenceTransformer = FakeModel
+        with tempfile.TemporaryDirectory() as directory, patch.dict(sys.modules, {"sentence_transformers": fake_module}):
+            first_vectors, first_run = encode_texts(
+                ["one", "two"],
+                "fixture-model",
+                cache_dir=directory,
+                model_revision="commit-a",
+            )
+            second_vectors, second_run = encode_texts(
+                ["one", "two"],
+                "fixture-model",
+                cache_dir=directory,
+                model_revision="commit-a",
+            )
+            changed_vectors, changed_run = encode_texts(
+                ["one", "changed"],
+                "fixture-model",
+                cache_dir=directory,
+                model_revision="commit-a",
+            )
+
+        self.assertEqual(first_vectors, second_vectors)
+        self.assertEqual(first_run.cache_key, second_run.cache_key)
+        self.assertFalse(first_run.cache_hit)
+        self.assertTrue(second_run.cache_hit)
+        self.assertFalse(changed_run.cache_hit)
+        self.assertNotEqual(first_run.cache_key, changed_run.cache_key)
+        self.assertNotEqual(first_vectors, changed_vectors)
+        self.assertEqual(FakeModel.calls, 2)
 
     def test_reference_estimate_excludes_pair_and_caps_related_family(self) -> None:
         estimate = estimate_reference(

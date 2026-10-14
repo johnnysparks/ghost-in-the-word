@@ -132,8 +132,16 @@ PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   --left-id webp --right-id bsb \
   --manifest sources.json \
   --model intfloat/multilingual-e5-small \
+  --cache-dir .embedding-cache \
   --output data/derived/john-e5-small.json
 ```
+
+The optional cache stores vectors outside Git. Its key includes the exact ordered
+input-text hash, model ID and immutable model revision, prefix, and preprocessing
+version. A changed input, model revision, or recipe creates a new entry; interrupted
+writes cannot replace a valid entry. Pass `--model-revision` with a pinned model commit
+when using a mutable local path, and increment `--preprocessing-version` whenever the
+text preparation recipe changes.
 
 Before scaling a model run, profile tokenizer lengths, truncation risk, throughput,
 peak RSS, and raw-vector capacity. The checked-in E5-small John profile uses 878 matched
@@ -186,6 +194,7 @@ model comparison:
 PYTHONPATH=src python3 scripts/evaluate_challenge.py \
   benchmarks/heldout_synthetic.json --metric embedding \
   --model intfloat/multilingual-e5-small \
+  --cache-dir .embedding-cache \
   --output benchmarks/reports/e5-small-heldout.json
 ```
 

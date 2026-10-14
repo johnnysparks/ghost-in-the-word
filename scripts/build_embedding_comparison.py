@@ -29,6 +29,17 @@ def main() -> None:
     parser.add_argument("--manifest", type=Path, help="Edition manifest used to attach provenance metadata")
     parser.add_argument("--book", action="append")
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--cache-dir", type=Path, help="Optional directory for content-addressed embedding vectors")
+    parser.add_argument(
+        "--model-revision",
+        help="Immutable model revision for cache identity (defaults to --model)",
+    )
+    parser.add_argument(
+        "--preprocessing-version",
+        default="1",
+        help="Version of the text preprocessing recipe; change it to invalidate the cache",
+    )
+    parser.add_argument("--prefix", default="query: ", help="Prefix passed to the embedding model")
     args = parser.parse_args()
 
     try:
@@ -58,8 +69,24 @@ def main() -> None:
     right_texts = [unit["right_text"] for unit in matched]
 
     try:
-        left_vectors, run = encode_texts(left_texts, args.model, batch_size=args.batch_size)
-        right_vectors, right_run = encode_texts(right_texts, args.model, batch_size=args.batch_size)
+        left_vectors, run = encode_texts(
+            left_texts,
+            args.model,
+            batch_size=args.batch_size,
+            prefix=args.prefix,
+            cache_dir=args.cache_dir,
+            model_revision=args.model_revision,
+            preprocessing_version=args.preprocessing_version,
+        )
+        right_vectors, right_run = encode_texts(
+            right_texts,
+            args.model,
+            batch_size=args.batch_size,
+            prefix=args.prefix,
+            cache_dir=args.cache_dir,
+            model_revision=args.model_revision,
+            preprocessing_version=args.preprocessing_version,
+        )
     except EmbeddingBackendUnavailable as exc:
         raise SystemExit(str(exc)) from exc
     if run.dimensions != right_run.dimensions:
