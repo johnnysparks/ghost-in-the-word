@@ -75,8 +75,16 @@ export type ComparisonData = {
       maxSeqLength: number;
       inputHash: string;
       prefix: string;
+      modelRevision?: string;
+      preprocessingVersion?: string;
+      cacheKey?: string | null;
+      cacheHit?: boolean;
       leftInputHash?: string;
       rightInputHash?: string;
+      leftCacheKey?: string | null;
+      rightCacheKey?: string | null;
+      leftCacheHit?: boolean;
+      rightCacheHit?: boolean;
     };
     source: { alignment: string };
     assessmentAttachment?: {
