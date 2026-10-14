@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import json
 from pathlib import Path
 
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings
@@ -199,6 +200,15 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(report["consensusItems"], 0)
         self.assertEqual(report["items"][1]["majorityUseful"], "uncertain")
         self.assertEqual(report["items"][0]["votes"][0]["evidence"], "wording differs")
+
+    def test_committed_browser_fixture_uses_public_schema(self) -> None:
+        fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-bsb.json").read_text(encoding="utf-8"))
+        unit = fixture["units"][0]
+        self.assertIn("leftText", unit)
+        self.assertIn("rightText", unit)
+        self.assertNotIn("left_text", unit)
+        self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
+        self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
 
 
 if __name__ == "__main__":
