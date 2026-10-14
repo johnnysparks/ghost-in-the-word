@@ -197,4 +197,5 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** a separate held-out synthetic set with genre slices, changed-versus-preserved margins, and reproducible report output for model regression checks.
 - **Implemented:** held-out synthetic reports for E5-small (4/8) and BGE-M3 (7/8); the BGE-M3 result clears the provisional synthetic ranking gate in this slice only.
 - **Implemented:** an offline latent-reference estimator that excludes the compared editions, normalizes a weighted panel centroid, caps related-family weight, reports a medoid and dispersion, and retains per-edition and pairwise panel distances so clustering remains inspectable.
+- **Implemented:** a validated source-conditioned assessment schema and CLI that retain source-edition identity, human/model origin, evidence, uncertainty, disagreement, and version without producing an automatic faithfulness grade.
 - **Pending:** held-out natural evaluation; independently reviewed natural-difference benchmark; applying reviewed mappings to source snapshots; cross-language and source-text modes.

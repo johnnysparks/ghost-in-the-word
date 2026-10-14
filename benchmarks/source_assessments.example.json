@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-conditioned-assessments",
+  "sourceEdition": {
+    "id": "example-source-edition-v1",
+    "name": "Example source edition (fixture only)",
+    "language": "grc",
+    "tradition": "fixture"
+  },
+  "assessments": [
+    {
+      "id": "JHN-3-16",
+      "origin": "human",
+      "reviewerId": "example-source-reader",
+      "judgmentType": "source-faithfulness",
+      "judgment": "uncertain",
+      "evidence": ["Fixture record: source span and translation wording require independent review."],
+      "uncertainty": "high",
+      "disagreement": ["Fixture disagreement is retained as text, not resolved automatically."],
+      "version": "example-review-v1"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
+from ghost_in_word.assessment import Assessment, validate_assessment_document
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
@@ -227,6 +228,54 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(first["status"], "matched")
         self.assertEqual(set(first["distances"]), {"a|b", "a|c", "b|c"})
         self.assertEqual(matrix["passages"][-1]["status"], "insufficient-panel")
+
+    def test_source_conditioned_assessment_preserves_provenance_and_disagreement(self) -> None:
+        document = {
+            "schemaVersion": 1,
+            "kind": "source-conditioned-assessments",
+            "sourceEdition": {"id": "source-greek-v1", "name": "Example Greek source", "language": "grc"},
+            "assessments": [
+                {
+                    "id": "JHN-3-16",
+                    "origin": "human",
+                    "reviewerId": "source-reader-1",
+                    "judgmentType": "source-faithfulness",
+                    "judgment": "uncertain",
+                    "evidence": ["The displayed source span permits more than one reading."],
+                    "uncertainty": "high",
+                    "disagreement": ["A second reader preferred preserved."],
+                    "version": "review-2026-10-14",
+                },
+                {
+                    "id": "JHN-3-17",
+                    "origin": "model",
+                    "modelId": "example-model-v1",
+                    "judgmentType": "meaning-equivalence",
+                    "judgment": "preserved",
+                    "evidence": ["Model output is retained as an observation."],
+                    "uncertainty": "medium",
+                    "version": "model-run-1",
+                },
+            ],
+        }
+        normalized = validate_assessment_document(document)
+        self.assertEqual(normalized["summary"]["total"], 2)
+        self.assertEqual(normalized["summary"]["disagreementRecords"], 1)
+        self.assertEqual(normalized["assessments"][0]["sourceEdition"], "source-greek-v1")
+        self.assertEqual(Assessment.from_dict(document["assessments"][0], source_edition="source-greek-v1").reviewer_id, "source-reader-1")
+
+    def test_source_conditioned_assessment_rejects_missing_origin_identity(self) -> None:
+        with self.assertRaisesRegex(ValueError, "reviewerId"):
+            Assessment(
+                item_id="JHN-3-16",
+                source_edition="source-v1",
+                origin="human",
+                judgment_type="source-faithfulness",
+                judgment="uncertain",
+                evidence=("No adjudication yet.",),
+                uncertainty="high",
+                version="review-1",
+            )
 
     def test_review_sample_hides_rank_and_is_seeded(self) -> None:
         comparison = {

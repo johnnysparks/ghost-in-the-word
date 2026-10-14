@@ -1,6 +1,7 @@
 """Data primitives for the Ghost in the Word corpus pipeline."""
 
 from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_segments, align_with_mappings, mapping_from_dict, parse_reference
+from .assessment import Assessment, validate_assessment_document
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
 from .matrix import build_translation_matrix
@@ -14,6 +15,7 @@ from .windows import build_windows
 __all__ = [
     "AlignmentUnit",
     "AlignmentMapping",
+    "Assessment",
     "Edition",
     "EmbeddingBackendUnavailable",
     "EmbeddingRun",
@@ -39,5 +41,6 @@ __all__ = [
     "summarize_reviews",
     "tokenize",
     "wording_distance",
+    "validate_assessment_document",
     "build_windows",
 ]

@@ -160,6 +160,15 @@ retains per-item votes, disagreement, and uncertain judgments, and reports usefu
 and agreement by selection bucket. It does not convert review usefulness into a
 translation-faithfulness grade.
 
+Source-conditioned judgments use a separate validated schema so the source edition,
+reviewer/model origin, evidence, uncertainty, and disagreement remain attached to each
+record. The checked-in file is a fixture only; it is not a judgment about Scripture:
+
+```sh
+PYTHONPATH=src python3 scripts/validate_assessments.py \
+  benchmarks/source_assessments.example.json
+```
+
 Book/chapter aggregates can be generated from any comparison artifact for a future
 whole-Bible overview. Missing units stay in coverage counts and are excluded from score
 statistics:
