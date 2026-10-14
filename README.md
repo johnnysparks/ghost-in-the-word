@@ -27,7 +27,8 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
   data/raw/webp data/raw/bsb \
   --left-id webp --right-id bsb \
   --mapping mappings/webp-bsb-reviewed.json \
-  --output data/derived/webp-bsb-reviewed-alignment.json
+  --output data/derived/webp-bsb-reviewed-alignment.json \
+  --mapping-report data/derived/webp-bsb-mapping-review.json
 ```
 
 For a versification exception or a reviewed verse bridge, pass a JSON mapping file.
@@ -51,17 +52,12 @@ score:
 ]
 ```
 
-```sh
-PYTHONPATH=src python3 scripts/build_alignment.py \
-  data/raw/webp data/raw/bsb \
-  --left-id webp --right-id bsb \
-  --mapping mappings/webp-bsb.json
-```
-
-Before applying a reviewed mapping, bind it to the exact parsed snapshots and their
-content hashes. The validator requires reviewer, review-type, and evidence fields by
-default; `--allow-unreviewed` is available only for exploratory mappings. The report
-does not prove reviewer independence, so that remains an external review responsibility:
+When `--mapping` is supplied, `build_alignment.py` validates the mapping before applying
+it and requires each source directory to carry a matching `snapshot.json`. The validator
+requires reviewer, review-type, and evidence fields by default; `--allow-unreviewed` is
+available only for exploratory mappings. Use `--mapping-report` to retain the content
+hashes and review summary. The report does not prove reviewer independence, so that
+remains an external review responsibility:
 
 ```sh
 PYTHONPATH=src python3 scripts/validate_mapping.py \
@@ -220,7 +216,9 @@ this small slice; these are still zero-shot synthetic checks and do not replace
 held-out natural translation judgments by independent reviewers.
 
 Reports include seeded case-level bootstrap intervals for the pass rate and mean
-margin. To add the same uncertainty summary to an older saved report:
+margin. Embedding reports also include a paired comparison against the character
+n-gram lexical baseline: pass-rate delta, mean-margin delta, and seeded uncertainty
+intervals over the same cases. To add the same uncertainty summary to an older saved report:
 
 ```sh
 PYTHONPATH=src python3 scripts/add_report_bootstrap.py \
@@ -265,6 +263,12 @@ With a packet, the report also includes deterministic 95% bootstrap intervals fo
 majority-useful rates. Resampling is clustered by book so several verses from one book
 do not masquerade as independent evidence; use `--bootstrap-samples 0` to omit the
 intervals or `--bootstrap-seed` to declare a different seed.
+
+The selection report also includes `rankingAgreement`: an AUC and rank-biserial effect
+for the reviewed items, asking whether passages reviewers marked useful tended to appear
+earlier in the model ranking than passages marked not useful. It is explicitly scoped to
+the reviewed selection, includes the same book-clustered interval, and is not a
+faithfulness score or a claim about unreviewed passages.
 
 Keep the key private: it lets the evaluator separate the highest-ranked 30 items from
 the seeded random sample without exposing that selection to reviewers. The report

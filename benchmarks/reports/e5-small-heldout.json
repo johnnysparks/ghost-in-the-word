@@ -5,7 +5,14 @@
     "dimensions": 384,
     "maxSeqLength": 512,
     "inputHash": "b34113af369e55e87d216dac3059b234a549796b8a3529af97ce1397a949113a",
-    "prefix": "query: "
+    "prefix": "query: ",
+    "modelRevision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+    "preprocessingVersion": "1",
+    "cacheKey": "03132d24dfb9ea71a2efc64dec9573cf71b216c0c3313e571c245d47b3c325dc",
+    "cacheHit": false,
+    "contextStrategy": "synthetic-triplet",
+    "inputCount": 24,
+    "truncatedInputCount": null
   },
   "cases": [
     {
@@ -15,7 +22,11 @@
       "preservedDistance": 0.087487,
       "changedDistance": 0.055763,
       "margin": -0.031724,
-      "changedRanksFarther": false
+      "changedRanksFarther": false,
+      "lexicalPreservedDistance": 0.383978,
+      "lexicalChangedDistance": 0.186511,
+      "lexicalMargin": -0.197467,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-participant",
@@ -24,7 +35,11 @@
       "preservedDistance": 0.011284,
       "changedDistance": 0.001714,
       "margin": -0.00957,
-      "changedRanksFarther": false
+      "changedRanksFarther": false,
+      "lexicalPreservedDistance": 0.344174,
+      "lexicalChangedDistance": 0.129032,
+      "lexicalMargin": -0.215142,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-modality",
@@ -33,7 +48,11 @@
       "preservedDistance": 0.073569,
       "changedDistance": 0.09851,
       "margin": 0.024941,
-      "changedRanksFarther": true
+      "changedRanksFarther": true,
+      "lexicalPreservedDistance": 0.636639,
+      "lexicalChangedDistance": 0.580427,
+      "lexicalMargin": -0.056212,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-quantity",
@@ -42,7 +61,11 @@
       "preservedDistance": 0.025793,
       "changedDistance": 0.023035,
       "margin": -0.002758,
-      "changedRanksFarther": false
+      "changedRanksFarther": false,
+      "lexicalPreservedDistance": 0.367544,
+      "lexicalChangedDistance": 0.060664,
+      "lexicalMargin": -0.30688,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-poetry",
@@ -51,7 +74,11 @@
       "preservedDistance": 0.061223,
       "changedDistance": 0.074951,
       "margin": 0.013728,
-      "changedRanksFarther": true
+      "changedRanksFarther": true,
+      "lexicalPreservedDistance": 0.591837,
+      "lexicalChangedDistance": 0.402852,
+      "lexicalMargin": -0.188985,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-argument",
@@ -60,7 +87,11 @@
       "preservedDistance": 0.030382,
       "changedDistance": 0.043216,
       "margin": 0.012834,
-      "changedRanksFarther": true
+      "changedRanksFarther": true,
+      "lexicalPreservedDistance": 0.586992,
+      "lexicalChangedDistance": 0.252333,
+      "lexicalMargin": -0.334659,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-tense",
@@ -69,7 +100,11 @@
       "preservedDistance": 0.037463,
       "changedDistance": 0.029333,
       "margin": -0.00813,
-      "changedRanksFarther": false
+      "changedRanksFarther": false,
+      "lexicalPreservedDistance": 0.320386,
+      "lexicalChangedDistance": 0.269231,
+      "lexicalMargin": -0.051155,
+      "lexicalChangedRanksFarther": false
     },
     {
       "id": "heldout-register",
@@ -78,7 +113,11 @@
       "preservedDistance": 0.052158,
       "changedDistance": 0.096516,
       "margin": 0.044358,
-      "changedRanksFarther": true
+      "changedRanksFarther": true,
+      "lexicalPreservedDistance": 0.709677,
+      "lexicalChangedDistance": 0.476365,
+      "lexicalMargin": -0.233312,
+      "lexicalChangedRanksFarther": false
     }
   ],
   "passed": 4,
@@ -123,6 +162,29 @@
       -0.009217,
       0.020615
     ]
+  },
+  "baselineComparison": {
+    "baselineMetric": "character-ngram-lexical",
+    "comparedMetric": "embedding",
+    "pairedCases": 8,
+    "embeddingPassRate": 0.5,
+    "lexicalPassRate": 0.0,
+    "passRateDelta": 0.5,
+    "meanMarginDelta": 0.203436,
+    "bootstrap": {
+      "samples": 2000,
+      "seed": 20261014,
+      "unit": "challenge-case",
+      "passRateDelta95CI": [
+        0.125,
+        0.875
+      ],
+      "meanMarginDelta95CI": [
+        0.137507,
+        0.273955
+      ]
+    },
+    "interpretation": "Paired synthetic effect against the lexical baseline; this does not establish translation faithfulness or model quality on Scripture."
   },
   "threshold": 0.8,
   "gatePassed": false,

@@ -8,7 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from ghost_in_word.mapping_review import validate_mapping_document
+from ghost_in_word.mapping_review import bind_snapshot, validate_mapping_document
 from ghost_in_word.usfm import parse_usfm_directory
 
 
@@ -36,32 +36,14 @@ def main() -> None:
         "sha256": hashlib.sha256(args.mapping.read_bytes()).hexdigest(),
     }
     report["sources"] = {
-        "left": _snapshot_binding(args.left, args.left_id),
-        "right": _snapshot_binding(args.right, args.right_id),
+        "left": bind_snapshot(args.left, args.left_id),
+        "right": bind_snapshot(args.right, args.right_id),
     }
     encoded = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(encoded, encoding="utf-8")
     print(encoded, end="")
-
-
-def _snapshot_binding(root: Path, edition_id: str) -> dict[str, object]:
-    path = root / "snapshot.json"
-    if not path.is_file():
-        raise SystemExit(f"missing source snapshot inventory: {path}")
-    try:
-        document = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise SystemExit(f"could not read source snapshot inventory {path}: {exc}") from exc
-    if document.get("edition") != edition_id or not document.get("directorySha256"):
-        raise SystemExit(f"source snapshot inventory does not bind to edition {edition_id}: {path}")
-    return {
-        "edition": edition_id,
-        "path": str(path),
-        "directorySha256": document["directorySha256"],
-        "fileCount": len(document.get("files", [])) if isinstance(document.get("files"), list) else None,
-    }
 
 
 if __name__ == "__main__":

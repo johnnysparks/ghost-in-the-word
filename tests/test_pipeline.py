@@ -12,7 +12,7 @@ from ghost_in_word.assessment_attachment import attach_assessment_document
 from ghost_in_word.embeddings import cosine_distance, embedding_cache_key, embedding_storage_bytes, encode_texts, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
-from ghost_in_word.mapping_review import validate_mapping_document
+from ghost_in_word.mapping_review import bind_snapshot, validate_mapping_document
 from ghost_in_word.review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
@@ -20,6 +20,7 @@ from ghost_in_word.sources import comparison_edition_metadata, load_editions
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 from ghost_in_word.windows import build_windows
+from scripts.evaluate_challenge import compare_to_baseline
 
 
 class PipelineTests(unittest.TestCase):
@@ -208,6 +209,18 @@ class PipelineTests(unittest.TestCase):
         records[0]["review"] = {"reviewer": "reviewer-1"}
         with self.assertRaisesRegex(ValueError, "reviewType"):
             validate_mapping_document(records, left, right)
+
+    def test_mapping_snapshot_binding_requires_matching_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "snapshot.json").write_text(
+                json.dumps({"edition": "webp", "directorySha256": "abc123", "files": []}),
+                encoding="utf-8",
+            )
+            binding = bind_snapshot(root, "webp")
+            self.assertEqual(binding["directorySha256"], "abc123")
+            with self.assertRaisesRegex(ValueError, "does not bind"):
+                bind_snapshot(root, "bsb")
 
     def test_committed_mapping_records_declare_review_provenance(self) -> None:
         records = json.loads(
@@ -680,6 +693,49 @@ class PipelineTests(unittest.TestCase):
         repeat = summarize_reviews(responses, selection_key=key, packet=packet, bootstrap_samples=25)
         self.assertEqual(interval, repeat["selection"]["topRanked"]["majorityUsefulRate95CI"])
 
+    def test_review_selection_reports_model_ranking_agreement(self) -> None:
+        packet = {
+            "schemaVersion": 1,
+            "kind": "blind-review-packet",
+            "source": {"leftEdition": {"id": "a"}, "rightEdition": {"id": "b"}},
+            "selection": {"strategy": "fixture", "selectedCount": 4, "candidateCount": 4},
+            "items": [
+                {"id": f"{book}-1-1", "reference": f"{book} 1:1", "book": book, "chapter": 1, "verse": "1", "leftText": "left", "rightText": "right"}
+                for book in ("GEN", "PSA", "LEV", "ROM")
+            ],
+        }
+        key = {
+            "schemaVersion": 1,
+            "kind": "blind-review-key",
+            "selection": {"seed": 23, "metric": "lexicalDistance"},
+            "items": [
+                {"id": item["id"], "rank": index + 1, "bucket": "top-ranked", "genre": "other", "lengthBand": "short"}
+                for index, item in enumerate(packet["items"])
+            ],
+        }
+        responses = [
+            {
+                "reviewerId": reviewer,
+                "items": [
+                    {
+                        "id": item["id"],
+                        "useful": "yes" if index < 2 else "no",
+                        "differenceType": "wording",
+                        "confidence": "high",
+                        "evidence": "visible difference",
+                    }
+                    for index, item in enumerate(packet["items"])
+                ],
+            }
+            for reviewer in ("r1", "r2")
+        ]
+        report = summarize_reviews(responses, selection_key=key, packet=packet, bootstrap_samples=25)
+        agreement = report["selection"]["rankingAgreement"]
+        self.assertEqual(agreement["auc"], 1.0)
+        self.assertEqual(agreement["rankBiserial"], 1.0)
+        self.assertEqual(agreement["comparablePairs"], 4)
+        self.assertEqual(agreement["auc95CI"]["unit"], "book")
+
     def test_committed_natural_benchmark_is_score_blinded(self) -> None:
         packet = json.loads(
             (Path(__file__).parents[1] / "benchmarks/natural-review-packet.example.json").read_text(encoding="utf-8")
@@ -732,6 +788,37 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(record["kind"], "model-exposure-record")
         self.assertEqual(record["status"], "unknown")
         self.assertTrue(all(model["bibleExposure"] == "unknown" for model in record["models"]))
+        self.assertTrue(all(isinstance(model["revision"], str) and len(model["revision"]) == 40 for model in record["models"]))
+
+    def test_committed_heldout_reports_include_paired_baseline_effects(self) -> None:
+        root = Path(__file__).parents[1] / "benchmarks/reports"
+        for name in ("e5-small-heldout.json", "bge-m3-heldout.json"):
+            report = json.loads((root / name).read_text(encoding="utf-8"))
+            comparison = report["baselineComparison"]
+            self.assertEqual(comparison["baselineMetric"], "character-ngram-lexical")
+            self.assertEqual(comparison["pairedCases"], report["total"])
+            self.assertIn("passRateDelta95CI", comparison["bootstrap"])
+
+    def test_challenge_reports_paired_baseline_effect(self) -> None:
+        results = [
+            {
+                "changedRanksFarther": True,
+                "margin": 0.4,
+                "lexicalChangedRanksFarther": False,
+                "lexicalMargin": -0.1,
+            },
+            {
+                "changedRanksFarther": False,
+                "margin": -0.2,
+                "lexicalChangedRanksFarther": False,
+                "lexicalMargin": -0.3,
+            },
+        ]
+        comparison = compare_to_baseline(results, bootstrap_samples=25, seed=11)
+        self.assertEqual(comparison["pairedCases"], 2)
+        self.assertEqual(comparison["passRateDelta"], 0.5)
+        self.assertEqual(comparison["meanMarginDelta"], 0.3)
+        self.assertEqual(comparison["bootstrap"]["unit"], "challenge-case")
 
     def test_committed_browser_fixture_uses_public_schema(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-bsb.json").read_text(encoding="utf-8"))

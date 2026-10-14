@@ -705,10 +705,19 @@ def _summarize_selection(
             ),
         }
 
+    ranking_agreement = _summarize_model_ranking(
+        [item for bucket in buckets.values() for item in bucket],
+        report_by_id,
+        packet_books=packet_books,
+        bootstrap_samples=bootstrap_samples,
+        bootstrap_seed=seed + 10,
+    )
+
     return {
         "metric": selection.get("metric"),
         "topRanked": summarize_bucket(buckets.get("top-ranked", []), 0),
         "seededRandom": summarize_bucket(buckets.get("seeded-random", []), 1),
+        "rankingAgreement": ranking_agreement,
         "breakdowns": {
             dimension: {
                 value: summarize_bucket(group, index + 2)
@@ -716,6 +725,96 @@ def _summarize_selection(
             }
             for dimension, groups in dimensions.items()
         },
+    }
+
+
+def _summarize_model_ranking(
+    key_items: list[dict[str, object]],
+    report_by_id: Mapping[str, Mapping[str, object]],
+    *,
+    packet_books: Mapping[str, str],
+    bootstrap_samples: int,
+    bootstrap_seed: int,
+) -> dict[str, object]:
+    """Compare model rank order with binary reviewer usefulness labels.
+
+    This is deliberately scoped to the reviewed selection. An AUC of 1 means
+    every reviewer-useful item ranked ahead of every reviewer-not-useful item;
+    it is not an estimate for unreviewed passages and is not a faithfulness
+    score. Book-clustered resampling keeps verses from one book from being
+    treated as independent evidence.
+    """
+
+    observations: list[tuple[str, float, int, str]] = []
+    for item in key_items:
+        item_id = str(item.get("id", ""))
+        report = report_by_id.get(item_id)
+        rank = item.get("rank")
+        if not report or isinstance(rank, bool) or not isinstance(rank, (int, float)):
+            continue
+        majority = report.get("majorityUseful")
+        if majority not in {"yes", "no"}:
+            continue
+        group = packet_books.get(item_id, item_id)
+        observations.append((item_id, float(rank), 1 if majority == "yes" else 0, group))
+
+    positives = sum(label for _, _, label, _ in observations)
+    negatives = len(observations) - positives
+    auc = _rank_auc(observations)
+    grouped: dict[str, list[tuple[str, float, int, str]]] = defaultdict(list)
+    for observation in observations:
+        grouped[observation[3]].append(observation)
+    interval = _cluster_bootstrap_auc(grouped, samples=bootstrap_samples, seed=bootstrap_seed)
+    return {
+        "scope": "reviewed selection only",
+        "evaluatedItemCount": len(observations),
+        "positiveUsefulCount": positives,
+        "negativeUsefulCount": negatives,
+        "comparablePairs": positives * negatives,
+        "auc": round(auc, 6) if auc is not None else None,
+        "rankBiserial": round(2 * auc - 1, 6) if auc is not None else None,
+        "auc95CI": interval,
+    }
+
+
+def _rank_auc(observations: list[tuple[str, float, int, str]]) -> float | None:
+    positives = [rank for _, rank, label, _ in observations if label == 1]
+    negatives = [rank for _, rank, label, _ in observations if label == 0]
+    if not positives or not negatives:
+        return None
+    wins = 0.0
+    for positive in positives:
+        for negative in negatives:
+            if positive < negative:
+                wins += 1.0
+            elif positive == negative:
+                wins += 0.5
+    return wins / (len(positives) * len(negatives))
+
+
+def _cluster_bootstrap_auc(
+    grouped_observations: Mapping[str, list[tuple[str, float, int, str]]],
+    *,
+    samples: int,
+    seed: int,
+) -> dict[str, object] | None:
+    groups = [values for values in grouped_observations.values() if values]
+    if not groups or samples == 0:
+        return None
+    generator = random.Random(seed)
+    aucs: list[float] = []
+    for _ in range(samples):
+        sampled = [generator.choice(groups) for _ in groups]
+        value = _rank_auc([observation for group in sampled for observation in group])
+        if value is not None:
+            aucs.append(value)
+    if not aucs:
+        return None
+    return {
+        "samples": samples,
+        "seed": seed,
+        "unit": "book" if len(groups) > 1 else "item",
+        "ci95": [_percentile(aucs, 0.025), _percentile(aucs, 0.975)],
     }
 
 

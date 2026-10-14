@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections import Counter
+import json
+from pathlib import Path
 from typing import Iterable, Mapping
 
 from .alignment import AlignmentMapping, alignment_method, align_with_mappings, mapping_from_dict
@@ -77,6 +79,30 @@ def validate_mapping_document(
             "alignedUnitCount": len(units),
         },
         "mappings": entries,
+    }
+
+
+def bind_snapshot(root: str | Path, edition_id: str) -> dict[str, object]:
+    """Read the content-addressed inventory for one parsed source snapshot."""
+
+    root_path = Path(root)
+    path = root_path / "snapshot.json"
+    if not path.is_file():
+        raise ValueError(f"missing source snapshot inventory: {path}")
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"could not read source snapshot inventory {path}: {exc}") from exc
+    if not isinstance(document, Mapping):
+        raise ValueError(f"source snapshot inventory must be an object: {path}")
+    if document.get("edition") != edition_id or not str(document.get("directorySha256", "")):
+        raise ValueError(f"source snapshot inventory does not bind to edition {edition_id}: {path}")
+    files = document.get("files")
+    return {
+        "edition": edition_id,
+        "path": str(path),
+        "directorySha256": document["directorySha256"],
+        "fileCount": len(files) if isinstance(files, list) else None,
     }
 
 
