@@ -353,6 +353,8 @@ the seeded random sample without exposing that selection to reviewers. The repor
 retains per-item votes, disagreement, and uncertain judgments, and reports usefulness
 and agreement by selection bucket. Supplying `--packet` checks every response against
 the exact blinded item IDs, rejects score/rank leakage, reports review coverage, and
+requires the private selection key to bind exactly to the packet's item IDs, so a
+different or partial key cannot silently produce a gate report. It
 marks the natural-evaluation gate ineligible until at least two reviewers have judged
 every one of the 30 top-ranked items. It does not convert review usefulness into a translation-faithfulness
 grade. Validate a packet independently with:

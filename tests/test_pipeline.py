@@ -793,6 +793,14 @@ class PipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown packet item"):
             summarize_reviews([response], selection_key=key, packet=packet)
         response["items"][0]["id"] = packet["items"][0]["id"]
+        incomplete_key = dict(key)
+        incomplete_key["items"] = key["items"][:-1]
+        with self.assertRaisesRegex(ValueError, "missing packet ids"):
+            summarize_reviews([response], selection_key=incomplete_key, packet=packet)
+        duplicate_key = dict(key)
+        duplicate_key["items"] = key["items"] + [key["items"][0]]
+        with self.assertRaisesRegex(ValueError, "duplicate id"):
+            summarize_reviews([response], selection_key=duplicate_key, packet=packet)
         response["items"][0]["modelOutput"] = "leak"
         with self.assertRaisesRegex(ValueError, "unsupported fields"):
             summarize_reviews([response], selection_key=key, packet=packet)

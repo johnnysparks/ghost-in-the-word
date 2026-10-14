@@ -632,16 +632,7 @@ def summarize_reviews(
         "items": item_reports,
     }
     if selection_key is not None:
-        if packet_ids is not None:
-            key_items = selection_key.get("items")
-            if isinstance(key_items, list):
-                unknown_key_ids = {
-                    str(item.get("id"))
-                    for item in key_items
-                    if isinstance(item, Mapping) and str(item.get("id", "")) not in packet_ids
-                }
-                if unknown_key_ids:
-                    raise ValueError(f"selection key contains ids outside the review packet: {', '.join(sorted(unknown_key_ids))}")
+        _validate_selection_key(selection_key, packet_ids=packet_ids)
         report["selection"] = _summarize_selection(
             item_reports,
             selection_key,
@@ -818,6 +809,43 @@ def _summarize_selection(
             for dimension, groups in dimensions.items()
         },
     }
+
+
+def _validate_selection_key(
+    selection_key: Mapping[str, object],
+    *,
+    packet_ids: set[str] | None,
+) -> None:
+    """Check that a private key binds one-to-one to the blinded packet."""
+
+    if selection_key.get("kind") != "blind-review-key":
+        raise ValueError("selection key must have kind blind-review-key")
+    key_items = selection_key.get("items")
+    if not isinstance(key_items, list):
+        raise ValueError("selection key must contain an items array")
+    key_ids: list[str] = []
+    for item in key_items:
+        if not isinstance(item, Mapping):
+            raise ValueError("selection key contains a non-object item")
+        item_id = item.get("id")
+        if not isinstance(item_id, str) or not item_id:
+            raise ValueError("selection key item needs a non-empty id")
+        if item_id in key_ids:
+            raise ValueError(f"selection key contains duplicate id: {item_id}")
+        key_ids.append(item_id)
+    if packet_ids is not None:
+        key_id_set = set(key_ids)
+        unknown_key_ids = key_id_set - packet_ids
+        missing_key_ids = packet_ids - key_id_set
+        if unknown_key_ids:
+            raise ValueError(f"selection key contains ids outside the review packet: {', '.join(sorted(unknown_key_ids))}")
+        if missing_key_ids:
+            raise ValueError(f"selection key is missing packet ids: {', '.join(sorted(missing_key_ids))}")
+    selection = selection_key.get("selection")
+    if isinstance(selection, Mapping):
+        selected_count = selection.get("selectedCount")
+        if selected_count is not None and selected_count != len(key_items):
+            raise ValueError("selection key selectedCount does not match items")
 
 
 def _summarize_model_ranking(
