@@ -34,6 +34,7 @@ from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 from ghost_in_word.windows import build_windows
 from scripts.evaluate_challenge import compare_to_baseline
+from scripts.render_mapping_review_form import render_mapping_review_form
 from scripts.render_review_form import render_review_form
 
 
@@ -262,6 +263,13 @@ class PipelineTests(unittest.TestCase):
         )
         self.assertEqual(validate_mapping_review_packet(packet)["itemCount"], 1)
         self.assertNotIn("path", packet["source"]["leftSnapshot"])
+        rendered = render_mapping_review_form(packet, reviewer_id="reviewer-1")
+        self.assertEqual(rendered.count('class="review-card"'), 1)
+        self.assertIn('data-field="decision"', rendered)
+        self.assertIn('id="independence"', rendered)
+        self.assertIn("blind-mapping-review-response", rendered)
+        self.assertNotIn('"review":', rendered)
+        self.assertNotIn('"status":', rendered)
         item_id = packet["items"][0]["id"]
         candidate_records = [{
             "left": ["JHN 1:1", "JHN 1:2"],

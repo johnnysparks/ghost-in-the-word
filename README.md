@@ -97,6 +97,16 @@ PYTHONPATH=src python3 scripts/build_mapping_review_packet.py \
   --output /tmp/webp-bsb-mapping-packet.json
 ```
 
+Render the packet for a reviewer without exposing candidate methods, statuses, or
+prior review evidence:
+
+```sh
+PYTHONPATH=src python3 scripts/render_mapping_review_form.py \
+  /tmp/webp-bsb-mapping-packet.json \
+  --reviewer-id reviewer-1 \
+  --output /tmp/webp-bsb-reviewer-1.html
+```
+
 Each reviewer should return a document with `kind: "blind-mapping-review-response"`,
 their `reviewerId`, `independence: "declared"`, and one `accept`, `reject`, or
 `uncertain` decision plus evidence for each packet item. Aggregate those responses:
