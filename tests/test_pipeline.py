@@ -10,6 +10,7 @@ from ghost_in_word.review import select_review_items, summarize_reviews
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
+from ghost_in_word.windows import build_windows
 
 
 class PipelineTests(unittest.TestCase):
@@ -209,6 +210,19 @@ class PipelineTests(unittest.TestCase):
         self.assertNotIn("left_text", unit)
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
         self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
+
+    def test_multi_verse_windows_are_separate_and_preserve_gaps(self) -> None:
+        units = [
+            {"id": "JHN-1-1", "order": 0, "book": "JHN", "chapter": 1, "verse": "1", "reference": "JHN 1:1", "status": "matched", "leftText": "In the beginning.", "rightText": "At the start."},
+            {"id": "JHN-1-2", "order": 1, "book": "JHN", "chapter": 1, "verse": "2", "reference": "JHN 1:2", "status": "matched", "leftText": "The Word was there.", "rightText": "The Word existed."},
+            {"id": "JHN-1-3", "order": 2, "book": "JHN", "chapter": 1, "verse": "3", "reference": "JHN 1:3", "status": "missing-right", "leftText": "All things were made.", "rightText": None},
+        ]
+        windows = build_windows(units, window_size=2, stride=1)
+        self.assertEqual(len(windows), 2)
+        self.assertEqual(windows[0]["status"], "matched")
+        self.assertEqual(windows[0]["windowSize"], 2)
+        self.assertEqual(windows[1]["status"], "unresolved")
+        self.assertIsNone(windows[1]["lexicalDistance"])
 
 
 if __name__ == "__main__":

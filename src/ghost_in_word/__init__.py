@@ -7,6 +7,7 @@ from .review import select_review_items, summarize_reviews
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
 from .summary import summarize_units
 from .usfm import parse_usfm
+from .windows import build_windows
 
 __all__ = [
     "AlignmentUnit",
@@ -31,4 +32,5 @@ __all__ = [
     "summarize_reviews",
     "tokenize",
     "wording_distance",
+    "build_windows",
 ]

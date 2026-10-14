@@ -144,6 +144,19 @@ PYTHONPATH=src python3 scripts/partition_comparison.py \
   --output-dir web/public/data/webp-bsb
 ```
 
+Verse scores remain the primary view. To inspect explicitly joined two-verse windows
+as a separate artifact, use a non-overlapping default stride or opt into a sliding
+stride for exploratory work:
+
+```sh
+PYTHONPATH=src python3 scripts/build_windows.py \
+  web/public/data/john-webp-bsb.json \
+  --window-size 2 --output data/derived/john-webp-bsb-windows.json
+```
+
+Windows containing missing or unresolved verses remain visible with null scores; the
+window artifact does not replace verse-level scores.
+
 The first interactive slice is in `web/`. It serves a committed John pilot fixture,
 loads the full WEB↔BSB atlas one book at a time, and keeps the selected comparison pair,
 verse, chapter, search, brush range, and reader state in the URL. Drag across the main
