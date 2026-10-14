@@ -12,41 +12,46 @@ type PairConfig = {
   rightSource: string;
 };
 
+function publicDataUrl(path: string) {
+  const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+  return `${base}${path.replace(/^\/+/, "")}`;
+}
+
 const PAIRS: PairConfig[] = [
   {
     id: "webp-bsb",
     label: "WEB ↔ BSB",
-    manifestUrl: "/data/webp-bsb/manifest.json",
-    matrixUrl: "/data/john-translation-matrix.json",
+    manifestUrl: publicDataUrl("data/webp-bsb/manifest.json"),
+    matrixUrl: publicDataUrl("data/john-translation-matrix.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
   },
   {
     id: "webp-asv",
     label: "WEB ↔ ASV 1901",
-    dataUrl: "/data/john-webp-asv.json",
-    matrixUrl: "/data/john-translation-matrix.json",
+    dataUrl: publicDataUrl("data/john-webp-asv.json"),
+    matrixUrl: publicDataUrl("data/john-translation-matrix.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://ebible.org/find/details.php?id=eng-asv",
   },
   {
     id: "webp-bsb-e5-small",
     label: "WEB ↔ BSB · E5 small",
-    dataUrl: "/data/john-e5-small-webp-bsb.json",
+    dataUrl: publicDataUrl("data/john-e5-small-webp-bsb.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
   },
   {
     id: "webp-rv1909-e5-small",
     label: "WEB ↔ RV1909 · E5 small",
-    dataUrl: "/data/john-webp-rv1909-e5-small.json",
+    dataUrl: publicDataUrl("data/john-webp-rv1909-e5-small.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://ebible.org/find/details.php?id=spaRV1909",
   },
   {
     id: "webp-srgrc-e5-small",
     label: "WEB ↔ SR Greek source · E5 small",
-    dataUrl: "/data/john-webp-srgrc-e5-small.json",
+    dataUrl: publicDataUrl("data/john-webp-srgrc-e5-small.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://github.com/Center-for-New-Testament-Restoration/SR",
   },

@@ -61,7 +61,10 @@ def main() -> None:
         books.append({
             "id": book,
             "name": BOOK_NAMES.get(book, book),
-            "dataUrl": f"/data/{args.output_dir.name}/{filename}",
+            # The manifest is served beside the book payloads, so keep this
+            # relative. This works for both a root deployment and a project
+            # site such as /ghost-in-the-word/.
+            "dataUrl": f"./{filename}",
             "totalUnits": summary["totalUnits"],
             "matchedUnits": summary["matchedUnits"],
             "coverage": summary["coverage"],
