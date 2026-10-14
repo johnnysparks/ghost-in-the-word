@@ -408,6 +408,11 @@ statistics.
 Footnotes are removed from analysis text but retained as expandable notes in the reader.
 The current focus can be downloaded as JSON or CSV, and the provenance panel exposes
 the metric, alignment, language pair, and embedding run metadata.
+The primary divergence chart gives every scored point a named keyboard control; the
+wording scatterplot remains pointer/hover interactive, while the expandable results
+table is the complete keyboard-readable fallback. A loaded John full-book selection
+benchmark is recorded in `benchmarks/reports/web-selection-latency.json` with its
+device, dataset, median, p95, and outliers.
 For the John pilot, the reader also loads a separate WEB/BSB/ASV distance matrix for
 the selected verse; the matrix is a panel comparison aid and does not assign a preferred
 translation.

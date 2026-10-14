@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { AssessmentRecord, ComparisonData, ComparisonManifest, ComparisonUnit, EditionMetadata, TranslationMatrix } from "./types";
 
@@ -191,7 +191,7 @@ function formatScoreRange(score: { p25?: number | null; p75?: number | null } | 
   return `${formatOverviewScore(score.p25)}–${formatOverviewScore(score.p75)}`;
 }
 
-function AtlasOverview({
+const AtlasOverview = memo(function AtlasOverview({
   manifest,
   selectedBook,
   onSelectBook,
@@ -240,7 +240,7 @@ function AtlasOverview({
       </div>}
     </section>
   );
-}
+});
 
 function ResultsTable({
   units,
@@ -310,6 +310,88 @@ function TranslationDistanceMatrix({ matrix, selectedId }: { matrix: Translation
 
 type UnitRange = { start: number; end: number };
 
+type ChartPointProps = {
+  unit: ComparisonUnit;
+  cx: number;
+  cy: number;
+  selected: boolean;
+  baseClassName: string;
+  ariaLabel: string;
+  description: string;
+  interactive?: boolean;
+  onSelect: (unit: ComparisonUnit) => void;
+};
+
+let lastSyncedChartSelection: string | undefined;
+
+function syncChartSelection(selectedId: string | undefined) {
+  if (lastSyncedChartSelection === selectedId) return;
+  document.querySelectorAll<SVGCircleElement>('[data-chart-point].selected-point').forEach((point) => {
+    if (point.getAttribute("role") === "button") point.setAttribute("aria-pressed", "false");
+    point.classList.remove("selected-point");
+    point.setAttribute("r", point.dataset.baseRadius ?? "3.8");
+  });
+  if (selectedId) {
+    const escapedId = selectedId.replace(/(["\\])/g, "\\$1");
+    document.querySelectorAll<SVGCircleElement>(`[data-chart-point="${escapedId}"]`).forEach((point) => {
+      if (point.getAttribute("role") === "button") point.setAttribute("aria-pressed", "true");
+      point.classList.add("selected-point");
+      point.setAttribute("r", "6");
+    });
+  }
+  lastSyncedChartSelection = selectedId;
+}
+
+const ChartPoint = memo(function ChartPoint({ unit, cx, cy, selected, baseClassName, ariaLabel, description, interactive = true, onSelect }: ChartPointProps) {
+  const [preview, setPreview] = useState(false);
+  const pointRef = useRef<SVGCircleElement | null>(null);
+  useLayoutEffect(() => {
+    if (lastSyncedChartSelection === undefined || !pointRef.current) return;
+    const selectedNow = lastSyncedChartSelection === unit.id;
+    pointRef.current.classList.toggle("selected-point", selectedNow);
+    pointRef.current.setAttribute("r", selectedNow ? "6" : pointRef.current.dataset.baseRadius ?? "3.8");
+    if (interactive) pointRef.current.setAttribute("aria-pressed", String(selectedNow));
+  }, [interactive, preview, unit.id]);
+  return (
+    <circle
+      ref={pointRef}
+      className={selected ? "point selected-point" : baseClassName}
+      cx={cx}
+      cy={cy}
+      key={unit.id}
+      r={selected ? 6 : baseClassName.includes("scatter-point") ? 3.6 : 3.8}
+      role={interactive === false ? undefined : "button"}
+      tabIndex={interactive === false ? undefined : 0}
+      aria-pressed={interactive === false ? undefined : selected}
+      data-chart-point={unit.id}
+      data-base-radius={baseClassName.includes("scatter-point") ? "3.6" : "3.8"}
+      aria-label={interactive === false ? undefined : (preview ? `${ariaLabel}. ${description}` : ariaLabel)}
+      onClick={() => onSelect(unit)}
+      onFocus={interactive === false ? undefined : () => setPreview(true)}
+      onBlur={interactive === false ? undefined : () => setPreview(false)}
+      onMouseEnter={() => setPreview(true)}
+      onMouseLeave={() => setPreview(false)}
+      onKeyDown={interactive === false ? undefined : (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(unit);
+        }
+      }}
+    >
+      {preview && <title>{description}</title>}
+    </circle>
+  );
+}, (previous, next) => (
+  previous.unit === next.unit
+  && previous.cx === next.cx
+  && previous.cy === next.cy
+  && previous.baseClassName === next.baseClassName
+  && previous.ariaLabel === next.ariaLabel
+  && previous.description === next.description
+  && previous.interactive === next.interactive
+  && previous.onSelect === next.onSelect
+));
+
 function parseInitialRange(): UnitRange | null {
   const value = new URLSearchParams(window.location.search).get("range");
   if (!value) return null;
@@ -348,7 +430,7 @@ function updateUrl(
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 }
 
-function DivergenceChart({
+const DivergenceChart = memo(function DivergenceChart({
   units,
   selectedId,
   onSelect,
@@ -445,35 +527,29 @@ function DivergenceChart({
         <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => {
           const selected = unit.id === selectedId;
-          return (
-            <circle
-              className={selected ? "point selected-point" : "point"}
-              cx={xFor(unit)}
-              cy={yFor(unit)}
-              key={unit.id}
-              r={selected ? 6 : 3.8}
-              tabIndex={0}
-              role="button"
-              aria-label={`${unit.reference}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}. A: ${unit.leftText ?? "No aligned text"}. B: ${unit.rightText ?? "No aligned text"}`}
-              onClick={() => onSelect(unit)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onSelect(unit);
-                }
-              }}
-            >
-              <title>{`${unit.reference}\n${distanceLabel}: ${formatScore(distanceFor(unit, distanceField))}\nA: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`}</title>
-            </circle>
-          );
+          const score = formatScore(distanceFor(unit, distanceField));
+          const ariaLabel = `${unit.reference}, ${distanceLabel} ${score}`;
+          const description = `A: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`;
+          return <ChartPoint key={unit.id} unit={unit} cx={xFor(unit)} cy={yFor(unit)} selected={selected} baseClassName="point" ariaLabel={ariaLabel} description={description} onSelect={onSelect} />;
         })}
       </svg>
       <div className="chart-note"><span className="legend-dot" /> matched {unitLabel} <span className="legend-ring" /> selected {unitLabel} <span className="brush-hint">Drag to focus a range</span>{rangeActive && <button className="clear-range" onClick={onClearBrush}>Reset range</button>}<span className="chart-count">{valid.length} scored units</span></div>
     </div>
   );
-}
+}, (previous, next) => (
+  previous.units === next.units
+  && previous.onSelect === next.onSelect
+  && previous.maxScore === next.maxScore
+  && previous.distanceField === next.distanceField
+  && previous.distanceLabel === next.distanceLabel
+  && previous.bookName === next.bookName
+  && previous.onBrush === next.onBrush
+  && previous.onClearBrush === next.onClearBrush
+  && previous.rangeActive === next.rangeActive
+  && previous.unitLabel === next.unitLabel
+));
 
-function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel, maxScore, unitLabel }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void; distanceField: string; distanceLabel: string; maxScore: number; unitLabel: string }) {
+const ScatterPlot = memo(function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel, maxScore, unitLabel }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void; distanceField: string; distanceLabel: string; maxScore: number; unitLabel: string }) {
   const width = 1000;
   const height = 266;
   const padding = { left: 58, right: 24, top: 20, bottom: 42 };
@@ -493,31 +569,25 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <text className="axis-title" x={width / 2} y={height - 10} textAnchor="middle">wording distance</text>
         <text className="axis-title" x={17} y={height / 2} transform={`rotate(-90 17 ${height / 2})`}>{distanceLabel}</text>
-        {valid.map((unit) => (
-          <circle
-            className={unit.id === selectedId ? "point selected-point" : "point scatter-point"}
-            key={unit.id}
-            cx={xFor(unit)}
-            cy={yFor(unit)}
-            r={unit.id === selectedId ? 6 : 3.6}
-            tabIndex={0}
-            role="button"
-            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}. A: ${unit.leftText ?? "No aligned text"}. B: ${unit.rightText ?? "No aligned text"}`}
-            onClick={() => onSelect(unit)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onSelect(unit);
-              }
-            }}
-          >
-            <title>{`${unit.reference}\nwording distance: ${formatScore(unit.wordingDistance)}\n${distanceLabel}: ${formatScore(distanceFor(unit, distanceField))}\nA: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`}</title>
-          </circle>
-        ))}
+        {valid.map((unit) => {
+          const score = formatScore(distanceFor(unit, distanceField));
+          const wording = formatScore(unit.wordingDistance);
+          const selected = unit.id === selectedId;
+          const ariaLabel = `${unit.reference}, wording distance ${wording}, ${distanceLabel} ${score}`;
+          const description = `A: ${unit.leftText ?? "No aligned text"}\nB: ${unit.rightText ?? "No aligned text"}`;
+          return <ChartPoint key={unit.id} unit={unit} cx={xFor(unit)} cy={yFor(unit)} selected={selected} baseClassName="point scatter-point" ariaLabel={ariaLabel} description={description} interactive={false} onSelect={onSelect} />;
+        })}
       </svg>
     </div>
   );
-}
+}, (previous, next) => (
+  previous.units === next.units
+  && previous.onSelect === next.onSelect
+  && previous.distanceField === next.distanceField
+  && previous.distanceLabel === next.distanceLabel
+  && previous.maxScore === next.maxScore
+  && previous.unitLabel === next.unitLabel
+));
 
 function App() {
   const [data, setData] = useState<ComparisonData | null>(null);
@@ -531,6 +601,7 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
   const [brushRange, setBrushRange] = useState<UnitRange | null>(parseInitialRange());
   const [unitMode, setUnitMode] = useState(parseInitialUnitMode());
+  const selectionStartedAt = useRef<number | null>(null);
 
   const pair = PAIRS.find((candidate) => candidate.id === pairId) ?? PAIRS[0];
   const activeUnitMode = unitMode === "window-2" && pair.windowManifestUrl ? "window-2" : "verse";
@@ -602,37 +673,45 @@ function App() {
   const runId = data?.metadata.embeddingRun?.cacheKey ?? data?.metadata.embeddingRun?.inputHash ?? data?.metadata.embeddingRun?.modelRevision ?? data?.metadata.embeddingRun?.modelId;
 
   useEffect(() => {
+    syncChartSelection(selected?.id);
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
+      if (selectionStartedAt.current !== null && selected.id === selectedId) {
+        document.querySelector<HTMLElement>(".app")?.setAttribute("data-selection-latency-ms", (performance.now() - selectionStartedAt.current).toFixed(2));
+        selectionStartedAt.current = null;
+      }
       updateUrl(pair.id, book, selected, chapter, search, brushRange, activeUnitMode, metricId, runId);
     }
-  }, [activeUnitMode, book, brushRange, chapter, metricId, pair.id, runId, search, selected]);
+  }, [activeUnitMode, book, brushRange, chapter, metricId, pair.id, runId, search, selected, selectedId]);
 
-  const selectUnit = (unit: ComparisonUnit) => {
+  const selectUnit = useCallback((unit: ComparisonUnit) => {
+    selectionStartedAt.current = performance.now();
     setSelectedId(unit.id);
     updateUrl(pair.id, book, unit, chapter, search, brushRange, activeUnitMode, metricId, runId);
-  };
+  }, [activeUnitMode, book, brushRange, chapter, metricId, pair.id, runId, search]);
 
-  const focusRange = (start: number, end: number) => {
+  const focusRange = useCallback((start: number, end: number) => {
     const nextRange = { start: Math.min(start, end), end: Math.max(start, end) };
     setBrushRange(nextRange);
     const firstScored = visibleUnits.slice(nextRange.start, nextRange.end + 1).find((unit) => distanceFor(unit, distanceField) !== null);
     if (firstScored) setSelectedId(firstScored.id);
-  };
+  }, [distanceField, visibleUnits]);
 
-  const selectBook = (nextBook: string) => {
+  const clearBrush = useCallback(() => setBrushRange(null), []);
+
+  const selectBook = useCallback((nextBook: string) => {
     setBook(nextBook);
     setChapter("all");
     setSelectedId(undefined);
     setBrushRange(null);
-  };
+  }, []);
 
-  const selectChapter = (nextBook: string, nextChapter: number) => {
+  const selectChapter = useCallback((nextBook: string, nextChapter: number) => {
     setBook(nextBook);
     setChapter(String(nextChapter));
     setSelectedId(undefined);
     setBrushRange(null);
-  };
+  }, []);
 
   if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
   if (!data) return <main className="app loading-state"><div className="loading-orb" /><p>Loading the comparison atlas…</p></main>;
@@ -703,7 +782,7 @@ function App() {
       <section className="panel chart-panel">
         <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS {bookName.toUpperCase()}</p><h2>Find the {unitPlural} that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
         <p className="panel-intro">Each point is a matched {unitLabel} in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
-        <DivergenceChart units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} onBrush={focusRange} onClearBrush={() => setBrushRange(null)} rangeActive={Boolean(brushRange)} unitLabel={unitLabel} />
+        <DivergenceChart units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} onBrush={focusRange} onClearBrush={clearBrush} rangeActive={Boolean(brushRange)} unitLabel={unitLabel} />
       </section>
 
       <div className="two-column">

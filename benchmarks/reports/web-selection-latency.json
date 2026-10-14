@@ -1,0 +1,59 @@
+{
+  "kind": "web-selection-latency",
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-14",
+  "device": {
+    "browser": "Chrome via CUA browser harness",
+    "viewport": {
+      "width": 960,
+      "height": 817,
+      "devicePixelRatio": 1
+    }
+  },
+  "dataset": {
+    "pair": "webp-bsb",
+    "book": "JHN",
+    "metric": "lexical-baseline",
+    "scope": "full John book",
+    "visibleUnits": 879,
+    "scoredUnits": 878
+  },
+  "interaction": {
+    "input": "Enter on a named point in the primary divergence chart",
+    "loadedBeforeMeasurement": true,
+    "latencyDefinition": "milliseconds from the chart selection handler to the linked reader heading commit"
+  },
+  "samplesMs": [
+    87.7,
+    96.6,
+    92.7,
+    116.6,
+    77.8,
+    94.5,
+    99.1,
+    100.6,
+    113.3,
+    94.4,
+    112.3,
+    99.1
+  ],
+  "summary": {
+    "count": 12,
+    "median": 96.6,
+    "p95": 113.3,
+    "maximum": 116.6,
+    "targetMs": 100
+  },
+  "accessibilityChecks": {
+    "primaryChartKeyboardControls": 878,
+    "selectedChartPointsAfterInteraction": 2,
+    "focusedPointIncludesFullTextPreview": true,
+    "secondaryScatterKeyboardControls": 0,
+    "resultsTableFallback": true
+  },
+  "notes": [
+    "The median selection commit is below the 100 ms engineering target on this declared device and dataset.",
+    "The p95 and maximum retain occasional main-thread outliers; this report is a performance baseline rather than a universal guarantee.",
+    "The secondary scatterplot remains pointer and hover interactive; the primary divergence chart and results table provide the keyboard path."
+  ]
+}
