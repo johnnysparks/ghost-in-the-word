@@ -1,7 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ComparisonData, ComparisonUnit } from "./types";
 
-const DATA_URL = "/data/john-webp-bsb.json";
+type PairConfig = {
+  id: string;
+  label: string;
+  dataUrl: string;
+  leftSource: string;
+  rightSource: string;
+};
+
+const PAIRS: PairConfig[] = [
+  {
+    id: "webp-bsb",
+    label: "WEB ↔ BSB",
+    dataUrl: "/data/john-webp-bsb.json",
+    leftSource: "https://ebible.org/find/details.php?id=engwebp",
+    rightSource: "https://berean.bible/downloads.htm",
+  },
+  {
+    id: "webp-asv",
+    label: "WEB ↔ ASV 1901",
+    dataUrl: "/data/john-webp-asv.json",
+    leftSource: "https://ebible.org/find/details.php?id=engwebp",
+    rightSource: "https://ebible.org/find/details.php?id=eng-asv",
+  },
+];
 
 const bookNames: Record<string, string> = {
   JHN: "John",
@@ -13,6 +36,10 @@ function displayBook(book: string) {
 
 function parseInitialRef() {
   return new URLSearchParams(window.location.search).get("ref");
+}
+
+function parseInitialPair() {
+  return new URLSearchParams(window.location.search).get("pair") ?? PAIRS[0].id;
 }
 
 function formatScore(score: number | null) {
@@ -45,8 +72,9 @@ function MarkedText({ text, other }: { text: string | null; other: string | null
   );
 }
 
-function updateUrl(unit: ComparisonUnit | undefined, chapter: string, search: string) {
+function updateUrl(pairId: string, unit: ComparisonUnit | undefined, chapter: string, search: string) {
   const params = new URLSearchParams(window.location.search);
+  params.set("pair", pairId);
   if (unit) params.set("ref", unit.id);
   if (chapter === "all") params.delete("chapter");
   else params.set("chapter", chapter);
@@ -173,19 +201,24 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
 function App() {
   const [data, setData] = useState<ComparisonData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pairId, setPairId] = useState(parseInitialPair());
   const [chapter, setChapter] = useState(new URLSearchParams(window.location.search).get("chapter") ?? "all");
   const [search, setSearch] = useState(new URLSearchParams(window.location.search).get("q") ?? "");
   const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
 
+  const pair = PAIRS.find((candidate) => candidate.id === pairId) ?? PAIRS[0];
+
   useEffect(() => {
-    fetch(DATA_URL)
+    setData(null);
+    setError(null);
+    fetch(pair.dataUrl)
       .then((response) => {
         if (!response.ok) throw new Error(`Could not load comparison data (${response.status})`);
         return response.json() as Promise<ComparisonData>;
       })
       .then(setData)
       .catch((reason: Error) => setError(reason.message));
-  }, []);
+  }, [pair.dataUrl]);
 
   const chapters = useMemo(() => data ? [...new Set(data.units.map((unit) => unit.chapter))].sort((a, b) => a - b) : [], [data]);
   const filtered = useMemo(() => {
@@ -209,13 +242,13 @@ function App() {
   useEffect(() => {
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
-      updateUrl(selected, chapter, search);
+      updateUrl(pair.id, selected, chapter, search);
     }
-  }, [chapter, search, selected]);
+  }, [chapter, pair.id, search, selected]);
 
   const selectUnit = (unit: ComparisonUnit) => {
     setSelectedId(unit.id);
-    updateUrl(unit, chapter, search);
+    updateUrl(pair.id, unit, chapter, search);
   };
 
   if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
@@ -236,7 +269,7 @@ function App() {
         <div className="hero-copy">
           <p className="eyebrow">TRANSLATION ATLAS · PILOT</p>
           <h1>Where the words<br /><em>move apart.</em></h1>
-          <p className="lede">A verse-by-verse view of how the World English Bible and Berean Standard Bible render John. Find an unusual point, then read the text that made it move.</p>
+          <p className="lede">A verse-by-verse view of how {leftName} and {rightName} render John. Find an unusual point, then read the text that made it move.</p>
         </div>
         <div className="hero-stamp"><span>01</span><span>JOHN</span><span>·</span><span>VERSE</span><span>MAP</span></div>
       </section>
@@ -248,6 +281,7 @@ function App() {
           <label><span>translation B</span><strong>{rightName}</strong></label>
         </div>
         <div className="filter-grid">
+          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setSelectedId(undefined); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
           <label className="field"><span>book</span><select value="JHN" aria-label="Book"><option value="JHN">John</option></select></label>
           <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => setChapter(event.target.value)}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
           <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Reference or phrase" /></label>
@@ -294,7 +328,7 @@ function App() {
 
       <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Embedding runs will be added as a separately identified metric after model evaluation.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
 
-      <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href="https://ebible.org/find/details.php?id=engwebp" target="_blank" rel="noreferrer">WEB</a> + <a href="https://berean.bible/downloads.htm" target="_blank" rel="noreferrer">BSB</a></span><span>{metric.id}</span></footer>
+      <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>
   );
 }
