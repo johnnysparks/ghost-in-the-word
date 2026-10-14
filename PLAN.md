@@ -186,6 +186,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** the atlas now supports chart drag-to-focus ranges, resettable linked filtering, URL restoration of the focused range, and richer hover/focus previews for both renderings.
 - **Implemented:** USFM footnotes are retained as separate cleaned note fields, excluded from text scoring, and available as expandable reader notes.
 - **Implemented:** the linked reader shows adjacent verse context cards alongside previous/next navigation, with the same selection synchronization and range focus.
+- **Implemented:** comparison metadata now carries language codes; lexical builds reject cross-language pairs, while embedding builds and the UI suppress same-language wording metrics and highlighting when languages differ.
 - **Implemented:** explicit reviewed one-to-many, many-to-one, and many-to-many alignment mappings, with unresolved and unmapped statuses preserved without semantic scores.
 - **Implemented:** seeded blind-review packet selection and review aggregation that preserves per-item disagreement, abstentions, evidence fields, and reviewer-level counts.
 - **Implemented:** a separate held-out synthetic set with genre slices, changed-versus-preserved margins, and reproducible report output for model regression checks.

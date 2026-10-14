@@ -68,8 +68,9 @@ function normalizedWords(text: string) {
   return text.toLocaleLowerCase().match(/[\p{L}\p{N}’'-]+/gu) ?? [];
 }
 
-function MarkedText({ text, other }: { text: string | null; other: string | null }) {
+function MarkedText({ text, other, sameLanguage = true }: { text: string | null; other: string | null; sameLanguage?: boolean }) {
   if (!text) return <span className="missing-copy">No aligned text</span>;
+  if (!sameLanguage) return <>{text}</>;
   const otherWords = new Set(normalizedWords(other ?? ""));
   return (
     <>
@@ -382,6 +383,7 @@ function App() {
   const rightName = data.metadata.rightEdition.name;
   const metric = data.metadata.metric;
   const bookName = displayBook(book);
+  const sameLanguage = Boolean(data.metadata.leftEdition.language && data.metadata.leftEdition.language === data.metadata.rightEdition.language);
   const alignmentNote = data.metadata.alignment.method === "exact-book-chapter-verse"
     ? "The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches."
     : "The chart preserves missing and unresolved passages as gaps and only scores reviewed mappings marked matched.";
@@ -434,14 +436,14 @@ function App() {
           {selected ? <>
             <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · verse {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
             <div className="translation-columns">
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p><TranslationNotes notes={selected.leftNotes} /></article>
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p><TranslationNotes notes={selected.rightNotes} /></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.leftNotes} /></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.rightNotes} /></article>
             </div>
             {(previous || next) && <div className="reader-context" aria-label="Adjacent verse context">
               {previous && <button onClick={() => selectUnit(previous)}><span>← {previous.reference}</span><small>{previous.leftText ?? "No aligned text"}</small></button>}
               {next && <button onClick={() => selectUnit(next)}><span>{next.reference} →</span><small>{next.leftText ?? "No aligned text"}</small></button>}
             </div>}
-            <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
+            <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div>{sameLanguage ? <div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div> : <div><span>wording distance</span><strong>n/a</strong></div>}<div className="score-explainer">{sameLanguage ? "Highlighted words are a token-level reading aid. They do not explain the score." : "Wording distance is hidden for cross-language comparisons because token overlap is not comparable across scripts."}</div></div>
           </> : <p className="empty-state">No verses match this filter.</p>}
         </section>
 
@@ -452,11 +454,11 @@ function App() {
         </section>
       </div>
 
-      <section className="panel scatter-panel">
+      {sameLanguage && <section className="panel scatter-panel">
         <div className="panel-heading"><div><p className="eyebrow">04 · WORDING / DISTANCE</p><h2>Different words don’t always mean different things.</h2></div></div>
         <p className="panel-intro">The same comparison shown two ways: horizontal movement is wording distance; vertical movement is the selected comparison metric. Use this as an investigation map, not a classification.</p>
         <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
-      </section>
+      </section>}
 
       <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
 

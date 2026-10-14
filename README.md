@@ -54,6 +54,12 @@ PYTHONPATH=src python3 scripts/verify_snapshots.py
 Future downloads write the same `snapshot.json` inventory automatically, including the
 archive hash when the source was obtained by `download_sources.py`.
 
+Cross-language embedding artifacts carry both edition language codes. The embedding
+builder suppresses same-language lexical fields when those codes differ, and the web
+client hides token-diff highlighting and the wording scatterplot for that comparison.
+The lexical builder refuses cross-language input rather than producing a misleading
+English token baseline.
+
 Embedding experiments are an optional offline step. Install the extra in an isolated
 environment, then run the model-specific builder. The output records the model ID,
 dimensions, input hash, prefix, and maximum sequence length alongside each score:

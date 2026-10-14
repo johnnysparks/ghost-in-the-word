@@ -16,9 +16,14 @@ def main() -> None:
     parser.add_argument("--book", action="append", help="Filter to one or more USFM book IDs")
     parser.add_argument("--left-id", required=True)
     parser.add_argument("--right-id", required=True)
+    parser.add_argument("--left-language", default="en")
+    parser.add_argument("--right-language", default="en")
     parser.add_argument("--left-name", default="Translation A")
     parser.add_argument("--right-name", default="Translation B")
     args = parser.parse_args()
+
+    if args.left_language != args.right_language:
+        raise SystemExit("build_comparison.py provides a same-language lexical baseline; use build_embedding_comparison.py for cross-language artifacts")
 
     alignment = json.loads(args.alignment.read_text(encoding="utf-8"))
     if args.book:
@@ -73,8 +78,8 @@ def main() -> None:
     output = {
         "schemaVersion": 1,
         "metadata": {
-            "leftEdition": {"id": args.left_id, "name": args.left_name},
-            "rightEdition": {"id": args.right_id, "name": args.right_name},
+            "leftEdition": {"id": args.left_id, "name": args.left_name, "language": args.left_language},
+            "rightEdition": {"id": args.right_id, "name": args.right_name, "language": args.right_language},
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
             "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {

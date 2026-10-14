@@ -19,6 +19,8 @@ def main() -> None:
     parser.add_argument("--model", required=True, help="Sentence-transformers model ID or local path")
     parser.add_argument("--left-id", required=True)
     parser.add_argument("--right-id", required=True)
+    parser.add_argument("--left-language", default="en")
+    parser.add_argument("--right-language", default="en")
     parser.add_argument("--left-name", default="Translation A")
     parser.add_argument("--right-name", default="Translation B")
     parser.add_argument("--book", action="append")
@@ -71,8 +73,12 @@ def main() -> None:
         record["order"] = index
         if unit["status"] == "matched" and unit["left_text"] and unit["right_text"]:
             record["embeddingDistance"] = distances[id(unit)]
-            record["wordingDistance"] = wording_distance(unit["left_text"], unit["right_text"])
-            record["lexicalDistance"] = lexical_distance(unit["left_text"], unit["right_text"])
+            if args.left_language == args.right_language:
+                record["wordingDistance"] = wording_distance(unit["left_text"], unit["right_text"])
+                record["lexicalDistance"] = lexical_distance(unit["left_text"], unit["right_text"])
+            else:
+                record["wordingDistance"] = None
+                record["lexicalDistance"] = None
         else:
             record["embeddingDistance"] = None
             record["wordingDistance"] = None
@@ -85,8 +91,8 @@ def main() -> None:
     output = {
         "schemaVersion": 1,
         "metadata": {
-            "leftEdition": {"id": args.left_id, "name": args.left_name},
-            "rightEdition": {"id": args.right_id, "name": args.right_name},
+            "leftEdition": {"id": args.left_id, "name": args.left_name, "language": args.left_language},
+            "rightEdition": {"id": args.right_id, "name": args.right_name, "language": args.right_language},
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
             "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {

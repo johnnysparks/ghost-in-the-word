@@ -26,8 +26,8 @@ export type ComparisonUnit = {
 export type ComparisonData = {
   schemaVersion: number;
   metadata: {
-    leftEdition: { id: string; name: string };
-    rightEdition: { id: string; name: string };
+    leftEdition: { id: string; name: string; language?: string };
+    rightEdition: { id: string; name: string; language?: string };
     scope: { books: string[]; unit: string };
     alignment: { method: string; statuses: Record<string, number> };
     metric: {
@@ -47,8 +47,8 @@ export type ComparisonManifest = {
   schemaVersion: number;
   kind: "comparison-partition-manifest";
   comparison: {
-    leftEdition: { id: string; name: string };
-    rightEdition: { id: string; name: string };
+    leftEdition: { id: string; name: string; language?: string };
+    rightEdition: { id: string; name: string; language?: string };
     metric: ComparisonData["metadata"]["metric"];
     alignment: ComparisonData["metadata"]["alignment"];
     scope: { books: string[]; unit: string };
