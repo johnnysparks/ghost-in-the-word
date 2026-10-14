@@ -178,11 +178,13 @@ function ResultsTable({
   distanceLabel: string;
   sameLanguage: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   return (
     <section className="panel results-table-panel" aria-labelledby="results-table-title">
       <div className="panel-heading"><div><p className="eyebrow">05 · ACCESSIBLE RESULTS</p><h2 id="results-table-title">Read every visible point.</h2></div><span className="table-count">{units.length.toLocaleString()} rows</span></div>
       <p className="panel-intro">This table mirrors the current book, chapter, search, and brush filters. Use the reference buttons to select a row and synchronize the chart and reader.</p>
-      <div className="results-table-wrap">
+      <div className="results-table-controls"><button className="table-toggle" aria-expanded={expanded} aria-controls="comparison-results-table" onClick={() => setExpanded((value) => !value)}>{expanded ? "Hide table" : "Show table"}</button><span>Rows are loaded when opened for faster navigation.</span></div>
+      {expanded && <div className="results-table-wrap" id="comparison-results-table">
         <table>
           <caption className="sr-only">Filtered translation comparison results</caption>
           <thead><tr><th scope="col">Reference</th><th scope="col">Status</th><th scope="col">{distanceLabel}</th><th scope="col">Wording</th><th scope="col">Translation A</th><th scope="col">Translation B</th></tr></thead>
@@ -197,7 +199,7 @@ function ResultsTable({
             </tr>
           ))}</tbody>
         </table>
-      </div>
+      </div>}
     </section>
   );
 }
