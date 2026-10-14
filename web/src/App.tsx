@@ -437,6 +437,10 @@ function App() {
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p><TranslationNotes notes={selected.leftNotes} /></article>
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p><TranslationNotes notes={selected.rightNotes} /></article>
             </div>
+            {(previous || next) && <div className="reader-context" aria-label="Adjacent verse context">
+              {previous && <button onClick={() => selectUnit(previous)}><span>← {previous.reference}</span><small>{previous.leftText ?? "No aligned text"}</small></button>}
+              {next && <button onClick={() => selectUnit(next)}><span>{next.reference} →</span><small>{next.leftText ?? "No aligned text"}</small></button>}
+            </div>}
             <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
           </> : <p className="empty-state">No verses match this filter.</p>}
         </section>
