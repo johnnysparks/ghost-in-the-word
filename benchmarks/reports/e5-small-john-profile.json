@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "kind": "embedding-profile",
+  "comparison": "web/public/data/john-webp-bsb.json",
+  "scope": {
+    "books": [
+      "JHN"
+    ],
+    "unitCount": 878
+  },
+  "run": {
+    "modelId": "intfloat/multilingual-e5-small",
+    "dimensions": 384,
+    "maxSeqLength": 512,
+    "prefix": "query: ",
+    "inputHash": "0e18164f9f68e18cb2a3fabc5917c7d643db8a0e09583960956ac91acde230f8"
+  },
+  "tokens": {
+    "inputCount": 1756,
+    "total": 56256,
+    "mean": 32.036,
+    "max": 80,
+    "overMaxSeqLength": 0
+  },
+  "performance": {
+    "batchSize": 32,
+    "modelLoadSeconds": 4.574288,
+    "encodeSeconds": 3.088487,
+    "unitsPerSecond": 284.281599,
+    "inputsPerSecond": 568.563199,
+    "peakRssBytes": 787136512,
+    "platform": "macOS-26.4.1-arm64-arm-64bit"
+  },
+  "projection": {
+    "targetUnits": 31103,
+    "editionCount": 3,
+    "rawFloat32VectorBytes": 143322624,
+    "estimatedEncodeSeconds": 109.409
+  },
+  "interpretation": "Capacity and throughput measurements for planning only; they do not evaluate translation quality."
+}

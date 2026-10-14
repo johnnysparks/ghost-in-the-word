@@ -36,6 +36,20 @@ def input_hash(texts: Iterable[str]) -> str:
     return digest.hexdigest()
 
 
+def embedding_storage_bytes(
+    unit_count: int,
+    edition_count: int,
+    dimensions: int,
+    *,
+    bytes_per_value: int = 4,
+) -> int:
+    """Estimate raw dense-vector storage before metadata or compression."""
+
+    if min(unit_count, edition_count, dimensions, bytes_per_value) < 0:
+        raise ValueError("embedding storage dimensions must be non-negative")
+    return unit_count * edition_count * dimensions * bytes_per_value
+
+
 def cosine_distance(left: Sequence[float], right: Sequence[float]) -> float:
     if len(left) != len(right):
         raise ValueError("embedding dimensions do not match")

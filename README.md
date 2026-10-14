@@ -135,6 +135,22 @@ PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   --output data/derived/john-e5-small.json
 ```
 
+Before scaling a model run, profile tokenizer lengths, truncation risk, throughput,
+peak RSS, and raw-vector capacity. The checked-in E5-small John profile uses 878 matched
+verses and projects the measured rate to the full 31,103-unit atlas:
+
+```sh
+PYTHONPATH=src python3 scripts/profile_embeddings.py \
+  web/public/data/john-webp-bsb.json --book JHN \
+  --model intfloat/multilingual-e5-small --batch-size 32 \
+  --target-units 31103 --edition-count 3 \
+  --output benchmarks/reports/e5-small-john-profile.json
+```
+
+This report is a capacity measurement, not a quality result; it records zero pilot
+inputs beyond the model sequence limit and keeps provider cost assumptions out of the
+measurement.
+
 For a named panel experiment, provide one vector per edition and passage in a
 `passages[].vectors` object, then build an offline latent-reference artifact. Exclude
 the two editions under comparison; the estimator reports the normalized weighted

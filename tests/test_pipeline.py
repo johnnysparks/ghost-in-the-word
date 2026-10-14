@@ -6,7 +6,7 @@ from pathlib import Path
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.assessment import Assessment, validate_assessment_document
 from ghost_in_word.assessment_attachment import attach_assessment_document
-from ghost_in_word.embeddings import cosine_distance, input_hash
+from ghost_in_word.embeddings import cosine_distance, embedding_storage_bytes, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
 from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews, validate_review_packet
@@ -215,6 +215,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(cosine_distance([1.0, 0.0], [0.0, 1.0]), 1.0)
         self.assertEqual(input_hash(["one", "two"]), input_hash(["one", "two"]))
         self.assertNotEqual(input_hash(["one", "two"]), input_hash(["two", "one"]))
+        self.assertEqual(embedding_storage_bytes(10, 3, 384), 46080)
 
     def test_reference_estimate_excludes_pair_and_caps_related_family(self) -> None:
         estimate = estimate_reference(

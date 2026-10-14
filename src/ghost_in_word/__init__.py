@@ -3,7 +3,7 @@
 from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_segments, align_with_mappings, mapping_from_dict, parse_reference
 from .assessment import Assessment, validate_assessment_document
 from .assessment_attachment import attach_assessment_document
-from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
+from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, embedding_storage_bytes, input_hash
 from .models import Edition, TextSegment
 from .matrix import build_translation_matrix
 from .review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
@@ -30,6 +30,7 @@ __all__ = [
     "cosine_distance",
     "encode_texts",
     "input_hash",
+    "embedding_storage_bytes",
     "estimate_reference",
     "distance_to_reference",
     "lexical_distance",
