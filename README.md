@@ -75,6 +75,7 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
   --left-id edition-a --right-id edition-b \
   --mapping mappings/edition-a-edition-b-independent.json \
   --require-independent \
+  --require-snapshot-binding \
   --output data/derived/edition-a-edition-b-alignment.json \
   --mapping-report data/derived/edition-a-edition-b-mapping-review.json
 ```
@@ -82,7 +83,9 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
 Each mapping record must retain `reviewers` with at least two distinct IDs and
 `independence: "declared"` in its review object. This is an auditable input
 requirement, not proof that the people were actually independent; the mapping report
-records both the declared panel count and whether every record met the gate.
+records both the declared panel count and whether every record met the gate. The
+snapshot-binding flag also requires each review record to carry the exact left and
+right directory hashes from the packet.
 
 To create that independently reviewed mapping file without exposing existing review
 metadata, build a blind packet from the pinned source directories:

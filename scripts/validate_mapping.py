@@ -30,27 +30,38 @@ def main() -> None:
         action="store_true",
         help="Require at least two distinct declared reviewers on every mapping record",
     )
+    parser.add_argument(
+        "--require-snapshot-binding",
+        action="store_true",
+        help="Require review records to bind to the exact source snapshot hashes",
+    )
     args = parser.parse_args()
 
     left = parse_usfm_directory(args.left, args.left_id)
     right = parse_usfm_directory(args.right, args.right_id)
     records = json.loads(args.mapping.read_text(encoding="utf-8"))
-    if args.require_independent and args.allow_unreviewed:
-        raise SystemExit("--require-independent cannot be combined with --allow-unreviewed")
+    if (args.require_independent or args.require_snapshot_binding) and args.allow_unreviewed:
+        raise SystemExit("strict mapping review requirements cannot be combined with --allow-unreviewed")
+    source_bindings = {
+        "left": bind_snapshot(args.left, args.left_id),
+        "right": bind_snapshot(args.right, args.right_id),
+    }
     report = validate_mapping_document(
         records,
         left,
         right,
         require_review=not args.allow_unreviewed,
         require_independent_review=args.require_independent,
+        require_snapshot_binding=args.require_snapshot_binding,
+        source_bindings=source_bindings,
     )
     report["mappingFile"] = {
         "path": str(args.mapping),
         "sha256": hashlib.sha256(args.mapping.read_bytes()).hexdigest(),
     }
     report["sources"] = {
-        "left": bind_snapshot(args.left, args.left_id),
-        "right": bind_snapshot(args.right, args.right_id),
+        "left": source_bindings["left"],
+        "right": source_bindings["right"],
     }
     encoded = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

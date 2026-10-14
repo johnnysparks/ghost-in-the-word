@@ -287,13 +287,32 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(approved["method"], "candidate-bridge")
         self.assertEqual(approved["review"]["reviewers"], ["reviewer-1", "reviewer-2"])
         self.assertEqual(approved["review"]["independence"], "declared")
+        self.assertEqual(approved["review"]["sourceBindings"]["left"]["directorySha256"], "abc")
         applied_report = validate_mapping_document(
             report["approvedMappings"],
             left,
             right,
             require_independent_review=True,
+            require_snapshot_binding=True,
+            source_bindings={
+                "left": packet["source"]["leftSnapshot"],
+                "right": packet["source"]["rightSnapshot"],
+            },
         )
         self.assertTrue(applied_report["summary"]["independentReviewEligible"])
+        self.assertTrue(applied_report["summary"]["snapshotBindingEligible"])
+        bad_bindings = {
+            "left": {**packet["source"]["leftSnapshot"], "directorySha256": "changed"},
+            "right": packet["source"]["rightSnapshot"],
+        }
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            validate_mapping_document(
+                report["approvedMappings"],
+                left,
+                right,
+                require_snapshot_binding=True,
+                source_bindings=bad_bindings,
+            )
 
         responses[1]["items"][0]["decision"] = "uncertain"
         rejected = summarize_mapping_reviews(responses, packet=packet, candidate_records=candidate_records)

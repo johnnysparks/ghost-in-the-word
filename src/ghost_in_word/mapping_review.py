@@ -29,6 +29,8 @@ def validate_mapping_document(
     *,
     require_review: bool = True,
     require_independent_review: bool = False,
+    require_snapshot_binding: bool = False,
+    source_bindings: Mapping[str, Mapping[str, object]] | None = None,
 ) -> dict[str, object]:
     """Validate an exception mapping and return an auditable compact report.
 
@@ -43,6 +45,8 @@ def validate_mapping_document(
 
     if require_independent_review and not require_review:
         raise ValueError("independent mapping review requires reviewer evidence")
+    if require_snapshot_binding and source_bindings is None:
+        raise ValueError("snapshot-bound mapping review needs source bindings")
 
     if not isinstance(records, list):
         raise ValueError("mapping document must contain a JSON array")
@@ -76,6 +80,18 @@ def validate_mapping_document(
                     raise ValueError(f"mapping record {index} independent review reviewers must be distinct")
                 if review.get("independence") != "declared":
                     raise ValueError(f"mapping record {index} independent review needs independence: declared")
+            if require_snapshot_binding:
+                bindings = review.get("sourceBindings")
+                if not isinstance(bindings, Mapping):
+                    raise ValueError(f"mapping record {index} review needs sourceBindings")
+                for side in ("left", "right"):
+                    expected = source_bindings.get(side) if source_bindings is not None else None
+                    actual = bindings.get(side)
+                    if not isinstance(expected, Mapping) or not isinstance(actual, Mapping):
+                        raise ValueError(f"mapping record {index} review needs {side} source binding")
+                    for field in ("edition", "directorySha256"):
+                        if actual.get(field) != expected.get(field):
+                            raise ValueError(f"mapping record {index} {side} source binding does not match the pinned snapshot")
         mapping_type = _mapping_type(len(mapping.left), len(mapping.right))
         status = mapping.status if mapping.status != "matched" else (
             "matched" if mapping.left and mapping.right else ("missing-right" if mapping.left else "missing-left")
@@ -104,6 +120,13 @@ def validate_mapping_document(
         and len({str(reviewer).strip() for reviewer in mapping.review["reviewers"] if str(reviewer).strip()}) >= 2
         and mapping.review.get("independence") == "declared"
     )
+    snapshot_binding_count = sum(
+        1
+        for mapping in parsed
+        if isinstance(mapping.review, Mapping)
+        and isinstance(mapping.review.get("sourceBindings"), Mapping)
+        and all(isinstance(mapping.review["sourceBindings"].get(side), Mapping) for side in ("left", "right"))
+    )
     return {
         "schemaVersion": 1,
         "kind": "alignment-review-report",
@@ -117,6 +140,9 @@ def validate_mapping_document(
             "independentReviewCount": independent_count,
             "independentReviewRequired": require_independent_review,
             "independentReviewEligible": bool(parsed) and independent_count == len(parsed) if require_independent_review else None,
+            "snapshotBindingRequired": require_snapshot_binding,
+            "snapshotBindingCount": snapshot_binding_count,
+            "snapshotBindingEligible": snapshot_binding_count == len(parsed) if require_snapshot_binding else None,
         },
         "mappings": entries,
     }
@@ -267,6 +293,13 @@ def summarize_mapping_reviews(
     packet_summary = validate_mapping_review_packet(packet)
     packet_ids = set(packet_summary["itemIds"])
     packet_items = {str(item["id"]): item for item in packet["items"] if isinstance(item, Mapping)}
+    packet_source = packet.get("source")
+    packet_bindings: dict[str, object] = {}
+    if isinstance(packet_source, Mapping):
+        for side, field in (("left", "leftSnapshot"), ("right", "rightSnapshot")):
+            snapshot = packet_source.get(field)
+            if isinstance(snapshot, Mapping):
+                packet_bindings[side] = dict(snapshot)
     candidate_by_id: dict[str, dict[str, object]] = {}
     if candidate_records is not None:
         if not isinstance(candidate_records, list) or len(candidate_records) != len(packet_ids):
@@ -361,6 +394,8 @@ def summarize_mapping_reviews(
                 "evidence": evidence,
                 "reviewEvidence": votes,
             }
+            if set(packet_bindings) == {"left", "right"}:
+                mapping_record["review"]["sourceBindings"] = packet_bindings
             approved.append(mapping_record)
 
     gate = {

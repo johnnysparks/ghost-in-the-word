@@ -39,31 +39,39 @@ def main() -> None:
         action="store_true",
         help="Require at least two distinct declared reviewers on every mapping record before applying it.",
     )
+    parser.add_argument(
+        "--require-snapshot-binding",
+        action="store_true",
+        help="Require review records to bind to the exact source snapshot hashes before applying them.",
+    )
     args = parser.parse_args()
 
     left = parse_usfm_directory(args.left, args.left_id)
     right = parse_usfm_directory(args.right, args.right_id)
     mapping_report = None
     if args.mapping:
-        if args.require_independent and args.allow_unreviewed:
-            raise SystemExit("--require-independent cannot be combined with --allow-unreviewed")
+        if (args.require_independent or args.require_snapshot_binding) and args.allow_unreviewed:
+            raise SystemExit("strict mapping review requirements cannot be combined with --allow-unreviewed")
         try:
             mapping_records = json.loads(args.mapping.read_text(encoding="utf-8"))
+            source_bindings = {
+                "left": bind_snapshot(args.left, args.left_id),
+                "right": bind_snapshot(args.right, args.right_id),
+            }
             mapping_report = validate_mapping_document(
                 mapping_records,
                 left,
                 right,
                 require_review=not args.allow_unreviewed,
                 require_independent_review=args.require_independent,
+                require_snapshot_binding=args.require_snapshot_binding,
+                source_bindings=source_bindings,
             )
             mapping_report["mappingFile"] = {
                 "path": str(args.mapping),
                 "sha256": _sha256(args.mapping),
             }
-            mapping_report["sources"] = {
-                "left": bind_snapshot(args.left, args.left_id),
-                "right": bind_snapshot(args.right, args.right_id),
-            }
+            mapping_report["sources"] = source_bindings
         except (OSError, json.JSONDecodeError, ValueError) as exc:
             raise SystemExit(str(exc)) from exc
         units = align_with_mappings(left, right, [mapping_from_dict(record) for record in mapping_records])
