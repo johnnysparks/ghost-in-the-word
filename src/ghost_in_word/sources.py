@@ -84,3 +84,34 @@ def edition_to_dict(edition: Edition) -> dict[str, object]:
     if edition.attribution:
         record["attribution"] = edition.attribution
     return record
+
+
+def comparison_edition_metadata(
+    edition_id: str,
+    *,
+    name: str,
+    language: str,
+    role: str,
+    manifest: str | Path | None = None,
+) -> dict[str, object]:
+    """Build comparison metadata, optionally resolving an edition manifest.
+
+    When a manifest is supplied it is authoritative for language, role,
+    provenance, license, canon, and attribution. Explicit custom names remain
+    available for small experiments, while mismatched language or role flags
+    fail instead of silently producing misleading provenance.
+    """
+
+    if manifest is None:
+        return {"id": edition_id, "name": name, "language": language, "role": role}
+    edition = load_editions(manifest).get(edition_id)
+    if edition is None:
+        raise ValueError(f"edition {edition_id!r} is not present in manifest {manifest}")
+    if language != edition.language and language != "en":
+        raise ValueError(f"language flag {language!r} does not match manifest edition {edition_id!r} ({edition.language!r})")
+    if role != edition.role and role != "translation":
+        raise ValueError(f"role flag {role!r} does not match manifest edition {edition_id!r} ({edition.role!r})")
+    record = edition_to_dict(edition)
+    if name not in {"Translation A", "Translation B"}:
+        record["name"] = name
+    return record

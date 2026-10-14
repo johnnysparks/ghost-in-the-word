@@ -90,6 +90,7 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
 PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   data/derived/webp-rv1909-alignment.json --book JHN \
   --left-id webp --right-id rv1909 --left-language en --right-language es \
+  --manifest sources.json \
   --model intfloat/multilingual-e5-small \
   --output data/derived/john-webp-rv1909-e5-small.json
 ```
@@ -105,6 +106,21 @@ required attribution. Source-role metadata is shown in the reader and provenance
 the source comparison remains an exploratory reference point, not an automatic
 faithfulness grade.
 
+Build that source pilot with the same manifest-resolved provenance:
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/webp data/raw/srgrc \
+  --left-id webp --right-id srgrc \
+  --output data/derived/webp-srgrc-alignment.json
+PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
+  data/derived/webp-srgrc-alignment.json --book JHN \
+  --left-id webp --right-id srgrc --left-language en --right-language grc \
+  --left-role translation --right-role source --manifest sources.json \
+  --model intfloat/multilingual-e5-small \
+  --output data/derived/john-webp-srgrc-e5-small.json
+```
+
 Embedding experiments are an optional offline step. Install the extra in an isolated
 environment, then run the model-specific builder. The output records the model ID,
 dimensions, input hash, prefix, and maximum sequence length alongside each score:
@@ -114,6 +130,7 @@ python3 -m pip install -e '.[embeddings]'
 PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   data/derived/webp-bsb.json --book JHN \
   --left-id webp --right-id bsb \
+  --manifest sources.json \
   --model intfloat/multilingual-e5-small \
   --output data/derived/john-e5-small.json
 ```

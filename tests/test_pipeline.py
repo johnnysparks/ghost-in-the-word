@@ -11,7 +11,7 @@ from ghost_in_word.matrix import build_translation_matrix
 from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
-from ghost_in_word.sources import load_editions
+from ghost_in_word.sources import comparison_edition_metadata, load_editions
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 from ghost_in_word.windows import build_windows
@@ -483,6 +483,8 @@ class PipelineTests(unittest.TestCase):
         source_fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-srgrc-e5-small.json").read_text(encoding="utf-8"))
         self.assertEqual(source_fixture["metadata"]["rightEdition"]["role"], "source")
         self.assertEqual(source_fixture["metadata"]["rightEdition"]["language"], "grc")
+        self.assertEqual(source_fixture["metadata"]["rightEdition"]["license"], "CC-BY-4.0")
+        self.assertIn("Center for New Testament Restoration", source_fixture["metadata"]["rightEdition"]["attribution"])
         self.assertLess(source_fixture["summary"]["scoredUnits"], source_fixture["summary"]["totalUnits"])
 
     def test_source_manifest_validates_roles_and_attribution(self) -> None:
@@ -490,6 +492,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(editions["rv1909"].language, "es")
         self.assertEqual(editions["srgrc"].role, "source")
         self.assertIn("Center for New Testament Restoration", editions["srgrc"].attribution)
+
+    def test_comparison_metadata_carries_source_provenance(self) -> None:
+        metadata = comparison_edition_metadata(
+            "srgrc",
+            name="Translation B",
+            language="en",
+            role="translation",
+            manifest=Path(__file__).parents[1] / "sources.json",
+        )
+        self.assertEqual(metadata["language"], "grc")
+        self.assertEqual(metadata["role"], "source")
+        self.assertEqual(metadata["license"], "CC-BY-4.0")
+        self.assertIn("Center for New Testament Restoration", metadata["attribution"])
 
     def test_atlas_manifest_exposes_book_and_chapter_summaries(self) -> None:
         manifest = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/manifest.json").read_text(encoding="utf-8"))

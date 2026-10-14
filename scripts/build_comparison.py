@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 from ghost_in_word.alignment import alignment_method
+from ghost_in_word.sources import comparison_edition_metadata
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -22,10 +23,29 @@ def main() -> None:
     parser.add_argument("--right-name", default="Translation B")
     parser.add_argument("--left-role", default="translation")
     parser.add_argument("--right-role", default="translation")
+    parser.add_argument("--manifest", type=Path, help="Edition manifest used to attach provenance metadata")
     args = parser.parse_args()
 
     if args.left_language != args.right_language:
         raise SystemExit("build_comparison.py provides a same-language lexical baseline; use build_embedding_comparison.py for cross-language artifacts")
+
+    try:
+        left_edition = comparison_edition_metadata(
+            args.left_id,
+            name=args.left_name,
+            language=args.left_language,
+            role=args.left_role,
+            manifest=args.manifest,
+        )
+        right_edition = comparison_edition_metadata(
+            args.right_id,
+            name=args.right_name,
+            language=args.right_language,
+            role=args.right_role,
+            manifest=args.manifest,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     alignment = json.loads(args.alignment.read_text(encoding="utf-8"))
     if args.book:
@@ -82,8 +102,8 @@ def main() -> None:
     output = {
         "schemaVersion": 1,
         "metadata": {
-            "leftEdition": {"id": args.left_id, "name": args.left_name, "language": args.left_language, "role": args.left_role},
-            "rightEdition": {"id": args.right_id, "name": args.right_name, "language": args.right_language, "role": args.right_role},
+            "leftEdition": left_edition,
+            "rightEdition": right_edition,
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
             "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {

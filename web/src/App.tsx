@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { ComparisonData, ComparisonManifest, ComparisonUnit, TranslationMatrix } from "./types";
+import type { ComparisonData, ComparisonManifest, ComparisonUnit, EditionMetadata, TranslationMatrix } from "./types";
 
 type PairConfig = {
   id: string;
@@ -124,6 +124,18 @@ function TranslationNotes({ notes }: { notes?: string[] }) {
       <summary>Notes ({notes.length})</summary>
       <ul>{notes.map((note, index) => <li key={`${index}-${note}`}>{note}</li>)}</ul>
     </details>
+  );
+}
+
+function EditionProvenanceRows({ label, edition }: { label: string; edition: EditionMetadata }) {
+  return (
+    <>
+      <dt>{label}</dt><dd>{edition.name} · {edition.role ?? "translation"}</dd>
+      {edition.source && <><dt>{label} source</dt><dd><a href={edition.source} target="_blank" rel="noreferrer">{edition.source}</a></dd></>}
+      {edition.license && <><dt>{label} license</dt><dd>{edition.license}</dd></>}
+      {edition.attribution && <><dt>{label} attribution</dt><dd>{edition.attribution}</dd></>}
+      {edition.canon && <><dt>{label} canon</dt><dd>{edition.canon}</dd></>}
+    </>
   );
 }
 
@@ -647,9 +659,9 @@ function App() {
 
       <ResultsTable units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} sameLanguage={sameLanguage} />
 
-      <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} {sourceMode ? "A source edition is shown as a textual reference point; this does not produce a faithfulness grade." : ""} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd><dt>Roles</dt><dd>{data.metadata.leftEdition.role ?? "translation"} → {data.metadata.rightEdition.role ?? "translation"}</dd>{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd>{data.metadata.embeddingRun.leftInputHash && <><dt>Left input hash</dt><dd>{data.metadata.embeddingRun.leftInputHash}</dd><dt>Right input hash</dt><dd>{data.metadata.embeddingRun.rightInputHash}</dd></>}</>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
+      <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} {sourceMode ? "A source edition is shown as a textual reference point; this does not produce a faithfulness grade." : ""} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd><dt>Roles</dt><dd>{data.metadata.leftEdition.role ?? "translation"} → {data.metadata.rightEdition.role ?? "translation"}</dd><EditionProvenanceRows label="Edition A" edition={data.metadata.leftEdition} /><EditionProvenanceRows label="Edition B" edition={data.metadata.rightEdition} />{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd>{data.metadata.embeddingRun.leftInputHash && <><dt>Left input hash</dt><dd>{data.metadata.embeddingRun.leftInputHash}</dd><dt>Right input hash</dt><dd>{data.metadata.embeddingRun.rightInputHash}</dd></>}</>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
 
-      <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
+      <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={data.metadata.leftEdition.source ?? pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={data.metadata.rightEdition.source ?? pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>
   );
 }

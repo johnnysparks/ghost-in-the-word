@@ -43,6 +43,21 @@ def build_translation_matrix(
                 "name": str(edition.get("name", edition_id)),
                 "language": edition.get("language"),
             }
+            for field in (
+                "role",
+                "source",
+                "download",
+                "format",
+                "license",
+                "canon",
+                "revision",
+                "versification",
+                "sourceTradition",
+                "family",
+                "attribution",
+            ):
+                if field in edition:
+                    normalized[field] = edition[field]
             previous = edition_metadata.get(edition_id)
             if previous is not None and previous != normalized:
                 raise ValueError(f"conflicting metadata for edition {edition_id}")

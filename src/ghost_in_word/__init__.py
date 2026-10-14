@@ -8,7 +8,7 @@ from .matrix import build_translation_matrix
 from .review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from .reference import ReferenceEstimate, distance_to_reference, estimate_reference
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
-from .sources import edition_to_dict, load_editions
+from .sources import comparison_edition_metadata, edition_to_dict, load_editions
 from .summary import summarize_units
 from .usfm import parse_usfm
 from .windows import build_windows
@@ -46,6 +46,7 @@ __all__ = [
     "wording_distance",
     "validate_assessment_document",
     "edition_to_dict",
+    "comparison_edition_metadata",
     "load_editions",
     "build_windows",
 ]

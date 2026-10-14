@@ -24,11 +24,27 @@ export type ComparisonUnit = {
   embeddingDistance?: number | null;
 };
 
+export type EditionMetadata = {
+  id: string;
+  name: string;
+  language?: string;
+  role?: string;
+  source?: string;
+  download?: string;
+  license?: string;
+  canon?: string;
+  revision?: string;
+  versification?: string;
+  sourceTradition?: string;
+  family?: string;
+  attribution?: string;
+};
+
 export type ComparisonData = {
   schemaVersion: number;
   metadata: {
-    leftEdition: { id: string; name: string; language?: string; role?: string };
-    rightEdition: { id: string; name: string; language?: string; role?: string };
+    leftEdition: EditionMetadata;
+    rightEdition: EditionMetadata;
     scope: { books: string[]; unit: string };
     alignment: { method: string; statuses: Record<string, number> };
     metric: {
@@ -57,8 +73,8 @@ export type ComparisonManifest = {
   schemaVersion: number;
   kind: "comparison-partition-manifest";
   comparison: {
-    leftEdition: { id: string; name: string; language?: string; role?: string };
-    rightEdition: { id: string; name: string; language?: string; role?: string };
+    leftEdition: EditionMetadata;
+    rightEdition: EditionMetadata;
     metric: ComparisonData["metadata"]["metric"];
     alignment: ComparisonData["metadata"]["alignment"];
     scope: { books: string[]; unit: string };
@@ -81,7 +97,7 @@ export type TranslationMatrix = {
   schemaVersion: number;
   kind: "translation-distance-matrix";
   metadata: {
-    editions: Array<{ id: string; name: string; language?: string; role?: string }>;
+    editions: EditionMetadata[];
     scope: { books: string[]; unit: string };
     metric: { id: string; label: string; description: string };
     sourceArtifacts?: string[];

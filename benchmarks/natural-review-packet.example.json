@@ -5,12 +5,24 @@
     "leftEdition": {
       "id": "webp",
       "name": "World English Bible Protestant Edition",
-      "language": "en"
+      "language": "en",
+      "source": "https://ebible.org/find/details.php?id=engwebp",
+      "download": "https://ebible.org/Scriptures/engwebp_usfm.zip",
+      "format": "usfm",
+      "license": "public-domain",
+      "canon": "protestant-66",
+      "role": "translation"
     },
     "rightEdition": {
       "id": "bsb",
       "name": "Berean Standard Bible",
-      "language": "en"
+      "language": "en",
+      "source": "https://berean.bible/downloads.htm",
+      "download": "https://bereanbible.com/bsb_usfm.zip",
+      "format": "usfm",
+      "license": "public-domain",
+      "canon": "protestant-66",
+      "role": "translation"
     },
     "metric": {
       "id": "lexical-baseline",
@@ -23,7 +35,7 @@
     "seed": 20261014,
     "requestedCount": 200,
     "selectedCount": 200,
-    "candidateCount": 31084,
+    "candidateCount": 31086,
     "topCount": 30,
     "backgroundCount": 170,
     "genres": {
@@ -35,13 +47,13 @@
   },
   "items": [
     {
-      "id": "1CO-8-2",
-      "reference": "1CO 8:2",
-      "book": "1CO",
-      "chapter": 8,
-      "verse": "2",
-      "leftText": "But if anyone thinks that he knows anything, he doesn’t yet know as he ought to know.",
-      "rightText": "The one who thinks he knows something does not yet know as he ought to know."
+      "id": "PHP-4-19",
+      "reference": "PHP 4:19",
+      "book": "PHP",
+      "chapter": 4,
+      "verse": "19",
+      "leftText": "My God will supply every need of yours according to his riches in glory in Christ Jesus.",
+      "rightText": "And my God will supply all your needs according to His glorious riches in Christ Jesus."
     },
     {
       "id": "LEV-14-54",
@@ -89,13 +101,13 @@
       "rightText": "I say to you that many will come from the east and the west to share the banquet with Abraham, Isaac, and Jacob in the kingdom of heaven."
     },
     {
-      "id": "JUD-1-24",
-      "reference": "JUD 1:24",
-      "book": "JUD",
+      "id": "TIT-1-5",
+      "reference": "TIT 1:5",
+      "book": "TIT",
       "chapter": 1,
-      "verse": "24",
-      "leftText": "Now to him who is able to keep them from stumbling, and to present you faultless before the presence of his glory in great joy,",
-      "rightText": "Now to Him who is able to keep you from stumbling and to present you unblemished in His glorious presence, with great joy —"
+      "verse": "5",
+      "leftText": "I left you in Crete for this reason, that you would set in order the things that were lacking and appoint elders in every city, as I directed you—",
+      "rightText": "The reason I left you in Crete was that you would set in order what was unfinished and appoint elders in every town, as I directed you."
     },
     {
       "id": "GEN-15-8",
@@ -179,13 +191,13 @@
       "rightText": "But some of them went to the Pharisees and told them what Jesus had done."
     },
     {
-      "id": "2TI-3-1",
-      "reference": "2TI 3:1",
-      "book": "2TI",
-      "chapter": 3,
-      "verse": "1",
-      "leftText": "But know this: that in the last days, grievous times will come.",
-      "rightText": "But understand this: In the last days terrible times will come."
+      "id": "ROM-16-20",
+      "reference": "ROM 16:20",
+      "book": "ROM",
+      "chapter": 16,
+      "verse": "20",
+      "leftText": "And the God of peace will quickly crush Satan under your feet.",
+      "rightText": "The God of peace will soon crush Satan under your feet. The grace of our Lord Jesus Christ be with you."
     },
     {
       "id": "JOB-2-12",
@@ -269,13 +281,13 @@
       "rightText": "But you may eat any clean bird."
     },
     {
-      "id": "EPH-3-4",
-      "reference": "EPH 3:4",
-      "book": "EPH",
-      "chapter": 3,
-      "verse": "4",
-      "leftText": "by which, when you read, you can perceive my understanding in the mystery of Christ,",
-      "rightText": "In reading this, then, you will be able to understand my insight into the mystery of Christ,"
+      "id": "2CO-2-6",
+      "reference": "2CO 2:6",
+      "book": "2CO",
+      "chapter": 2,
+      "verse": "6",
+      "leftText": "This punishment which was inflicted by the many is sufficient for such a one;",
+      "rightText": "The punishment imposed on him by the majority is sufficient for him."
     },
     {
       "id": "EZK-21-27",
@@ -341,13 +353,13 @@
       "rightText": "What exists has already been, and what will be has already been, for God will call to account what has passed."
     },
     {
-      "id": "1JN-3-16",
-      "reference": "1JN 3:16",
-      "book": "1JN",
-      "chapter": 3,
-      "verse": "16",
-      "leftText": "By this we know love, because he laid down his life for us. And we ought to lay down our lives for the brothers.",
-      "rightText": "By this we know what love is: Jesus laid down His life for us, and we ought to lay down our lives for our brothers."
+      "id": "COL-1-7",
+      "reference": "COL 1:7",
+      "book": "COL",
+      "chapter": 1,
+      "verse": "7",
+      "leftText": "even as you learned from Epaphras our beloved fellow servant, who is a faithful servant of Christ on your behalf,",
+      "rightText": "You learned it from Epaphras, our beloved fellow servant, who is a faithful minister of Christ on our behalf,"
     },
     {
       "id": "GEN-32-16",
@@ -404,13 +416,13 @@
       "rightText": "On this altar you must not offer unauthorized incense or a burnt offering or grain offering; nor are you to pour a drink offering on it."
     },
     {
-      "id": "1CO-3-13",
-      "reference": "1CO 3:13",
-      "book": "1CO",
-      "chapter": 3,
-      "verse": "13",
-      "leftText": "each man’s work will be revealed. For the Day will declare it, because it is revealed in fire; and the fire itself will test what sort of work each man’s work is.",
-      "rightText": "his workmanship will be evident, because the Day will bring it to light. It will be revealed with fire, and the fire will prove the quality of each man’s work."
+      "id": "2CO-8-7",
+      "reference": "2CO 8:7",
+      "book": "2CO",
+      "chapter": 8,
+      "verse": "7",
+      "leftText": "But as you abound in everything—in faith, utterance, knowledge, all earnestness, and in your love to us—see that you also abound in this grace.",
+      "rightText": "But just as you excel in everything — in faith, in speech, in knowledge, in complete earnestness, and in the love we inspired in you — see that you also excel in this grace of giving."
     },
     {
       "id": "LEV-18-1",
@@ -458,13 +470,13 @@
       "rightText": "in Jeshua, Moladah, and Beth-pelet;"
     },
     {
-      "id": "ROM-7-22",
-      "reference": "ROM 7:22",
+      "id": "ROM-7-17",
+      "reference": "ROM 7:17",
       "book": "ROM",
       "chapter": 7,
-      "verse": "22",
-      "leftText": "For I delight in God’s law after the inward person,",
-      "rightText": "For in my inner being I delight in God’s law."
+      "verse": "17",
+      "leftText": "So now it is no more I that do it, but sin which dwells in me.",
+      "rightText": "In that case, it is no longer I who do it, but it is sin living in me that does it."
     },
     {
       "id": "PSA-18-1",
@@ -476,13 +488,13 @@
       "rightText": "For the choirmaster. Of David the servant of the LORD, who sang this song to the LORD on the day the LORD had delivered him from the hand of all his enemies and from the hand of Saul. He said:"
     },
     {
-      "id": "1TI-5-5",
-      "reference": "1TI 5:5",
-      "book": "1TI",
-      "chapter": 5,
-      "verse": "5",
-      "leftText": "Now she who is a widow indeed and desolate, has her hope set on God and continues in petitions and prayers night and day.",
-      "rightText": "The widow who is truly in need and left all alone puts her hope in God and continues night and day in her petitions and prayers."
+      "id": "1CO-11-11",
+      "reference": "1CO 11:11",
+      "book": "1CO",
+      "chapter": 11,
+      "verse": "11",
+      "leftText": "Nevertheless, neither is the woman independent of the man, nor the man independent of the woman, in the Lord.",
+      "rightText": "In the Lord, however, woman is not independent of man, nor is man independent of woman."
     },
     {
       "id": "JOB-12-22",
@@ -521,13 +533,13 @@
       "rightText": "Sihon king of the Amorites,"
     },
     {
-      "id": "1TH-4-14",
-      "reference": "1TH 4:14",
-      "book": "1TH",
-      "chapter": 4,
-      "verse": "14",
-      "leftText": "For if we believe that Jesus died and rose again, even so God will bring with him those who have fallen asleep in Jesus.",
-      "rightText": "For since we believe that Jesus died and rose again, we also believe that God will bring with Jesus those who have fallen asleep in Him."
+      "id": "1PE-3-18",
+      "reference": "1PE 3:18",
+      "book": "1PE",
+      "chapter": 3,
+      "verse": "18",
+      "leftText": "Because Christ also suffered for sins once, the righteous for the unrighteous, that he might bring you to God, being put to death in the flesh, but made alive in the Spirit,",
+      "rightText": "For Christ also suffered for sins once for all, the righteous for the unrighteous, to bring you to God. He was put to death in the body but made alive in the Spirit,"
     },
     {
       "id": "LAM-2-11",
@@ -611,13 +623,13 @@
       "rightText": "Surely You love the people;"
     },
     {
-      "id": "2CO-4-12",
-      "reference": "2CO 4:12",
-      "book": "2CO",
+      "id": "2TI-4-6",
+      "reference": "2TI 4:6",
+      "book": "2TI",
       "chapter": 4,
-      "verse": "12",
-      "leftText": "So then death works in us, but life in you.",
-      "rightText": "So then, death is at work in us, but life is at work in you."
+      "verse": "6",
+      "leftText": "For I am already being offered, and the time of my departure has come.",
+      "rightText": "For I am already being poured out like a drink offering, and the time of my departure is at hand."
     },
     {
       "id": "JHN-1-3",
@@ -638,13 +650,13 @@
       "rightText": "Hallelujah!"
     },
     {
-      "id": "EPH-5-10",
-      "reference": "EPH 5:10",
-      "book": "EPH",
-      "chapter": 5,
-      "verse": "10",
-      "leftText": "proving what is well pleasing to the Lord.",
-      "rightText": "Test and prove what pleases the Lord."
+      "id": "1CO-15-31",
+      "reference": "1CO 15:31",
+      "book": "1CO",
+      "chapter": 15,
+      "verse": "31",
+      "leftText": "I affirm, by the boasting in you which I have in Christ Jesus our Lord, I die daily.",
+      "rightText": "I face death every day, brothers, as surely as I boast about you in Christ Jesus our Lord."
     },
     {
       "id": "PSA-120-1",
@@ -692,22 +704,22 @@
       "rightText": "For the choirmaster. With stringed instruments. A Maskil of David. When the Ziphites went to Saul and said, “Is David not hiding among us?”"
     },
     {
-      "id": "ROM-14-8",
-      "reference": "ROM 14:8",
+      "id": "ROM-8-17",
+      "reference": "ROM 8:17",
       "book": "ROM",
-      "chapter": 14,
-      "verse": "8",
-      "leftText": "For if we live, we live to the Lord. Or if we die, we die to the Lord. If therefore we live or die, we are the Lord’s.",
-      "rightText": "If we live, we live to the Lord, and if we die, we die to the Lord. So whether we live or die, we belong to the Lord."
+      "chapter": 8,
+      "verse": "17",
+      "leftText": "and if children, then heirs—heirs of God and joint heirs with Christ, if indeed we suffer with him, that we may also be glorified with him.",
+      "rightText": "And if we are children, then we are heirs: heirs of God and co-heirs with Christ — if indeed we suffer with Him, so that we may also be glorified with Him."
     },
     {
-      "id": "PHP-4-16",
-      "reference": "PHP 4:16",
-      "book": "PHP",
-      "chapter": 4,
-      "verse": "16",
-      "leftText": "For even in Thessalonica you sent once and again to my need.",
-      "rightText": "For even while I was in Thessalonica, you provided for my needs again and again."
+      "id": "2JN-1-13",
+      "reference": "2JN 1:13",
+      "book": "2JN",
+      "chapter": 1,
+      "verse": "13",
+      "leftText": "The children of your chosen sister greet you. Amen.",
+      "rightText": "The children of your elect sister send you greetings."
     },
     {
       "id": "PRO-12-21",
@@ -719,22 +731,22 @@
       "rightText": "No harm befalls the righteous,"
     },
     {
-      "id": "1JN-3-20",
-      "reference": "1JN 3:20",
-      "book": "1JN",
-      "chapter": 3,
-      "verse": "20",
-      "leftText": "because if our heart condemns us, God is greater than our heart, and knows all things.",
-      "rightText": "Even if our hearts condemn us, God is greater than our hearts, and He knows all things."
+      "id": "EPH-5-22",
+      "reference": "EPH 5:22",
+      "book": "EPH",
+      "chapter": 5,
+      "verse": "22",
+      "leftText": "Wives, be subject to your own husbands, as to the Lord.",
+      "rightText": "Wives, submit to your husbands as to the Lord."
     },
     {
-      "id": "1PE-3-15",
-      "reference": "1PE 3:15",
-      "book": "1PE",
-      "chapter": 3,
-      "verse": "15",
-      "leftText": "But sanctify the Lord God in your hearts. Always be ready to give an answer to everyone who asks you a reason concerning the hope that is in you, with humility and fear,",
-      "rightText": "But in your hearts sanctify Christ as Lord. Always be prepared to give a defense to everyone who asks you the reason for the hope that is in you. But respond with gentleness and respect,"
+      "id": "1CO-4-6",
+      "reference": "1CO 4:6",
+      "book": "1CO",
+      "chapter": 4,
+      "verse": "6",
+      "leftText": "Now these things, brothers, I have in a figure transferred to myself and Apollos for your sakes, that in us you might learn not to think beyond the things which are written, that none of you be puffed up against one another.",
+      "rightText": "Brothers, I have applied these things to myself and Apollos for your benefit, so that you may learn from us not to go beyond what is written. Then you will not take pride in one man over another."
     },
     {
       "id": "GEN-19-35",
@@ -854,13 +866,13 @@
       "rightText": "“Behold, I am insignificant. How can I reply to You?"
     },
     {
-      "id": "GAL-4-30",
-      "reference": "GAL 4:30",
+      "id": "GAL-3-23",
+      "reference": "GAL 3:23",
       "book": "GAL",
-      "chapter": 4,
-      "verse": "30",
-      "leftText": "However, what does the Scripture say? “Throw out the servant and her son, for the son of the servant will not inherit with the son of the free woman.”",
-      "rightText": "But what does the Scripture say? “Expel the slave woman and her son, for the slave woman’s son will never share in the inheritance with the free woman’s son.”"
+      "chapter": 3,
+      "verse": "23",
+      "leftText": "But before faith came, we were kept in custody under the law, confined for the faith which should afterwards be revealed.",
+      "rightText": "Before this faith came, we were held in custody under the law, locked up until faith should be revealed."
     },
     {
       "id": "PSA-78-43",
@@ -908,13 +920,13 @@
       "rightText": "Of David."
     },
     {
-      "id": "HEB-10-20",
-      "reference": "HEB 10:20",
+      "id": "HEB-7-24",
+      "reference": "HEB 7:24",
       "book": "HEB",
-      "chapter": 10,
-      "verse": "20",
-      "leftText": "by the way which he dedicated for us, a new and living way, through the veil, that is to say, his flesh,",
-      "rightText": "by the new and living way opened for us through the curtain of His body,"
+      "chapter": 7,
+      "verse": "24",
+      "leftText": "But he, because he lives forever, has his priesthood unchangeable.",
+      "rightText": "But because Jesus lives forever, He has a permanent priesthood."
     },
     {
       "id": "ROM-3-7",
@@ -944,13 +956,13 @@
       "rightText": "But the bronze altar made by Bezalel son of Uri, the son of Hur, was in Gibeon before the tabernacle of the LORD. So Solomon and the assembly inquired of Him there."
     },
     {
-      "id": "1TH-2-11",
-      "reference": "1TH 2:11",
-      "book": "1TH",
-      "chapter": 2,
-      "verse": "11",
-      "leftText": "As you know, we exhorted, comforted, and implored every one of you, as a father does his own children,",
-      "rightText": "For you know that we treated each of you as a father treats his own children—"
+      "id": "2PE-1-13",
+      "reference": "2PE 1:13",
+      "book": "2PE",
+      "chapter": 1,
+      "verse": "13",
+      "leftText": "I think it right, as long as I am in this tent, to stir you up by reminding you,",
+      "rightText": "I think it is right to refresh your memory as long as I live in the tent of my body,"
     },
     {
       "id": "PRO-26-6",
@@ -962,13 +974,13 @@
       "rightText": "Like cutting off one’s own feet or drinking violence"
     },
     {
-      "id": "GAL-5-14",
-      "reference": "GAL 5:14",
-      "book": "GAL",
-      "chapter": 5,
-      "verse": "14",
-      "leftText": "For the whole law is fulfilled in one word, in this: “You shall love your neighbor as yourself.”",
-      "rightText": "The entire law is fulfilled in a single decree: “Love your neighbor as yourself.”"
+      "id": "2TI-4-12",
+      "reference": "2TI 4:12",
+      "book": "2TI",
+      "chapter": 4,
+      "verse": "12",
+      "leftText": "But I sent Tychicus to Ephesus.",
+      "rightText": "Tychicus, however, I have sent to Ephesus."
     },
     {
       "id": "1SA-20-15",
@@ -998,13 +1010,13 @@
       "rightText": "So we passed by our brothers, the descendants of Esau, who live in Seir. We turned away from the Arabah road, which comes up from Elath and Ezion-geber, and traveled along the road of the Wilderness of Moab."
     },
     {
-      "id": "ROM-3-1",
-      "reference": "ROM 3:1",
-      "book": "ROM",
-      "chapter": 3,
-      "verse": "1",
-      "leftText": "Then what advantage does the Jew have? Or what is the profit of circumcision?",
-      "rightText": "What, then, is the advantage of being a Jew? Or what is the value of circumcision?"
+      "id": "1CO-4-21",
+      "reference": "1CO 4:21",
+      "book": "1CO",
+      "chapter": 4,
+      "verse": "21",
+      "leftText": "What do you want? Shall I come to you with a rod, or in love and a spirit of gentleness?",
+      "rightText": "Which do you prefer? Shall I come to you with a rod, or in love and with a gentle spirit?"
     },
     {
       "id": "DEU-28-39",
@@ -1016,13 +1028,13 @@
       "rightText": "You will plant and cultivate vineyards, but will neither drink the wine nor gather the grapes, because worms will eat them."
     },
     {
-      "id": "2CO-2-8",
-      "reference": "2CO 2:8",
-      "book": "2CO",
+      "id": "1PE-2-3",
+      "reference": "1PE 2:3",
+      "book": "1PE",
       "chapter": 2,
-      "verse": "8",
-      "leftText": "Therefore I beg you to confirm your love toward him.",
-      "rightText": "Therefore I urge you to reaffirm your love for him."
+      "verse": "3",
+      "leftText": "if indeed you have tasted that the Lord is gracious.",
+      "rightText": "now that you have tasted that the Lord is good."
     },
     {
       "id": "PRO-28-28",
@@ -1070,13 +1082,13 @@
       "rightText": "But Jesus saw through their hypocrisy and said, “Why are you testing Me? Bring Me a denarius to inspect.”"
     },
     {
-      "id": "1CO-4-9",
-      "reference": "1CO 4:9",
-      "book": "1CO",
-      "chapter": 4,
-      "verse": "9",
-      "leftText": "For I think that God has displayed us, the apostles, last of all, like men sentenced to death. For we are made a spectacle to the world, both to angels and men.",
-      "rightText": "For it seems to me that God has displayed us apostles at the end of the procession, like prisoners appointed for death. We have become a spectacle to the whole world, to angels as well as to men."
+      "id": "HEB-6-1",
+      "reference": "HEB 6:1",
+      "book": "HEB",
+      "chapter": 6,
+      "verse": "1",
+      "leftText": "Therefore leaving the teaching of the first principles of Christ, let’s press on to perfection—not laying again a foundation of repentance from dead works, of faith toward God,",
+      "rightText": "Therefore let us leave the elementary teachings about Christ and go on to maturity, not laying again the foundation of repentance from dead works, and of faith in God,"
     },
     {
       "id": "PSA-77-14",
@@ -1124,13 +1136,13 @@
       "rightText": "He said of his father and mother,"
     },
     {
-      "id": "1TI-5-1",
-      "reference": "1TI 5:1",
-      "book": "1TI",
-      "chapter": 5,
-      "verse": "1",
-      "leftText": "Don’t rebuke an older man, but exhort him as a father; the younger men as brothers;",
-      "rightText": "Do not rebuke an older man, but appeal to him as to a father."
+      "id": "JAS-1-3",
+      "reference": "JAS 1:3",
+      "book": "JAS",
+      "chapter": 1,
+      "verse": "3",
+      "leftText": "knowing that the testing of your faith produces endurance.",
+      "rightText": "because you know that the testing of your faith develops perseverance."
     },
     {
       "id": "PSA-131-1",
@@ -1169,13 +1181,13 @@
       "rightText": "Then Joseph had a dream, and when he told it to his brothers, they hated him even more."
     },
     {
-      "id": "ROM-9-2",
-      "reference": "ROM 9:2",
-      "book": "ROM",
-      "chapter": 9,
-      "verse": "2",
-      "leftText": "that I have great sorrow and unceasing pain in my heart.",
-      "rightText": "I have deep sorrow and unceasing anguish in my heart."
+      "id": "1TI-1-8",
+      "reference": "1TI 1:8",
+      "book": "1TI",
+      "chapter": 1,
+      "verse": "8",
+      "leftText": "But we know that the law is good if a person uses it lawfully,",
+      "rightText": "Now we know that the law is good, if one uses it legitimately."
     },
     {
       "id": "EPH-4-14",
@@ -1313,13 +1325,13 @@
       "rightText": "Two robbers were crucified with Him, one on His right and the other on His left."
     },
     {
-      "id": "1CO-6-14",
-      "reference": "1CO 6:14",
-      "book": "1CO",
-      "chapter": 6,
-      "verse": "14",
-      "leftText": "Now God raised up the Lord, and will also raise us up by his power.",
-      "rightText": "By His power God raised the Lord from the dead, and He will raise us also."
+      "id": "GAL-4-10",
+      "reference": "GAL 4:10",
+      "book": "GAL",
+      "chapter": 4,
+      "verse": "10",
+      "leftText": "You observe days, months, seasons, and years.",
+      "rightText": "You are observing special days and months and seasons and years!"
     },
     {
       "id": "PSA-111-1",
@@ -1421,13 +1433,13 @@
       "rightText": "They must eat those things by which atonement was made for their ordination and consecration. But no outsider may eat them, because these things are sacred."
     },
     {
-      "id": "1CO-9-8",
-      "reference": "1CO 9:8",
-      "book": "1CO",
-      "chapter": 9,
-      "verse": "8",
-      "leftText": "Do I speak these things according to the ways of men? Or doesn’t the law also say the same thing?",
-      "rightText": "Do I say this from a human perspective? Doesn’t the Law say the same thing?"
+      "id": "EPH-6-15",
+      "reference": "EPH 6:15",
+      "book": "EPH",
+      "chapter": 6,
+      "verse": "15",
+      "leftText": "and having fitted your feet with the preparation of the Good News of peace,",
+      "rightText": "and with your feet fitted with the readiness of the gospel of peace."
     },
     {
       "id": "ECC-7-25",
@@ -1448,13 +1460,13 @@
       "rightText": "“What have they seen in your palace?” Isaiah asked."
     },
     {
-      "id": "1CO-1-18",
-      "reference": "1CO 1:18",
-      "book": "1CO",
-      "chapter": 1,
-      "verse": "18",
-      "leftText": "For the word of the cross is foolishness to those who are dying, but to us who are being saved it is the power of God.",
-      "rightText": "For the message of the cross is foolishness to those who are perishing, but to us who are being saved it is the power of God."
+      "id": "HEB-7-1",
+      "reference": "HEB 7:1",
+      "book": "HEB",
+      "chapter": 7,
+      "verse": "1",
+      "leftText": "For this Melchizedek, king of Salem, priest of God Most High, who met Abraham returning from the slaughter of the kings and blessed him,",
+      "rightText": "This Melchizedek was king of Salem and priest of God Most High. He met Abraham returning from the slaughter of the kings and blessed him,"
     },
     {
       "id": "LUK-1-30",
@@ -1565,13 +1577,13 @@
       "rightText": "Then the LORD said to me, “Do not harass the Moabites or provoke them to war, for I will not give you any of their land, because I have given Ar to the descendants of Lot as their possession.”"
     },
     {
-      "id": "1JN-5-12",
-      "reference": "1JN 5:12",
-      "book": "1JN",
-      "chapter": 5,
-      "verse": "12",
-      "leftText": "He who has the Son has the life. He who doesn’t have God’s Son doesn’t have the life.",
-      "rightText": "Whoever has the Son has life; whoever does not have the Son of God does not have life."
+      "id": "1CO-15-21",
+      "reference": "1CO 15:21",
+      "book": "1CO",
+      "chapter": 15,
+      "verse": "21",
+      "leftText": "For since death came by man, the resurrection of the dead also came by man.",
+      "rightText": "For since death came through a man, the resurrection of the dead comes also through a man."
     },
     {
       "id": "LEV-13-48",
@@ -1592,13 +1604,13 @@
       "rightText": "A Psalm of David."
     },
     {
-      "id": "GAL-6-4",
-      "reference": "GAL 6:4",
-      "book": "GAL",
-      "chapter": 6,
-      "verse": "4",
-      "leftText": "But let each man examine his own work, and then he will have reason to boast in himself, and not in someone else.",
-      "rightText": "Each one should test his own work. Then he will have reason to boast in himself alone, and not in someone else."
+      "id": "ROM-9-32",
+      "reference": "ROM 9:32",
+      "book": "ROM",
+      "chapter": 9,
+      "verse": "32",
+      "leftText": "Why? Because they didn’t seek it by faith, but as it were by works of the law. They stumbled over the stumbling stone,",
+      "rightText": "Why not? Because their pursuit was not by faith, but as if it were by works. They stumbled over the stumbling stone,"
     },
     {
       "id": "GEN-38-3",
@@ -1628,13 +1640,13 @@
       "rightText": "But if anyone who is unclean eats meat from the peace offering that belongs to the LORD, that person must be cut off from his people."
     },
     {
-      "id": "COL-3-6",
-      "reference": "COL 3:6",
-      "book": "COL",
-      "chapter": 3,
-      "verse": "6",
-      "leftText": "For these things’ sake the wrath of God comes on the children of disobedience.",
-      "rightText": "Because of these, the wrath of God is coming on the sons of disobedience."
+      "id": "HEB-11-30",
+      "reference": "HEB 11:30",
+      "book": "HEB",
+      "chapter": 11,
+      "verse": "30",
+      "leftText": "By faith the walls of Jericho fell down after they had been encircled for seven days.",
+      "rightText": "By faith the walls of Jericho fell, after the people had marched around them for seven days."
     },
     {
       "id": "PSA-127-1",
@@ -1745,13 +1757,13 @@
       "rightText": "When the Pharisees heard the crowd whispering these things about Jesus, they and the chief priests sent officers to arrest Him."
     },
     {
-      "id": "1TH-2-16",
-      "reference": "1TH 2:16",
-      "book": "1TH",
-      "chapter": 2,
-      "verse": "16",
-      "leftText": "forbidding us to speak to the Gentiles that they may be saved, to fill up their sins always. But wrath has come on them to the uttermost.",
-      "rightText": "hindering us from telling the Gentiles how they may be saved. As a result, they continue to heap up their sins to full capacity; the utmost wrath has come upon them."
+      "id": "EPH-1-12",
+      "reference": "EPH 1:12",
+      "book": "EPH",
+      "chapter": 1,
+      "verse": "12",
+      "leftText": "to the end that we should be to the praise of his glory, we who had before hoped in Christ.",
+      "rightText": "in order that we, who were the first to hope in Christ, would be for the praise of His glory."
     },
     {
       "id": "ECC-11-2",
