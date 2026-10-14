@@ -321,6 +321,26 @@ class PipelineTests(unittest.TestCase):
                 version="review-1",
             )
 
+    def test_source_conditioned_assessment_rejects_mixed_source_ids(self) -> None:
+        document = {
+            "schemaVersion": 1,
+            "kind": "source-conditioned-assessments",
+            "sourceEdition": {"id": "source-a"},
+            "assessments": [{
+                "id": "JHN-3-16",
+                "sourceEdition": "source-b",
+                "origin": "model",
+                "modelId": "fixture-model",
+                "judgmentType": "meaning-equivalence",
+                "judgment": "uncertain",
+                "evidence": ["mixed-source fixture"],
+                "uncertainty": "uncertain",
+                "version": "fixture-1",
+            }],
+        }
+        with self.assertRaisesRegex(ValueError, "match the document sourceEdition"):
+            validate_assessment_document(document)
+
     def test_source_assessment_attachment_requires_source_and_preserves_evidence(self) -> None:
         comparison = {
             "schemaVersion": 1,

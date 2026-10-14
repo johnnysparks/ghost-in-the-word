@@ -91,7 +91,11 @@ def validate_assessment_document(document: Mapping[str, object]) -> dict[str, ob
     records = document.get("assessments")
     if not isinstance(records, list):
         raise ValueError("assessment document needs an assessments array")
-    assessments = [Assessment.from_dict(record, source_edition=str(source_edition["id"])) for record in records if isinstance(record, Mapping)]
+    source_id = str(source_edition["id"])
+    for record in records:
+        if isinstance(record, Mapping) and record.get("sourceEdition") not in (None, source_id):
+            raise ValueError("assessment sourceEdition must match the document sourceEdition")
+    assessments = [Assessment.from_dict(record, source_edition=source_id) for record in records if isinstance(record, Mapping)]
     if len(assessments) != len(records):
         raise ValueError("assessment records must be objects")
     ids = [assessment.item_id for assessment in assessments]
