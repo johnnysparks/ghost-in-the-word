@@ -261,6 +261,19 @@ class PipelineTests(unittest.TestCase):
                 cache_dir=directory,
                 model_revision="commit-a",
             )
+            revised_vectors, revised_run = encode_texts(
+                ["one", "two"],
+                "fixture-model",
+                cache_dir=directory,
+                model_revision="commit-b",
+            )
+            recipe_vectors, recipe_run = encode_texts(
+                ["one", "two"],
+                "fixture-model",
+                cache_dir=directory,
+                model_revision="commit-a",
+                preprocessing_version="2",
+            )
 
         self.assertEqual(first_vectors, second_vectors)
         self.assertEqual(first_run.cache_key, second_run.cache_key)
@@ -269,7 +282,11 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(changed_run.cache_hit)
         self.assertNotEqual(first_run.cache_key, changed_run.cache_key)
         self.assertNotEqual(first_vectors, changed_vectors)
-        self.assertEqual(FakeModel.calls, 2)
+        self.assertFalse(revised_run.cache_hit)
+        self.assertFalse(recipe_run.cache_hit)
+        self.assertEqual(first_vectors, revised_vectors)
+        self.assertEqual(first_vectors, recipe_vectors)
+        self.assertEqual(FakeModel.calls, 4)
 
     def test_reference_estimate_excludes_pair_and_caps_related_family(self) -> None:
         estimate = estimate_reference(
