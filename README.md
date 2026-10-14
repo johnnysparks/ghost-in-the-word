@@ -44,6 +44,9 @@ an embedding model separately:
 PYTHONPATH=src python3 scripts/evaluate_challenge.py benchmarks/challenge.json
 ```
 
+Recorded E5-small and BGE-M3 reports are kept in `benchmarks/reports/`; both are below
+the provisional gate and therefore remain research evidence rather than product labels.
+
 The first interactive slice is in `web/`. It serves a committed John pilot fixture and
 keeps the selected comparison pair, verse, chapter, search, and reader state in the URL.
 The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded

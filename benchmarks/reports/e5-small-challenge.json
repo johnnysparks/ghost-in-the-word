@@ -1,0 +1,54 @@
+{
+  "metric": "embedding",
+  "run": {
+    "modelId": "intfloat/multilingual-e5-small",
+    "dimensions": 384,
+    "maxSeqLength": 512,
+    "inputHash": "86db91ae3d72c5fe83173c8828cce6c13f539e4c7a70694be8c01d68db60a2e8",
+    "prefix": "query: "
+  },
+  "cases": [
+    {
+      "id": "negation",
+      "preservedDistance": 0.064643,
+      "changedDistance": 0.061375,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "participant",
+      "preservedDistance": 0.005852,
+      "changedDistance": 0.002185,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "quantity",
+      "preservedDistance": 0.007257,
+      "changedDistance": 0.021943,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "register",
+      "preservedDistance": 0.031569,
+      "changedDistance": 0.063125,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "speaker",
+      "preservedDistance": 0.05105,
+      "changedDistance": 0.019465,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "synonym",
+      "preservedDistance": 0.086667,
+      "changedDistance": 0.088506,
+      "changedRanksFarther": true
+    }
+  ],
+  "passed": 3,
+  "total": 6,
+  "passRate": 0.5,
+  "threshold": 0.8,
+  "gatePassed": false,
+  "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."
+}

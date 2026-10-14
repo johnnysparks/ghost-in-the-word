@@ -1,0 +1,54 @@
+{
+  "metric": "embedding",
+  "run": {
+    "modelId": "BAAI/bge-m3",
+    "dimensions": 1024,
+    "maxSeqLength": 8192,
+    "inputHash": "86db91ae3d72c5fe83173c8828cce6c13f539e4c7a70694be8c01d68db60a2e8",
+    "prefix": "query: "
+  },
+  "cases": [
+    {
+      "id": "negation",
+      "preservedDistance": 0.097829,
+      "changedDistance": 0.261117,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "participant",
+      "preservedDistance": 0.024973,
+      "changedDistance": 0.01089,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "quantity",
+      "preservedDistance": 0.011114,
+      "changedDistance": 0.062126,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "register",
+      "preservedDistance": 0.032788,
+      "changedDistance": 0.222146,
+      "changedRanksFarther": true
+    },
+    {
+      "id": "speaker",
+      "preservedDistance": 0.097376,
+      "changedDistance": 0.062816,
+      "changedRanksFarther": false
+    },
+    {
+      "id": "synonym",
+      "preservedDistance": 0.086142,
+      "changedDistance": 0.207669,
+      "changedRanksFarther": true
+    }
+  ],
+  "passed": 4,
+  "total": 6,
+  "passRate": 0.666667,
+  "threshold": 0.8,
+  "gatePassed": false,
+  "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."
+}
