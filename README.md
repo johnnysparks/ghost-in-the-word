@@ -378,8 +378,11 @@ window artifact does not replace verse-level scores.
 
 The first interactive slice is in `web/`. It serves a committed John pilot fixture,
 loads the full WEB↔BSB atlas one book at a time, and keeps the selected comparison pair,
-verse, chapter, search, brush range, and reader state in the URL. Drag across the main
-chart to focus a verse range; the reader, ranked list, and scatterplot follow that focus.
+unit granularity, passage, chapter, search, brush range, and reader state in the URL. The
+WEB↔BSB pair offers a verse view and a separate non-overlapping two-verse passage view;
+the latter is built from joined text and has its own metric and coverage summaries. Drag
+across the main chart to focus a range; the reader, ranked list, and scatterplot follow
+that focus.
 The full-corpus view also shows book and chapter score summaries with coverage and status
 counts before loading a book's verse points.
 Footnotes are removed from analysis text but retained as expandable notes in the reader.

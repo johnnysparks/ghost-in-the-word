@@ -7,6 +7,7 @@ type PairConfig = {
   label: string;
   dataUrl?: string;
   manifestUrl?: string;
+  windowManifestUrl?: string;
   matrixUrl?: string;
   leftSource: string;
   rightSource: string;
@@ -26,6 +27,7 @@ const PAIRS: PairConfig[] = [
     id: "webp-bsb",
     label: "WEB ↔ BSB",
     manifestUrl: publicDataUrl("data/webp-bsb/manifest.json"),
+    windowManifestUrl: publicDataUrl("data/webp-bsb-windows-2/manifest.json"),
     matrixUrl: publicDataUrl("data/john-translation-matrix.json"),
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
@@ -69,6 +71,15 @@ function displayBook(book: string) {
   return bookNames[book] ?? book;
 }
 
+function granularityLabel(unit: string) {
+  return unit === "verse" ? "verse" : unit.includes("window") ? "passage" : unit.replace(/-/g, " ");
+}
+
+function granularityPlural(unit: string) {
+  const label = granularityLabel(unit);
+  return label === "verse" ? "verses" : `${label}s`;
+}
+
 function parseInitialRef() {
   return new URLSearchParams(window.location.search).get("ref");
 }
@@ -79,6 +90,10 @@ function parseInitialPair() {
 
 function parseInitialBook() {
   return new URLSearchParams(window.location.search).get("book") ?? "JHN";
+}
+
+function parseInitialUnitMode() {
+  return new URLSearchParams(window.location.search).get("unit") === "window-2" ? "window-2" : "verse";
 }
 
 function formatScore(score: number | null) {
@@ -184,15 +199,17 @@ function AtlasOverview({
 }) {
   const selected = manifest.books.find((book) => book.id === selectedBook) ?? manifest.books[0];
   const metricLabel = manifest.comparison.metric.label;
+  const unitLabel = granularityLabel(manifest.comparison.scope.unit);
+  const unitPlural = granularityPlural(manifest.comparison.scope.unit);
   return (
     <section className="panel atlas-overview" aria-labelledby="atlas-overview-title">
       <div className="panel-heading">
         <div><p className="eyebrow">ATLAS OVERVIEW · {manifest.books.length} BOOKS</p><h2 id="atlas-overview-title">See the shape of the corpus.</h2></div>
         <span className="metric-chip">{metricLabel.toUpperCase()}</span>
       </div>
-      <p className="panel-intro">Book and chapter summaries keep the full corpus navigable. Select a book or chapter to load its verse points; scores describe this translation pair and metric only.</p>
+      <p className="panel-intro">Book and chapter summaries keep the full corpus navigable. Select a book or chapter to load its {unitPlural}; scores describe this translation pair and metric only.</p>
       <div className="atlas-overview-stats">
-        <div><span>scored verses</span><strong>{manifest.summary.scoredUnits.toLocaleString()}</strong></div>
+        <div><span>scored {unitPlural}</span><strong>{manifest.summary.scoredUnits.toLocaleString()}</strong></div>
         <div><span>coverage</span><strong>{Math.round((manifest.summary.coverage ?? 0) * 100)}%</strong></div>
         <div><span>median distance</span><strong>{formatOverviewScore(manifest.summary.score?.median)}</strong></div>
         <div><span>highest distance</span><strong>{formatOverviewScore(manifest.summary.score?.max)}</strong></div>
@@ -201,7 +218,7 @@ function AtlasOverview({
         {manifest.books.map((book) => (
           <button className={book.id === selected?.id ? "atlas-book active" : "atlas-book"} key={book.id} onClick={() => onSelectBook(book.id)} role="listitem">
             <span className="atlas-book-name">{book.name}</span>
-            <span className="atlas-book-meta">{book.totalUnits.toLocaleString()} verses · {Math.round(book.coverage * 100)}% · median {formatOverviewScore(book.score.median)}</span>
+            <span className="atlas-book-meta">{book.totalUnits.toLocaleString()} {unitPlural} · {Math.round(book.coverage * 100)}% · median {formatOverviewScore(book.score.median)}</span>
             <span className="atlas-book-bar"><i style={{ width: `${Math.max(0, Math.min(100, book.coverage * 100))}%` }} /></span>
           </button>
         ))}
@@ -227,6 +244,7 @@ function ResultsTable({
   distanceField,
   distanceLabel,
   sameLanguage,
+  unitLabel,
 }: {
   units: ComparisonUnit[];
   selectedId: string | undefined;
@@ -234,12 +252,13 @@ function ResultsTable({
   distanceField: string;
   distanceLabel: string;
   sameLanguage: boolean;
+  unitLabel: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <section className="panel results-table-panel" aria-labelledby="results-table-title">
       <div className="panel-heading"><div><p className="eyebrow">05 · ACCESSIBLE RESULTS</p><h2 id="results-table-title">Read every visible point.</h2></div><span className="table-count">{units.length.toLocaleString()} rows</span></div>
-      <p className="panel-intro">This table mirrors the current book, chapter, search, and brush filters. Use the reference buttons to select a row and synchronize the chart and reader.</p>
+      <p className="panel-intro">This table mirrors the current book, chapter, search, and brush filters. Use the reference buttons to select a {unitLabel} and synchronize the chart and reader.</p>
       <div className="results-table-controls"><button className="table-toggle" aria-expanded={expanded} aria-controls="comparison-results-table" onClick={() => setExpanded((value) => !value)}>{expanded ? "Hide table" : "Show table"}</button><span>Rows are loaded when opened for faster navigation.</span></div>
       {expanded && <div className="results-table-wrap" id="comparison-results-table">
         <table>
@@ -294,11 +313,13 @@ function parseInitialRange(): UnitRange | null {
   return { start, end };
 }
 
-function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string, range: UnitRange | null = null) {
+function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string, range: UnitRange | null = null, unitMode = "verse") {
   const params = new URLSearchParams(window.location.search);
   params.set("pair", pairId);
   params.set("book", book);
   if (unit) params.set("ref", unit.id);
+  if (unitMode === "verse") params.delete("unit");
+  else params.set("unit", unitMode);
   if (chapter === "all") params.delete("chapter");
   else params.set("chapter", chapter);
   if (search) params.set("q", search);
@@ -319,6 +340,7 @@ function DivergenceChart({
   onBrush,
   onClearBrush,
   rangeActive,
+  unitLabel,
 }: {
   units: ComparisonUnit[];
   selectedId: string | undefined;
@@ -330,6 +352,7 @@ function DivergenceChart({
   onBrush: (start: number, end: number) => void;
   onClearBrush: () => void;
   rangeActive: boolean;
+  unitLabel: string;
 }) {
   const [brushStart, setBrushStart] = useState<number | null>(null);
   const [brushEnd, setBrushEnd] = useState<number | null>(null);
@@ -384,7 +407,7 @@ function DivergenceChart({
         onPointerCancel={() => { setBrushStart(null); setBrushEnd(null); }}
       >
         <title id="divergence-title">Distance across the selected book</title>
-        <desc id="divergence-description">Each point is a matched verse. Higher points have more divergence according to the selected comparison metric.</desc>
+        <desc id="divergence-description">Each point is a matched {unitLabel}. Higher points have more divergence according to the selected comparison metric.</desc>
         {gridValues.map((value) => {
           const y = padding.top + (1 - value / maxScore) * plotHeight;
           return (
@@ -398,7 +421,7 @@ function DivergenceChart({
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <rect className="brush-surface" x={padding.left} y={padding.top} width={plotWidth} height={plotHeight} />
         {brushLow !== null && brushHigh !== null && <rect className="brush-selection" x={brushX} y={padding.top} width={Math.max(2, brushWidth)} height={plotHeight} />}
-        <text className="axis-title" x={padding.left} y={height - 10}>{bookName} · verse order</text>
+        <text className="axis-title" x={padding.left} y={height - 10}>{bookName} · {unitLabel} order</text>
         <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => {
           const selected = unit.id === selectedId;
@@ -425,12 +448,12 @@ function DivergenceChart({
           );
         })}
       </svg>
-      <div className="chart-note"><span className="legend-dot" /> matched verse <span className="legend-ring" /> selected verse <span className="brush-hint">Drag to focus a range</span>{rangeActive && <button className="clear-range" onClick={onClearBrush}>Reset range</button>}<span className="chart-count">{valid.length} scored units</span></div>
+      <div className="chart-note"><span className="legend-dot" /> matched {unitLabel} <span className="legend-ring" /> selected {unitLabel} <span className="brush-hint">Drag to focus a range</span>{rangeActive && <button className="clear-range" onClick={onClearBrush}>Reset range</button>}<span className="chart-count">{valid.length} scored units</span></div>
     </div>
   );
 }
 
-function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel, maxScore }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void; distanceField: string; distanceLabel: string; maxScore: number }) {
+function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel, maxScore, unitLabel }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void; distanceField: string; distanceLabel: string; maxScore: number; unitLabel: string }) {
   const width = 1000;
   const height = 266;
   const padding = { left: 58, right: 24, top: 20, bottom: 42 };
@@ -443,7 +466,7 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
     <div className="chart-shell compact-chart">
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="scatter-title scatter-description">
         <title id="scatter-title">Wording change compared with comparison distance</title>
-        <desc id="scatter-description">Each point is a verse. Points farther right use less shared vocabulary; points higher have more divergence according to the selected comparison metric.</desc>
+        <desc id="scatter-description">Each point is a {unitLabel}. Points farther right use less shared vocabulary; points higher have more divergence according to the selected comparison metric.</desc>
         {[0, 0.5, 1].map((value) => <line className="grid-line" key={`h-${value}`} x1={padding.left} x2={width - padding.right} y1={padding.top + (1 - value) * plotHeight} y2={padding.top + (1 - value) * plotHeight} />)}
         {[0, 0.5, 1].map((value) => <line className="grid-line" key={`v-${value}`} x1={padding.left + value * plotWidth} x2={padding.left + value * plotWidth} y1={padding.top} y2={height - padding.bottom} />)}
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
@@ -487,8 +510,12 @@ function App() {
   const [search, setSearch] = useState(new URLSearchParams(window.location.search).get("q") ?? "");
   const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
   const [brushRange, setBrushRange] = useState<UnitRange | null>(parseInitialRange());
+  const [unitMode, setUnitMode] = useState(parseInitialUnitMode());
 
   const pair = PAIRS.find((candidate) => candidate.id === pairId) ?? PAIRS[0];
+  const activeUnitMode = unitMode === "window-2" && pair.windowManifestUrl ? "window-2" : "verse";
+  const activeManifestUrl = activeUnitMode === "window-2" ? pair.windowManifestUrl : pair.manifestUrl;
+  const activeDataUrl = activeUnitMode === "window-2" ? undefined : pair.dataUrl;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -496,9 +523,9 @@ function App() {
     setMatrix(null);
     setError(null);
     const load = async () => {
-      const response = await fetch(pair.manifestUrl ?? pair.dataUrl ?? "", { signal: controller.signal });
+      const response = await fetch(activeManifestUrl ?? activeDataUrl ?? "", { signal: controller.signal });
       if (!response.ok) throw new Error(`Could not load comparison data (${response.status})`);
-      if (pair.manifestUrl) {
+      if (activeManifestUrl) {
         const nextManifest = await response.json() as ComparisonManifest;
         setManifest(nextManifest);
         const selectedBook = nextManifest.books.find((entry) => entry.id === book) ?? nextManifest.books[0];
@@ -507,14 +534,14 @@ function App() {
           setBook(selectedBook.id);
           setBrushRange(null);
         }
-        const bookResponse = await fetch(resolveDataUrl(selectedBook.dataUrl, pair.manifestUrl), { signal: controller.signal });
+        const bookResponse = await fetch(resolveDataUrl(selectedBook.dataUrl, activeManifestUrl), { signal: controller.signal });
         if (!bookResponse.ok) throw new Error(`Could not load ${selectedBook.name} (${bookResponse.status})`);
         setData(await bookResponse.json() as ComparisonData);
       } else {
         setManifest(null);
         setData(await response.json() as ComparisonData);
       }
-      if (pair.matrixUrl && book === "JHN") {
+      if (pair.matrixUrl && book === "JHN" && activeUnitMode === "verse") {
         const matrixResponse = await fetch(pair.matrixUrl, { signal: controller.signal });
         if (!matrixResponse.ok) throw new Error(`Could not load translation matrix (${matrixResponse.status})`);
         setMatrix(await matrixResponse.json() as TranslationMatrix);
@@ -524,7 +551,7 @@ function App() {
       if (reason.name !== "AbortError") setError(reason.message);
     });
     return () => controller.abort();
-  }, [book, pair.dataUrl, pair.manifestUrl, pair.matrixUrl]);
+  }, [activeDataUrl, activeManifestUrl, activeUnitMode, book, pair.matrixUrl]);
 
   const chapters = useMemo(() => data ? [...new Set(data.units.map((unit) => unit.chapter))].sort((a, b) => a - b) : [], [data]);
   const books = manifest?.books ?? [{ id: "JHN", name: "John", dataUrl: "", totalUnits: data?.summary.totalUnits ?? 0, matchedUnits: data?.summary.matchedUnits ?? 0, coverage: data && data.summary.totalUnits ? data.summary.matchedUnits / data.summary.totalUnits : 0 }];
@@ -555,13 +582,13 @@ function App() {
   useEffect(() => {
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
-      updateUrl(pair.id, book, selected, chapter, search, brushRange);
+      updateUrl(pair.id, book, selected, chapter, search, brushRange, activeUnitMode);
     }
-  }, [book, brushRange, chapter, pair.id, search, selected]);
+  }, [activeUnitMode, book, brushRange, chapter, pair.id, search, selected]);
 
   const selectUnit = (unit: ComparisonUnit) => {
     setSelectedId(unit.id);
-    updateUrl(pair.id, book, unit, chapter, search, brushRange);
+    updateUrl(pair.id, book, unit, chapter, search, brushRange, activeUnitMode);
   };
 
   const focusRange = (start: number, end: number) => {
@@ -591,6 +618,8 @@ function App() {
   const leftName = data.metadata.leftEdition.name;
   const rightName = data.metadata.rightEdition.name;
   const metric = data.metadata.metric;
+  const unitLabel = granularityLabel(data.metadata.scope.unit);
+  const unitPlural = granularityPlural(data.metadata.scope.unit);
   const bookName = displayBook(book);
   const sameLanguage = Boolean(data.metadata.leftEdition.language && data.metadata.leftEdition.language === data.metadata.rightEdition.language);
   const sourceMode = data.metadata.leftEdition.role === "source" || data.metadata.rightEdition.role === "source";
@@ -602,7 +631,7 @@ function App() {
   const exportCurrentView = (format: "json" | "csv") => {
     const filename = `${pair.id}-${book}-${brushRange ? `range-${brushRange.start}-${brushRange.end}` : "view"}.${format}`;
     if (format === "json") {
-      downloadText(filename, JSON.stringify({ metadata: data.metadata, summary: data.summary, filters: { chapter, search, range: brushRange }, units: visibleUnits }, null, 2), "application/json");
+      downloadText(filename, JSON.stringify({ metadata: data.metadata, summary: data.summary, filters: { chapter, search, range: brushRange, unit: activeUnitMode }, units: visibleUnits }, null, 2), "application/json");
       return;
     }
     const header = ["reference", "status", "leftText", "rightText", data.metadata.metric.distanceField, "wordingDistance"];
@@ -614,16 +643,16 @@ function App() {
     <main className="app">
       <header className="topbar">
         <div className="brand"><span className="brand-mark">✦</span><span>Ghost in the Word</span></div>
-        <div className="topbar-meta"><span className="status-pip" /> live comparison atlas <span className="slash">/</span> {(manifest?.summary.scoredUnits ?? data.summary.scoredUnits).toLocaleString()} scored verses in corpus</div>
+        <div className="topbar-meta"><span className="status-pip" /> live comparison atlas <span className="slash">/</span> {(manifest?.summary.scoredUnits ?? data.summary.scoredUnits).toLocaleString()} scored {unitPlural} in corpus</div>
       </header>
 
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">TRANSLATION ATLAS · PILOT</p>
           <h1>Where the words<br /><em>move apart.</em></h1>
-          <p className="lede">A verse-by-verse view of how {leftName} and {rightName} render {bookName}. Find an unusual point, then read the text that made it move.</p>
+          <p className="lede">A {unitLabel}-by-{unitLabel} view of how {leftName} and {rightName} render {bookName}. Find an unusual point, then read the text that made it move.</p>
         </div>
-        <div className="hero-stamp"><span>01</span><span>{bookName.toUpperCase()}</span><span>·</span><span>VERSE</span><span>MAP</span></div>
+        <div className="hero-stamp"><span>01</span><span>{bookName.toUpperCase()}</span><span>·</span><span>{unitLabel.toUpperCase()}</span><span>MAP</span></div>
       </section>
 
       {manifest && <AtlasOverview manifest={manifest} selectedBook={book} onSelectBook={selectBook} onSelectChapter={selectChapter} />}
@@ -635,30 +664,31 @@ function App() {
           <label><span>{rightRole}</span><strong>{rightName}</strong></label>
         </div>
         <div className="filter-grid">
-          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
+          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setUnitMode("verse"); setBook("JHN"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
           <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name} · {entry.totalUnits.toLocaleString()} · {Math.round(entry.coverage * 100)}%</option>)}</select></label>
           <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => { setChapter(event.target.value); setSelectedId(undefined); setBrushRange(null); }}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
+          {pair.windowManifestUrl && <label className="field"><span>granularity</span><select value={activeUnitMode} onChange={(event) => { setUnitMode(event.target.value); setChapter("all"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Passage granularity"><option value="verse">Verse</option><option value="window-2">2-verse passage</option></select></label>}
           <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => { setSearch(event.target.value); setBrushRange(null); }} placeholder="Reference or phrase" /></label>
         </div>
       </section>
 
       <section className="summary-grid">
-        <div className="summary-card"><span className="summary-label">scope</span><strong>{visibleUnits.length.toLocaleString()}</strong><span>{brushRange ? "focused verses" : "visible verses"}</span></div>
+        <div className="summary-card"><span className="summary-label">scope</span><strong>{visibleUnits.length.toLocaleString()}</strong><span>{brushRange ? `focused ${unitPlural}` : `visible ${unitPlural}`}</span></div>
         <div className="summary-card"><span className="summary-label">highest distance</span><strong>{formatScore(ranked[0] ? distanceFor(ranked[0], distanceField) : null)}</strong><span>{ranked[0]?.reference ?? "No match"}</span></div>
         <div className="summary-card summary-card-wide"><span className="summary-label">alignment coverage</span><div className="coverage-bar"><i style={{ width: `${(data.summary.matchedUnits / data.summary.totalUnits) * 100}%` }} /></div><span>{data.summary.matchedUnits.toLocaleString()} matched · {data.summary.totalUnits.toLocaleString()} total</span></div>
       </section>
 
       <section className="panel chart-panel">
-        <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS {bookName.toUpperCase()}</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
-        <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
-        <DivergenceChart units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} onBrush={focusRange} onClearBrush={() => setBrushRange(null)} rangeActive={Boolean(brushRange)} />
+        <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS {bookName.toUpperCase()}</p><h2>Find the {unitPlural} that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
+        <p className="panel-intro">Each point is a matched {unitLabel} in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
+        <DivergenceChart units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} onBrush={focusRange} onClearBrush={() => setBrushRange(null)} rangeActive={Boolean(brushRange)} unitLabel={unitLabel} />
       </section>
 
       <div className="two-column">
         <section className="panel reader-panel">
-          <div className="panel-heading reader-heading"><div><p className="eyebrow">02 · LINKED READER</p><h2>{selected?.reference ?? "Select a verse"}</h2></div><div className="reader-nav"><button aria-label="Previous verse" disabled={!previous} onClick={() => previous && selectUnit(previous)}>←</button><button aria-label="Next verse" disabled={!next} onClick={() => next && selectUnit(next)}>→</button></div></div>
+          <div className="panel-heading reader-heading"><div><p className="eyebrow">02 · LINKED READER</p><h2>{selected?.reference ?? `Select a ${unitLabel}`}</h2></div><div className="reader-nav"><button aria-label={`Previous ${unitLabel}`} disabled={!previous} onClick={() => previous && selectUnit(previous)}>←</button><button aria-label={`Next ${unitLabel}`} disabled={!next} onClick={() => next && selectUnit(next)}>→</button></div></div>
           {selected ? <>
-            <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · verse {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
+            <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · {unitLabel} {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
             <div className="translation-columns">
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}{data.metadata.leftEdition.role === "source" ? " · source text" : ""}</div><p><MarkedText text={selected.leftText} other={selected.rightText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.leftNotes} /></article>
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}{data.metadata.rightEdition.role === "source" ? " · source text" : ""}</div><p><MarkedText text={selected.rightText} other={selected.leftText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.rightNotes} /></article>
@@ -670,7 +700,7 @@ function App() {
               {next && <button onClick={() => selectUnit(next)}><span>{next.reference} →</span><small>{next.leftText ?? "No aligned text"}</small></button>}
             </div>}
             <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div>{sameLanguage ? <div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div> : <div><span>wording distance</span><strong>n/a</strong></div>}<div className="score-explainer">{sameLanguage ? "Highlighted words are a token-level reading aid. They do not explain the score." : "Wording distance is hidden for cross-language comparisons because token overlap is not comparable across scripts."}</div></div>
-          </> : <p className="empty-state">No verses match this filter.</p>}
+          </> : <p className="empty-state">No {unitPlural} match this filter.</p>}
         </section>
 
         <section className="panel ranked-panel">
@@ -683,10 +713,12 @@ function App() {
       {sameLanguage && <section className="panel scatter-panel">
         <div className="panel-heading"><div><p className="eyebrow">04 · WORDING / DISTANCE</p><h2>Different words don’t always mean different things.</h2></div></div>
         <p className="panel-intro">The same comparison shown two ways: horizontal movement is wording distance; vertical movement is the selected comparison metric. Use this as an investigation map, not a classification.</p>
-        <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
+        <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} unitLabel={unitLabel} />
       </section>}
 
-      <ResultsTable units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} sameLanguage={sameLanguage} />
+      <ResultsTable units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} sameLanguage={sameLanguage} unitLabel={unitLabel} />
+
+      <p className="provenance-inline">Granularity: <strong>{data.metadata.scope.unit}</strong>{data.metadata.embeddingRun?.modelRevision ? <> · model revision <code>{data.metadata.embeddingRun.modelRevision}</code></> : null}</p>
 
       <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} {sourceMode ? "A source edition is shown as a textual reference point; this does not produce a faithfulness grade." : ""} {data.metadata.assessmentAttachment ? "Attached source-conditioned evidence is shown per passage and remains separate from the distance score." : ""} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd><dt>Roles</dt><dd>{data.metadata.leftEdition.role ?? "translation"} → {data.metadata.rightEdition.role ?? "translation"}</dd><EditionProvenanceRows label="Edition A" edition={data.metadata.leftEdition} /><EditionProvenanceRows label="Edition B" edition={data.metadata.rightEdition} />{data.metadata.assessmentAttachment && <><dt>Assessments</dt><dd>{data.metadata.assessmentAttachment.sourceEdition.name}</dd></>}{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd>{data.metadata.embeddingRun.leftInputHash && <><dt>Left input hash</dt><dd>{data.metadata.embeddingRun.leftInputHash}</dd><dt>Right input hash</dt><dd>{data.metadata.embeddingRun.rightInputHash}</dd></>}</>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
 

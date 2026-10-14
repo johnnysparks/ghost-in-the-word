@@ -35,6 +35,8 @@ def main() -> None:
 
     comparison = json.loads(args.comparison.read_text(encoding="utf-8"))
     distance_field = comparison["metadata"]["metric"]["distanceField"]
+    scope = comparison["metadata"].get("scope", {})
+    unit_label = scope.get("unit", "verse") if isinstance(scope, dict) else "verse"
     grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
     for unit in comparison["units"]:
         grouped[str(unit["book"])].append(unit)
@@ -43,7 +45,7 @@ def main() -> None:
     books = []
     for book, units in grouped.items():
         metadata = copy.deepcopy(comparison["metadata"])
-        metadata["scope"] = {"books": [book], "unit": "verse"}
+        metadata["scope"] = {"books": [book], "unit": unit_label}
         book_report = summarize_units(units, distance_field)
         summary = book_report["overall"]
         payload = {
@@ -93,7 +95,7 @@ def main() -> None:
             "rightEdition": comparison["metadata"]["rightEdition"],
             "metric": comparison["metadata"]["metric"],
             "alignment": comparison["metadata"]["alignment"],
-            "scope": {"books": [book["id"] for book in books], "unit": "verse"},
+            "scope": {"books": [book["id"] for book in books], "unit": unit_label},
         },
         "summary": {
             "totalUnits": overall["totalUnits"],

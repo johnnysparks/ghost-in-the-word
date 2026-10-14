@@ -874,6 +874,55 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("coverage", genesis["chapters"][0])
         self.assertIn("score", genesis["chapters"][0])
 
+    def test_partition_preserves_passage_granularity(self) -> None:
+        from scripts.partition_comparison import main as partition_main
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "comparison.json"
+            output_dir = root / "partitioned"
+            source.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "metadata": {
+                            "leftEdition": {"id": "a", "name": "A"},
+                            "rightEdition": {"id": "b", "name": "B"},
+                            "scope": {"books": ["JHN"], "unit": "multi-verse-window"},
+                            "metric": {"distanceField": "lexicalDistance", "label": "window"},
+                            "alignment": {},
+                        },
+                        "units": [
+                            {
+                                "id": "JHN-1-1-2",
+                                "book": "JHN",
+                                "chapter": 1,
+                                "verse": "1-2",
+                                "reference": "JHN 1:1–JHN 1:2",
+                                "status": "matched",
+                                "lexicalDistance": 0.2,
+                                "wordingDistance": 0.1,
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with patch.object(sys, "argv", ["partition_comparison.py", str(source), "--output-dir", str(output_dir)]):
+                partition_main()
+            manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+            payload = json.loads((output_dir / "JHN.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["comparison"]["scope"]["unit"], "multi-verse-window")
+            self.assertEqual(payload["metadata"]["scope"]["unit"], "multi-verse-window")
+
+    def test_committed_passage_manifest_is_full_corpus(self) -> None:
+        manifest = json.loads(
+            (Path(__file__).parents[1] / "web/public/data/webp-bsb-windows-2/manifest.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(manifest["comparison"]["scope"]["unit"], "multi-verse-window")
+        self.assertEqual(len(manifest["books"]), 66)
+        self.assertEqual(manifest["summary"]["scoredUnits"], 15230)
+
     def test_multi_verse_windows_are_separate_and_preserve_gaps(self) -> None:
         units = [
             {"id": "JHN-1-1", "order": 0, "book": "JHN", "chapter": 1, "verse": "1", "reference": "JHN 1:1", "status": "matched", "leftText": "In the beginning.", "rightText": "At the start."},

@@ -184,6 +184,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** an offline embedding profiler records tokenizer lengths, truncation counts, throughput, peak RSS, and raw-vector capacity projections; the checked-in E5-small John profile projects the measured pilot rate to the full atlas without assuming provider costs.
 - **Implemented:** the synthetic challenge has been run with `multilingual-e5-small` (50%) and `BAAI/bge-m3` (66.7%); neither clears the provisional 80% gate, so the pilot does not promote either score to a faithfulness claim.
 - **Implemented:** the default WEB↔BSB atlas now loads a 66-book partition manifest and one book payload at a time; the backend produces book/chapter coverage and score summaries.
+- **Implemented:** the WEB↔BSB atlas exposes verse and non-overlapping two-verse passage granularities as separate URL-addressable manifests; passage metadata and partitioning preserve the multi-verse scope and keep incomplete windows unresolved.
 - **Implemented:** the whole-corpus atlas overview exposes book-level score distributions, coverage/status counts, and chapter summaries before drilling into a selected book's verse points.
 - **Implemented:** the atlas now supports chart drag-to-focus ranges, resettable linked filtering, URL restoration of the focused range, and richer hover/focus previews for both renderings.
 - **Implemented:** USFM footnotes are retained as separate cleaned note fields, excluded from text scoring, and available as expandable reader notes.
