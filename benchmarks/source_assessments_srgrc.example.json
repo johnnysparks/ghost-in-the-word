@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-conditioned-assessments",
+  "sourceEdition": {
+    "id": "srgrc",
+    "name": "Statistical Restoration Greek New Testament (fixture attachment)",
+    "language": "grc",
+    "tradition": "CNTR SR",
+    "license": "CC-BY-4.0"
+  },
+  "assessments": [
+    {
+      "id": "JHN-3-16",
+      "origin": "model",
+      "modelId": "fixture-observation-v1",
+      "judgmentType": "meaning-equivalence",
+      "judgment": "unreviewed",
+      "evidence": ["Fixture record only; no human source-language judgment is asserted."],
+      "uncertainty": "uncertain",
+      "version": "fixture-attachment-v1"
+    }
+  ]
+}

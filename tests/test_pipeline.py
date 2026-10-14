@@ -5,6 +5,7 @@ from pathlib import Path
 
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.assessment import Assessment, validate_assessment_document
+from ghost_in_word.assessment_attachment import attach_assessment_document
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
@@ -319,6 +320,39 @@ class PipelineTests(unittest.TestCase):
                 uncertainty="high",
                 version="review-1",
             )
+
+    def test_source_assessment_attachment_requires_source_and_preserves_evidence(self) -> None:
+        comparison = {
+            "schemaVersion": 1,
+            "metadata": {
+                "leftEdition": {"id": "webp", "role": "translation"},
+                "rightEdition": {"id": "srgrc", "role": "source"},
+            },
+            "units": [{"id": "JHN-3-16", "status": "matched"}],
+        }
+        document = {
+            "schemaVersion": 1,
+            "kind": "source-conditioned-assessments",
+            "sourceEdition": {"id": "srgrc", "name": "Greek source", "language": "grc"},
+            "assessments": [{
+                "id": "JHN-3-16",
+                "origin": "human",
+                "reviewerId": "source-reader",
+                "judgmentType": "source-faithfulness",
+                "judgment": "uncertain",
+                "evidence": ["The source span permits more than one reading."],
+                "uncertainty": "high",
+                "version": "review-1",
+            }],
+        }
+        attached = attach_assessment_document(comparison, document, source_document="review.json")
+        self.assertEqual(attached["metadata"]["assessmentAttachment"]["sourceEdition"]["id"], "srgrc")
+        self.assertEqual(attached["units"][0]["assessments"][0]["reviewerId"], "source-reader")
+        self.assertEqual(attached["metadata"]["assessmentAttachment"]["sourceDocument"], "review.json")
+
+        comparison["metadata"]["rightEdition"] = {"id": "bsb", "role": "translation"}
+        with self.assertRaisesRegex(ValueError, "not part of the comparison"):
+            attach_assessment_document(comparison, document)
 
     def test_review_sample_hides_rank_and_is_seeded(self) -> None:
         comparison = {

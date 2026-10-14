@@ -255,6 +255,20 @@ PYTHONPATH=src python3 scripts/validate_assessments.py \
   benchmarks/source_assessments.example.json
 ```
 
+Attach validated records to a source comparison only when the source edition is one
+of the comparison sides and is marked with `role: source`:
+
+```sh
+PYTHONPATH=src python3 scripts/attach_assessments.py \
+  data/derived/john-webp-srgrc-e5-small.json \
+  benchmarks/source_assessments_srgrc.example.json \
+  --output data/derived/john-webp-srgrc-assessed.json
+```
+
+The checked-in source-specific document is a fixture attachment, not a human judgment;
+replace it with independently reviewed records for research use. Attached evidence
+remains separate from embedding and wording scores.
+
 Book/chapter aggregates can be generated from any comparison artifact for a future
 whole-Bible overview. Missing units stay in coverage counts and are excluded from score
 statistics:

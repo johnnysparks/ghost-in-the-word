@@ -17,11 +17,26 @@ export type ComparisonUnit = {
   rightReferences?: string[];
   mappingMethod?: string;
   review?: Record<string, unknown>;
+  assessments?: AssessmentRecord[];
   leftNotes?: string[];
   rightNotes?: string[];
   wordingDistance: number | null;
   lexicalDistance: number | null;
   embeddingDistance?: number | null;
+};
+
+export type AssessmentRecord = {
+  id: string;
+  sourceEdition: string;
+  origin: "human" | "model" | "adjudicated" | string;
+  reviewerId?: string;
+  modelId?: string;
+  judgmentType: string;
+  judgment: string;
+  evidence: string[];
+  uncertainty: string;
+  disagreement?: string[];
+  version: string;
 };
 
 export type EditionMetadata = {
@@ -64,6 +79,13 @@ export type ComparisonData = {
       rightInputHash?: string;
     };
     source: { alignment: string };
+    assessmentAttachment?: {
+      schemaVersion: number;
+      kind: string;
+      sourceEdition: EditionMetadata;
+      sourceDocument?: string;
+      summary: Record<string, unknown>;
+    };
   };
   units: ComparisonUnit[];
   summary: { totalUnits: number; matchedUnits: number; scoredUnits: number };

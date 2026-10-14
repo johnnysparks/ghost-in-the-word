@@ -109,6 +109,7 @@ def validate_assessment_document(document: Mapping[str, object]) -> dict[str, ob
             "judgmentTypes": dict(Counter(assessment.judgment_type for assessment in assessments)),
             "uncertainty": dict(Counter(assessment.uncertainty for assessment in assessments)),
             "disagreementRecords": sum(1 for assessment in assessments if assessment.disagreement),
+            "versions": sorted({assessment.version for assessment in assessments}),
         },
     }
 

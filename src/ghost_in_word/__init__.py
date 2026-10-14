@@ -2,6 +2,7 @@
 
 from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_segments, align_with_mappings, mapping_from_dict, parse_reference
 from .assessment import Assessment, validate_assessment_document
+from .assessment_attachment import attach_assessment_document
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
 from .matrix import build_translation_matrix
@@ -45,6 +46,7 @@ __all__ = [
     "tokenize",
     "wording_distance",
     "validate_assessment_document",
+    "attach_assessment_document",
     "edition_to_dict",
     "comparison_edition_metadata",
     "load_editions",
