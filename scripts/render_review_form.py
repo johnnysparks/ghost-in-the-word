@@ -108,6 +108,8 @@ def render_review_form(packet: Mapping[str, object], *, reviewer_id: str = "", t
     .instructions {{ padding: 1rem 1.2rem; margin-bottom: 1rem; }}
     .instructions p {{ margin: .45rem 0; }}
     .toolbar {{ display: flex; flex-wrap: wrap; align-items: end; gap: .75rem 1rem; margin-top: 1rem; }}
+    .attestation {{ display: flex; align-items: center; gap: .45rem; font-weight: 650; }}
+    .attestation input {{ min-width: 0; width: 1.1rem; height: 1.1rem; }}
     label {{ display: grid; gap: .3rem; font-weight: 650; }}
     input, select, textarea, button {{ font: inherit; }}
     input, select, textarea {{ border: 1px solid #aeb8c8; border-radius: .4rem; padding: .5rem; color: inherit; background: #fff; }}
@@ -150,6 +152,7 @@ def render_review_form(packet: Mapping[str, object], *, reviewer_id: str = "", t
       <label>Reviewer ID
         <input id="reviewer-id" value="{safe_reviewer}" autocomplete="off" required>
       </label>
+      <label class="attestation"><input id="independence" type="checkbox"> I reviewed independently</label>
       <button type="button" id="download">Download response JSON</button>
       <button type="button" id="reset" class="secondary">Clear form</button>
     </div>
@@ -167,6 +170,7 @@ def render_review_form(packet: Mapping[str, object], *, reviewer_id: str = "", t
   const progress = document.getElementById('progress');
   const status = document.getElementById('status');
   const reviewer = document.getElementById('reviewer-id');
+  const independence = document.getElementById('independence');
   const fields = ['useful', 'differenceType', 'confidence', 'evidence'];
 
   function cardComplete(card) {{
@@ -191,8 +195,9 @@ def render_review_form(packet: Mapping[str, object], *, reviewer_id: str = "", t
     const reviewerId = reviewer.value.trim();
     const incomplete = cards.filter((card) => !cardComplete(card));
     if (!reviewerId) {{ reviewer.focus(); status.textContent = 'Enter a reviewer ID before downloading.'; return; }}
+    if (!independence.checked) {{ independence.focus(); status.textContent = 'Confirm that you reviewed the packet independently.'; return; }}
     if (incomplete.length) {{ incomplete[0].querySelector('[data-field="useful"]').focus(); status.textContent = `Complete all required judgments first (${{incomplete.length}} remaining).`; return; }}
-    const response = {{ schemaVersion: 1, reviewerId, items: collect() }};
+    const response = {{ schemaVersion: 1, reviewerId, independence: 'declared', items: collect() }};
     const blob = new Blob([JSON.stringify(response, null, 2) + '\\n'], {{ type: 'application/json' }});
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

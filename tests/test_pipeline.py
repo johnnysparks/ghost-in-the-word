@@ -731,7 +731,9 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("A &lt;word&gt; &amp; a phrase", rendered)
         self.assertIn('data-field="differenceType"', rendered)
         self.assertIn('data-field="evidence"', rendered)
-        self.assertIn('schemaVersion: 1, reviewerId, items: collect()', rendered)
+        self.assertIn('id="independence"', rendered)
+        self.assertIn("independence: 'declared'", rendered)
+        self.assertIn("schemaVersion: 1, reviewerId, independence: 'declared', items: collect()", rendered)
         self.assertNotIn('"lexicalDistance"', rendered)
         self.assertNotIn('"rank"', rendered)
         self.assertNotIn('"score"', rendered)
@@ -762,6 +764,24 @@ class PipelineTests(unittest.TestCase):
         report = summarize_reviews([response], selection_key=key, packet=packet)
         self.assertEqual(report["packet"]["reviewedItemCount"], 2)
         self.assertFalse(report["naturalEvaluation"]["eligible"])
+        response["independence"] = "declared"
+        strict_report = summarize_reviews(
+            [response],
+            selection_key=key,
+            packet=packet,
+            require_independent_reviewers=True,
+        )
+        self.assertTrue(strict_report["reviewerIndependence"]["allDeclared"])
+        self.assertTrue(strict_report["naturalEvaluation"]["prerequisites"]["independentReviewersRequired"])
+        missing_declaration = dict(response)
+        missing_declaration.pop("independence")
+        with self.assertRaisesRegex(ValueError, "declare independence"):
+            summarize_reviews(
+                [missing_declaration],
+                selection_key=key,
+                packet=packet,
+                require_independent_reviewers=True,
+            )
         response["items"][0]["id"] = "outside-packet"
         with self.assertRaisesRegex(ValueError, "unknown packet item"):
             summarize_reviews([response], selection_key=key, packet=packet)

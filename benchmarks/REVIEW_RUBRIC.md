@@ -28,6 +28,7 @@ not add a model score or rank to the response:
 {
   "schemaVersion": 1,
   "reviewerId": "reviewer-1",
+  "independence": "declared",
   "items": [
     {
       "id": "JHN-3-16",
@@ -39,6 +40,11 @@ not add a model score or rank to the response:
   ]
 }
 ```
+
+Include `independence: "declared"` when the reviewer completed the packet without
+consulting another reviewer's judgments. The evaluator's `--require-independent` mode
+checks this declaration for every response document; it cannot prove real-world
+independence.
 
 Use `uncertain` when the reviewer cannot make a useful/not-useful judgment. The
 aggregation script reports this separately and preserves each reviewer’s vote. The

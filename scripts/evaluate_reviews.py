@@ -18,6 +18,11 @@ def main() -> None:
     parser.add_argument("--key", type=Path, help="Private selection key created alongside the blind packet")
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--bootstrap-seed", type=int, help="Override the deterministic seed from the selection key")
+    parser.add_argument(
+        "--require-independent",
+        action="store_true",
+        help="Require every reviewer response to declare independent review before the natural gate can be eligible",
+    )
     args = parser.parse_args()
     if args.bootstrap_samples < 0:
         raise SystemExit("--bootstrap-samples must be non-negative")
@@ -33,6 +38,7 @@ def main() -> None:
         packet=packet,
         bootstrap_samples=args.bootstrap_samples,
         bootstrap_seed=args.bootstrap_seed,
+        require_independent_reviewers=args.require_independent,
     )
     encoded = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:

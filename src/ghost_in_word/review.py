@@ -439,6 +439,7 @@ def summarize_reviews(
     packet: Mapping[str, object] | None = None,
     bootstrap_samples: int = 2000,
     bootstrap_seed: int | None = None,
+    require_independent_reviewers: bool = False,
 ) -> dict[str, object]:
     """Aggregate independent review documents without hiding abstentions.
 
@@ -455,6 +456,7 @@ def summarize_reviews(
     packet_summary = validate_review_packet(packet) if packet is not None else None
     packet_ids = set(packet_summary["itemIds"]) if packet_summary else None
     seen_reviewers: set[str] = set()
+    declared_independent_reviewers: set[str] = set()
     for document in documents:
         if document.get("schemaVersion", 1) != 1:
             raise ValueError("unsupported review document schema version")
@@ -464,6 +466,10 @@ def summarize_reviews(
         if reviewer in seen_reviewers:
             raise ValueError(f"reviewer {reviewer!r} appears in more than one document")
         seen_reviewers.add(reviewer)
+        if document.get("independence") == "declared":
+            declared_independent_reviewers.add(reviewer)
+        elif require_independent_reviewers:
+            raise ValueError(f"reviewer {reviewer!r} must declare independence")
         items = document.get("items")
         if not isinstance(items, list):
             raise ValueError(f"reviewer {reviewer!r} must provide an items array")
@@ -548,6 +554,12 @@ def summarize_reviews(
         "binaryAgreementItems": sum(binary_agreement),
         "binaryComparedItems": len(binary_agreement),
         "binaryAgreementRate": round(sum(binary_agreement) / len(binary_agreement), 6) if binary_agreement else None,
+        "reviewerIndependence": {
+            "required": require_independent_reviewers,
+            "declaredCount": len(declared_independent_reviewers),
+            "reviewerCount": len(documents),
+            "allDeclared": bool(documents) and len(declared_independent_reviewers) == len(documents),
+        },
         "items": item_reports,
     }
     if selection_key is not None:
@@ -571,6 +583,8 @@ def summarize_reviews(
         report["naturalEvaluation"] = _natural_evaluation_status(
             report["selection"],
             reviewer_count=len(documents),
+            require_independent_reviewers=require_independent_reviewers,
+            independent_reviewer_count=len(declared_independent_reviewers),
         )
     if packet_summary is not None:
         reviewed_ids = set(by_item)
@@ -583,7 +597,13 @@ def summarize_reviews(
     return report
 
 
-def _natural_evaluation_status(selection: object, *, reviewer_count: int) -> dict[str, object]:
+def _natural_evaluation_status(
+    selection: object,
+    *,
+    reviewer_count: int,
+    require_independent_reviewers: bool = False,
+    independent_reviewer_count: int = 0,
+) -> dict[str, object]:
     """Report eligibility for the plan's natural-review gate.
 
     The gate is intentionally conservative: it needs at least two reviewers,
@@ -603,16 +623,19 @@ def _natural_evaluation_status(selection: object, *, reviewer_count: int) -> dic
         "minimumReviewers": 2,
         "reviewerCount": reviewer_count,
         "reviewerCountMet": reviewer_count >= 2,
+        "independentReviewersRequired": require_independent_reviewers,
+        "independentReviewerCount": independent_reviewer_count,
+        "independentReviewersMet": independent_reviewer_count == reviewer_count and reviewer_count >= 2,
         "minimumTopRankedItems": target_count,
         "topRankedItemCount": selected_count,
         "topRankedItemCountMet": selected_count >= target_count,
         "topRankedComplete": reviewed_count == selected_count and selected_count >= target_count,
         "topRankedIndependentlyReviewed": bool(top.get("allItemsReviewedByTwo", False)),
     }
-    eligible = all(
-        bool(prerequisites[key])
-        for key in ("reviewerCountMet", "topRankedItemCountMet", "topRankedComplete", "topRankedIndependentlyReviewed")
-    )
+    required_keys = ["reviewerCountMet", "topRankedItemCountMet", "topRankedComplete", "topRankedIndependentlyReviewed"]
+    if require_independent_reviewers:
+        required_keys.append("independentReviewersMet")
+    eligible = all(bool(prerequisites[key]) for key in required_keys)
     passed = bool(eligible and isinstance(rate, (int, float)) and rate >= 0.70)
     return {
         "threshold": 0.70,

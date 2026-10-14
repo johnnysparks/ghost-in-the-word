@@ -318,10 +318,24 @@ PYTHONPATH=src python3 scripts/render_review_form.py \
 ```
 
 Open the generated HTML file locally, choose **Download response JSON** when all
-required judgments are complete, and give the downloaded document to the evaluator.
+required judgments are complete, confirm the independent-review declaration, and give
+the downloaded document to the evaluator.
 The downloaded response can be passed to the same `evaluate_reviews.py` command above.
 The form is a transport convenience; it does not add labels or infer a faithfulness
 grade.
+
+For a final held-out natural evaluation, add `--require-independent` to the evaluator.
+That mode requires every response document to contain the form's
+`"independence": "declared"` field before the natural gate can be eligible:
+
+```sh
+PYTHONPATH=src python3 scripts/evaluate_reviews.py \
+  benchmarks/reviews/heldout-reviewer-1.json benchmarks/reviews/heldout-reviewer-2.json \
+  --packet benchmarks/natural-review-heldout.example.json \
+  --key /path/to/private-heldout-key.json \
+  --require-independent \
+  --output benchmarks/reports/natural-review-heldout.json
+```
 
 With a packet, the report also includes deterministic 95% bootstrap intervals for
 majority-useful rates. Resampling is clustered by book so several verses from one book
