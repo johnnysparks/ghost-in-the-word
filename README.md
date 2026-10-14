@@ -69,6 +69,29 @@ PYTHONPATH=src python3 scripts/evaluate_challenge.py benchmarks/challenge.json
 Recorded E5-small and BGE-M3 reports are kept in `benchmarks/reports/`; both are below
 the provisional gate and therefore remain research evidence rather than product labels.
 
+Generate a blinded review packet from a scored comparison. The selector mixes the
+highest-scoring matched passages with a seeded random sample, then removes scores and
+ranks from the reviewer-facing payload:
+
+```sh
+PYTHONPATH=src python3 scripts/select_review_sample.py \
+  web/public/data/john-webp-bsb.json \
+  --metric lexicalDistance --count 30 --seed 20261014 \
+  --output benchmarks/review-packet.json
+```
+
+Reviewers should return one JSON document each with `reviewerId` and an `items` array
+using the fields in `benchmarks/REVIEW_RUBRIC.md`. Aggregate those documents with:
+
+```sh
+PYTHONPATH=src python3 scripts/evaluate_reviews.py \
+  benchmarks/reviews/reviewer-1.json benchmarks/reviews/reviewer-2.json \
+  --output benchmarks/reports/natural-review.json
+```
+
+The report retains per-item votes, disagreement, and uncertain judgments. It does not
+convert review usefulness into a translation-faithfulness grade.
+
 Book/chapter aggregates can be generated from any comparison artifact for a future
 whole-Bible overview. Missing units stay in coverage counts and are excluded from score
 statistics:

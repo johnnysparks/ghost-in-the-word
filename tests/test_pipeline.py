@@ -5,6 +5,7 @@ from pathlib import Path
 from ghost_in_word.alignment import AlignmentMapping, align_segments, align_with_mappings
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
+from ghost_in_word.review import select_review_items, summarize_reviews
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
@@ -23,6 +24,17 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(len(segments), 1)
         self.assertEqual(segments[0].key, ("JHN", 3, "16"))
         self.assertEqual(segments[0].text, "For God so loved the world.")
+
+    def test_usfm_parser_removes_plus_word_markers_and_attributes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "JHN.SFM"
+            path.write_text(
+                '\\id JHN\n\\c 1\n\\v 1 In the beginning \\+w was|strong="G1510"\\+w* the Word.\n',
+                encoding="utf-8",
+            )
+            segments = parse_usfm(path, "webp")
+
+        self.assertEqual(segments[0].text, "In the beginning was the Word.")
 
     def test_alignment_exposes_missing_references(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
@@ -119,6 +131,47 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(cosine_distance([1.0, 0.0], [0.0, 1.0]), 1.0)
         self.assertEqual(input_hash(["one", "two"]), input_hash(["one", "two"]))
         self.assertNotEqual(input_hash(["one", "two"]), input_hash(["two", "one"]))
+
+    def test_review_sample_hides_rank_and_is_seeded(self) -> None:
+        comparison = {
+            "metadata": {
+                "leftEdition": {"id": "a"},
+                "rightEdition": {"id": "b"},
+                "metric": {"id": "lexical-baseline", "label": "Lexical"},
+            },
+            "units": [
+                {"id": "JHN-1-1", "reference": "JHN 1:1", "status": "matched", "left_text": "one", "right_text": "uno", "lexicalDistance": 0.9},
+                {"id": "JHN-1-2", "reference": "JHN 1:2", "status": "matched", "left_text": "two", "right_text": "dos", "lexicalDistance": 0.8},
+                {"id": "JHN-1-3", "reference": "JHN 1:3", "status": "matched", "left_text": "three", "right_text": "tres", "lexicalDistance": 0.1},
+            ],
+        }
+        packet = select_review_items(comparison, count=2, metric_field="lexicalDistance", seed=7)
+        self.assertEqual(packet["selection"]["selectedCount"], 2)
+        self.assertTrue(all("lexicalDistance" not in item and "rank" not in item for item in packet["items"]))
+        self.assertEqual(packet, select_review_items(comparison, count=2, metric_field="lexicalDistance", seed=7))
+
+    def test_review_summary_preserves_uncertainty_and_disagreement(self) -> None:
+        report = summarize_reviews(
+            [
+                {
+                    "reviewerId": "r1",
+                    "items": [{"id": "x", "useful": "yes", "differenceType": "likely meaning", "confidence": "high", "evidence": "wording differs"}],
+                },
+                {
+                    "reviewerId": "r2",
+                    "items": [{"id": "x", "useful": "no", "differenceType": "wording", "confidence": "medium", "evidence": "not useful"}],
+                },
+                {
+                    "reviewerId": "r3",
+                    "items": [{"id": "y", "useful": "uncertain", "differenceType": "unclear", "confidence": "low", "evidence": "unclear"}],
+                },
+            ]
+        )
+        self.assertEqual(report["binaryAgreementItems"], 0)
+        self.assertEqual(report["binaryComparedItems"], 1)
+        self.assertEqual(report["consensusItems"], 0)
+        self.assertEqual(report["items"][1]["majorityUseful"], "uncertain")
+        self.assertEqual(report["items"][0]["votes"][0]["evidence"], "wording differs")
 
 
 if __name__ == "__main__":

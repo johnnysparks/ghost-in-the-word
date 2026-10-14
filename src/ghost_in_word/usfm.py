@@ -8,8 +8,8 @@ from .models import TextSegment
 _BOOK = re.compile(r"\\id\s+(\S+)")
 _CHAPTER = re.compile(r"\\c\s+(\d+)")
 _VERSE = re.compile(r"\\v\s+([0-9]+(?:-[0-9]+)?)\s*(.*?)(?=\s\\v\s+|$)")
-_WORD_MARKER = re.compile(r"\\w\s*([^|\\]*?)\|[^\\]*?\\w\*", re.DOTALL)
-_INLINE_MARKER = re.compile(r"\\(?:add|bd|bdit|it|nd|no|pn|qt|rq|sc|tl|wj|em|k|sig)\*?|\\[a-z0-9]+\s*")
+_WORD_MARKER = re.compile(r"\\\+?w\s*([^|\\]*?)\|[^\\]*?\\\+?w\*", re.DOTALL)
+_INLINE_MARKER = re.compile(r"\\\+?(?:add|bd|bdit|it|nd|no|pn|qt|rq|sc|tl|wj|em|k|sig)\*?|\\\+?[a-z0-9]+\s*")
 _NOTE = re.compile(r"\\(?:f|x)\s.*?\\(?:f|x)\*", re.DOTALL)
 _WHITESPACE = re.compile(r"\s+")
 
