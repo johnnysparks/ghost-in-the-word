@@ -630,6 +630,50 @@ class PipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unsupported fields"):
             summarize_reviews([response], selection_key=key, packet=packet)
 
+    def test_review_selection_bootstrap_resamples_books_deterministically(self) -> None:
+        items = [
+            {
+                "id": f"{book}-1-1",
+                "reference": f"{book} 1:1",
+                "book": book,
+                "chapter": 1,
+                "verse": "1",
+                "leftText": "left",
+                "rightText": "right",
+            }
+            for book in ("GEN", "PSA", "LEV", "ROM")
+        ]
+        packet = {
+            "schemaVersion": 1,
+            "kind": "blind-review-packet",
+            "source": {"leftEdition": {"id": "a"}, "rightEdition": {"id": "b"}},
+            "selection": {"strategy": "fixture", "selectedCount": 4, "candidateCount": 4},
+            "items": items,
+        }
+        key = {
+            "schemaVersion": 1,
+            "kind": "blind-review-key",
+            "selection": {"seed": 19, "metric": "lexicalDistance"},
+            "items": [{"id": item["id"], "rank": index + 1, "bucket": "top-ranked"} for index, item in enumerate(items)],
+        }
+        responses = [
+            {
+                "reviewerId": reviewer,
+                "items": [
+                    {"id": item["id"], "useful": "yes", "differenceType": "wording", "confidence": "high", "evidence": "visible difference"}
+                    for item in items
+                ],
+            }
+            for reviewer in ("r1", "r2")
+        ]
+        report = summarize_reviews(responses, selection_key=key, packet=packet, bootstrap_samples=25)
+        interval = report["selection"]["topRanked"]["majorityUsefulRate95CI"]
+        self.assertEqual(interval["unit"], "book")
+        self.assertEqual(interval["samples"], 25)
+        self.assertEqual(interval["seed"], 19)
+        repeat = summarize_reviews(responses, selection_key=key, packet=packet, bootstrap_samples=25)
+        self.assertEqual(interval, repeat["selection"]["topRanked"]["majorityUsefulRate95CI"])
+
     def test_committed_natural_benchmark_is_score_blinded(self) -> None:
         packet = json.loads(
             (Path(__file__).parents[1] / "benchmarks/natural-review-packet.example.json").read_text(encoding="utf-8")

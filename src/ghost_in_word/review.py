@@ -437,6 +437,8 @@ def summarize_reviews(
     *,
     selection_key: Mapping[str, object] | None = None,
     packet: Mapping[str, object] | None = None,
+    bootstrap_samples: int = 2000,
+    bootstrap_seed: int | None = None,
 ) -> dict[str, object]:
     """Aggregate independent review documents without hiding abstentions.
 
@@ -445,6 +447,8 @@ def summarize_reviews(
     responses from different runs or accepting a reviewer-side score leak.
     """
 
+    if bootstrap_samples < 0:
+        raise ValueError("bootstrap_samples must be non-negative")
     by_item: dict[str, list[dict[str, object]]] = defaultdict(list)
     reviewer_counts: Counter[str] = Counter()
     documents = list(review_documents)
@@ -557,7 +561,13 @@ def summarize_reviews(
                 }
                 if unknown_key_ids:
                     raise ValueError(f"selection key contains ids outside the review packet: {', '.join(sorted(unknown_key_ids))}")
-        report["selection"] = _summarize_selection(item_reports, selection_key)
+        report["selection"] = _summarize_selection(
+            item_reports,
+            selection_key,
+            packet=packet,
+            bootstrap_samples=bootstrap_samples,
+            bootstrap_seed=bootstrap_seed,
+        )
         report["naturalEvaluation"] = _natural_evaluation_status(
             report["selection"],
             reviewer_count=len(documents),
@@ -614,13 +624,27 @@ def _natural_evaluation_status(selection: object, *, reviewer_count: int) -> dic
     }
 
 
-def _summarize_selection(item_reports: list[dict[str, object]], selection_key: Mapping[str, object]) -> dict[str, object]:
+def _summarize_selection(
+    item_reports: list[dict[str, object]],
+    selection_key: Mapping[str, object],
+    *,
+    packet: Mapping[str, object] | None = None,
+    bootstrap_samples: int = 2000,
+    bootstrap_seed: int | None = None,
+) -> dict[str, object]:
     if selection_key.get("kind") != "blind-review-key":
         raise ValueError("selection key must have kind blind-review-key")
     key_items = selection_key.get("items")
     if not isinstance(key_items, list):
         raise ValueError("selection key must contain an items array")
     report_by_id = {str(item["id"]): item for item in item_reports}
+    packet_books: dict[str, str] = {}
+    if packet is not None and isinstance(packet.get("items"), list):
+        packet_books = {
+            str(item.get("id")): str(item.get("book"))
+            for item in packet["items"]
+            if isinstance(item, Mapping) and item.get("id") and item.get("book")
+        }
     buckets: dict[str, list[dict[str, object]]] = defaultdict(list)
     for item in key_items:
         if not isinstance(item, Mapping):
@@ -633,11 +657,22 @@ def _summarize_selection(item_reports: list[dict[str, object]], selection_key: M
             raise ValueError(f"invalid selection bucket for {item_id!r}: {bucket!r}")
         buckets[str(bucket)].append({"id": item_id, "rank": item.get("rank")})
 
-    def summarize_bucket(items: list[dict[str, object]]) -> dict[str, object]:
+    selection = selection_key.get("selection")
+    selection = dict(selection) if isinstance(selection, Mapping) else {}
+    seed = bootstrap_seed if bootstrap_seed is not None else int(selection.get("seed", 20261014))
+
+    def summarize_bucket(items: list[dict[str, object]], bucket_offset: int) -> dict[str, object]:
         reviewed = [report_by_id[item["id"]] for item in items if item["id"] in report_by_id]
         consensus = [str(item["majorityUseful"]) for item in reviewed if item["majorityUseful"] in {"yes", "no"}]
         agreements = [item["binaryAgreement"] for item in reviewed if isinstance(item.get("binaryAgreement"), bool)]
         review_counts = [int(item.get("reviewCount", 0)) for item in reviewed]
+        grouped_consensus: dict[str, list[float]] = defaultdict(list)
+        for item in reviewed:
+            majority = item.get("majorityUseful")
+            if majority not in {"yes", "no"}:
+                continue
+            group = packet_books.get(str(item["id"]), str(item["id"]))
+            grouped_consensus[group].append(1.0 if majority == "yes" else 0.0)
         return {
             "selectedCount": len(items),
             "reviewedCount": len(reviewed),
@@ -648,12 +683,53 @@ def _summarize_selection(item_reports: list[dict[str, object]], selection_key: M
             "majorityUsefulNo": consensus.count("no"),
             "majorityUsefulRate": round(consensus.count("yes") / len(consensus), 6) if consensus else None,
             "binaryAgreementRate": round(sum(1 for value in agreements if value) / len(agreements), 6) if agreements else None,
+            "majorityUsefulRate95CI": _cluster_bootstrap_interval(
+                grouped_consensus,
+                samples=bootstrap_samples,
+                seed=seed + bucket_offset,
+                unit="book" if packet_books else "item",
+            ),
         }
 
-    selection = selection_key.get("selection")
-    selection = dict(selection) if isinstance(selection, Mapping) else {}
     return {
         "metric": selection.get("metric"),
-        "topRanked": summarize_bucket(buckets.get("top-ranked", [])),
-        "seededRandom": summarize_bucket(buckets.get("seeded-random", [])),
+        "topRanked": summarize_bucket(buckets.get("top-ranked", []), 0),
+        "seededRandom": summarize_bucket(buckets.get("seeded-random", []), 1),
     }
+
+
+def _cluster_bootstrap_interval(
+    grouped_values: Mapping[str, list[float]],
+    *,
+    samples: int,
+    seed: int,
+    unit: str,
+) -> dict[str, object] | None:
+    """Bootstrap cluster means without treating verses in one book as independent."""
+
+    groups = [values for values in grouped_values.values() if values]
+    if not groups or samples == 0:
+        return None
+    generator = random.Random(seed)
+    rates: list[float] = []
+    for _ in range(samples):
+        sampled_groups = [generator.choice(groups) for _ in groups]
+        values = [value for group in sampled_groups for value in group]
+        rates.append(sum(values) / len(values))
+    return {
+        "samples": samples,
+        "seed": seed,
+        "unit": unit,
+        "ci95": [_percentile(rates, 0.025), _percentile(rates, 0.975)],
+    }
+
+
+def _percentile(values: list[float], fraction: float) -> float:
+    ordered = sorted(values)
+    if not ordered:
+        return 0.0
+    position = fraction * (len(ordered) - 1)
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    weight = position - lower
+    return round(ordered[lower] + (ordered[upper] - ordered[lower]) * weight, 6)

@@ -254,6 +254,11 @@ PYTHONPATH=src python3 scripts/evaluate_reviews.py \
   --output benchmarks/reports/natural-review.json
 ```
 
+With a packet, the report also includes deterministic 95% bootstrap intervals for
+majority-useful rates. Resampling is clustered by book so several verses from one book
+do not masquerade as independent evidence; use `--bootstrap-samples 0` to omit the
+intervals or `--bootstrap-seed` to declare a different seed.
+
 Keep the key private: it lets the evaluator separate the highest-ranked 30 items from
 the seeded random sample without exposing that selection to reviewers. The report
 retains per-item votes, disagreement, and uncertain judgments, and reports usefulness
