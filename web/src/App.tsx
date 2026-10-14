@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { ComparisonData, ComparisonManifest, ComparisonUnit } from "./types";
+import type { ComparisonData, ComparisonManifest, ComparisonUnit, TranslationMatrix } from "./types";
 
 type PairConfig = {
   id: string;
   label: string;
   dataUrl?: string;
   manifestUrl?: string;
+  matrixUrl?: string;
   leftSource: string;
   rightSource: string;
 };
@@ -16,6 +17,7 @@ const PAIRS: PairConfig[] = [
     id: "webp-bsb",
     label: "WEB ↔ BSB",
     manifestUrl: "/data/webp-bsb/manifest.json",
+    matrixUrl: "/data/john-translation-matrix.json",
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
   },
@@ -23,6 +25,7 @@ const PAIRS: PairConfig[] = [
     id: "webp-asv",
     label: "WEB ↔ ASV 1901",
     dataUrl: "/data/john-webp-asv.json",
+    matrixUrl: "/data/john-translation-matrix.json",
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://ebible.org/find/details.php?id=eng-asv",
   },
@@ -200,6 +203,29 @@ function ResultsTable({
           ))}</tbody>
         </table>
       </div>}
+    </section>
+  );
+}
+
+function TranslationDistanceMatrix({ matrix, selectedId }: { matrix: TranslationMatrix; selectedId: string | undefined }) {
+  const passage = matrix.passages.find((candidate) => candidate.id === selectedId);
+  if (!passage || passage.status !== "matched") return null;
+  const distanceForPair = (left: string, right: string) => {
+    if (left === right) return 0;
+    const key = [left, right].sort().join("|");
+    return passage.distances[key]?.lexicalDistance ?? null;
+  };
+  return (
+    <section className="translation-matrix" aria-labelledby="translation-matrix-title">
+      <div className="matrix-heading"><div><span className="matrix-kicker">PANEL VIEW</span><strong id="translation-matrix-title">Distance across three translations</strong></div><span>{passage.reference}</span></div>
+      <div className="matrix-table-wrap">
+        <table className="matrix-table">
+          <caption className="sr-only">Pairwise lexical distance matrix for {passage.reference}</caption>
+          <thead><tr><th scope="col">edition</th>{matrix.metadata.editions.map((edition) => <th scope="col" key={edition.id}>{edition.name}</th>)}</tr></thead>
+          <tbody>{matrix.metadata.editions.map((row) => <tr key={row.id}><th scope="row">{row.name}</th>{matrix.metadata.editions.map((column) => <td key={column.id}>{formatScore(distanceForPair(row.id, column.id))}</td>)}</tr>)}</tbody>
+        </table>
+      </div>
+      <p className="matrix-note">Pairwise lexical distances are shown for panel context. They describe this verse and edition set; they do not identify a faithful translation.</p>
     </section>
   );
 }
@@ -399,6 +425,7 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
 function App() {
   const [data, setData] = useState<ComparisonData | null>(null);
   const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
+  const [matrix, setMatrix] = useState<TranslationMatrix | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pairId, setPairId] = useState(parseInitialPair());
   const [book, setBook] = useState(parseInitialBook());
@@ -412,6 +439,7 @@ function App() {
   useEffect(() => {
     const controller = new AbortController();
     setData(null);
+    setMatrix(null);
     setError(null);
     const load = async () => {
       const response = await fetch(pair.manifestUrl ?? pair.dataUrl ?? "", { signal: controller.signal });
@@ -432,12 +460,17 @@ function App() {
         setManifest(null);
         setData(await response.json() as ComparisonData);
       }
+      if (pair.matrixUrl && book === "JHN") {
+        const matrixResponse = await fetch(pair.matrixUrl, { signal: controller.signal });
+        if (!matrixResponse.ok) throw new Error(`Could not load translation matrix (${matrixResponse.status})`);
+        setMatrix(await matrixResponse.json() as TranslationMatrix);
+      }
     };
     load().catch((reason: Error) => {
       if (reason.name !== "AbortError") setError(reason.message);
     });
     return () => controller.abort();
-  }, [book, pair.dataUrl, pair.manifestUrl]);
+  }, [book, pair.dataUrl, pair.manifestUrl, pair.matrixUrl]);
 
   const chapters = useMemo(() => data ? [...new Set(data.units.map((unit) => unit.chapter))].sort((a, b) => a - b) : [], [data]);
   const books = manifest?.books ?? [{ id: "JHN", name: "John", dataUrl: "", totalUnits: data?.summary.totalUnits ?? 0, matchedUnits: data?.summary.matchedUnits ?? 0, coverage: data && data.summary.totalUnits ? data.summary.matchedUnits / data.summary.totalUnits : 0 }];
@@ -573,6 +606,7 @@ function App() {
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.leftNotes} /></article>
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.rightNotes} /></article>
             </div>
+            {matrix && <TranslationDistanceMatrix matrix={matrix} selectedId={selected.id} />}
             {(previous || next) && <div className="reader-context" aria-label="Adjacent verse context">
               {previous && <button onClick={() => selectUnit(previous)}><span>← {previous.reference}</span><small>{previous.leftText ?? "No aligned text"}</small></button>}
               {next && <button onClick={() => selectUnit(next)}><span>{next.reference} →</span><small>{next.leftText ?? "No aligned text"}</small></button>}

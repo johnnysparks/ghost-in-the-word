@@ -201,6 +201,9 @@ counts before loading a book's verse points.
 Footnotes are removed from analysis text but retained as expandable notes in the reader.
 The current focus can be downloaded as JSON or CSV, and the provenance panel exposes
 the metric, alignment, language pair, and embedding run metadata.
+For the John pilot, the reader also loads a separate WEB/BSB/ASV distance matrix for
+the selected verse; the matrix is a panel comparison aid and does not assign a preferred
+translation.
 The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded
 `multilingual-e5-small` WEB↔BSB run:
 

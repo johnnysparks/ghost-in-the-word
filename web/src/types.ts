@@ -75,6 +75,29 @@ export type ComparisonManifest = {
   }>;
 };
 
+export type TranslationMatrix = {
+  schemaVersion: number;
+  kind: "translation-distance-matrix";
+  metadata: {
+    editions: Array<{ id: string; name: string; language?: string }>;
+    scope: { books: string[]; unit: string };
+    metric: { id: string; label: string; description: string };
+    sourceArtifacts?: string[];
+  };
+  passages: Array<{
+    id: string;
+    order: number;
+    book: string;
+    chapter: number;
+    verse: string;
+    reference: string;
+    status: string;
+    texts: Record<string, string>;
+    distances: Record<string, { wordingDistance: number; lexicalDistance: number }>;
+  }>;
+  summary: { totalPassages: number; scoredPassages: number; editionCoverage: Record<string, number> };
+};
+
 export type ScoreStats = {
   mean: number | null;
   median: number | null;

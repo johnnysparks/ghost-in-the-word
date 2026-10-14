@@ -187,6 +187,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** the atlas now supports chart drag-to-focus ranges, resettable linked filtering, URL restoration of the focused range, and richer hover/focus previews for both renderings.
 - **Implemented:** USFM footnotes are retained as separate cleaned note fields, excluded from text scoring, and available as expandable reader notes.
 - **Implemented:** the linked reader shows adjacent verse context cards alongside previous/next navigation, with the same selection synchronization and range focus.
+- **Implemented:** the John reader can show a three-edition WEB/BSB/ASV pairwise distance matrix for the selected passage, with explicit panel-relative interpretation.
 - **Implemented:** a semantic, keyboard-friendly results table mirrors the active filters and synchronizes row selection with the chart and linked reader.
 - **Implemented:** comparison metadata now carries language codes; lexical builds reject cross-language pairs, while embedding builds and the UI suppress same-language wording metrics and highlighting when languages differ.
 - **Implemented:** the focused atlas view can export JSON or CSV and exposes metric, alignment, language, and embedding-run provenance in the reader.

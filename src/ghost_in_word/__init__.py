@@ -3,6 +3,7 @@
 from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_segments, align_with_mappings, mapping_from_dict, parse_reference
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
+from .matrix import build_translation_matrix
 from .review import build_review_key, select_review_items, summarize_reviews
 from .reference import ReferenceEstimate, distance_to_reference, estimate_reference
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
@@ -18,6 +19,7 @@ __all__ = [
     "EmbeddingRun",
     "ReferenceEstimate",
     "TextSegment",
+    "build_translation_matrix",
     "align_segments",
     "align_with_mappings",
     "alignment_method",

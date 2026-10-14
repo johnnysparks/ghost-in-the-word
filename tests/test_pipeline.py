@@ -6,6 +6,7 @@ from pathlib import Path
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
+from ghost_in_word.matrix import build_translation_matrix
 from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
@@ -202,6 +203,30 @@ class PipelineTests(unittest.TestCase):
     def test_reference_estimate_rejects_empty_panel_after_exclusion(self) -> None:
         with self.assertRaisesRegex(ValueError, "leaves no reference panel"):
             estimate_reference({"a": [1.0, 0.0]}, exclude={"a"})
+
+    def test_translation_matrix_joins_pairwise_artifacts(self) -> None:
+        matrix = build_translation_matrix(
+            [
+                {
+                    "metadata": {"leftEdition": {"id": "a", "name": "A"}, "rightEdition": {"id": "b", "name": "B"}},
+                    "units": [{"id": "JHN-1-1", "book": "JHN", "chapter": 1, "verse": "1", "reference": "JHN 1:1", "order": 0, "leftText": "one", "rightText": "two", "status": "matched"}],
+                },
+                {
+                    "metadata": {"leftEdition": {"id": "a", "name": "A"}, "rightEdition": {"id": "c", "name": "C"}},
+                    "units": [
+                        {"id": "JHN-1-1", "book": "JHN", "chapter": 1, "verse": "1", "reference": "JHN 1:1", "order": 0, "leftText": "one", "rightText": "three", "status": "matched"},
+                        {"id": "JHN-1-2", "book": "JHN", "chapter": 1, "verse": "2", "reference": "JHN 1:2", "order": 1, "leftText": "next", "rightText": "next", "status": "matched"},
+                        {"id": "JHN-1-3", "book": "JHN", "chapter": 1, "verse": "3", "reference": "JHN 1:3", "order": 2, "leftText": "only one side", "rightText": None, "status": "missing-right"},
+                    ],
+                },
+            ]
+        )
+        self.assertEqual([edition["id"] for edition in matrix["metadata"]["editions"]], ["a", "b", "c"])
+        self.assertEqual(matrix["summary"]["scoredPassages"], 2)
+        first = matrix["passages"][0]
+        self.assertEqual(first["status"], "matched")
+        self.assertEqual(set(first["distances"]), {"a|b", "a|c", "b|c"})
+        self.assertEqual(matrix["passages"][-1]["status"], "insufficient-panel")
 
     def test_review_sample_hides_rank_and_is_seeded(self) -> None:
         comparison = {
