@@ -4,10 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import urllib.request
 import zipfile
 from pathlib import Path
+
+from snapshot_utils import snapshot_directory, write_snapshot
 
 
 def shutil_copyfileobj(source, destination, length: int = 1024 * 1024) -> None:
@@ -43,9 +46,20 @@ def main() -> None:
         )
         with urllib.request.urlopen(request, timeout=60) as response, archive.open("wb") as output:
             shutil_copyfileobj(response, output)
+        archive_bytes = archive.stat().st_size
+        archive_sha256 = hashlib.sha256(archive.read_bytes()).hexdigest()
         target.mkdir(parents=True, exist_ok=False)
         with zipfile.ZipFile(archive) as zipped:
             zipped.extractall(target)
+        write_snapshot(
+            target,
+            snapshot_directory(
+                target,
+                edition,
+                archive_sha256=archive_sha256,
+                archive_bytes=archive_bytes,
+            ),
+        )
         archive.unlink()
         print(f"wrote {target}")
 

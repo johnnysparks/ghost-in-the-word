@@ -178,7 +178,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 
 ## Current implementation status
 
-- **Implemented:** pinned edition manifest and source downloader for WEB, BSB, and ASV; USFM parsing; explicit exact-reference alignment with missing statuses; lexical wording and character n-gram baselines; browser comparison schema; optional sentence-transformers embedding runner; synthetic challenge format and review rubric.
+- **Implemented:** pinned edition manifest and source downloader for WEB, BSB, and ASV; content-addressed source snapshot inventories and verification; USFM parsing; explicit exact-reference alignment with missing statuses; lexical wording and character n-gram baselines; browser comparison schema; optional sentence-transformers embedding runner; synthetic challenge format and review rubric.
 - **Implemented:** John pilot UI with pair selection, chapter/search filters, divergence chart, wording/distance scatterplot, ranked differences, linked reader, token highlights, previous/next navigation, provenance links, and URL state.
 - **Implemented:** one `multilingual-e5-small` John pilot run is available as a separate UI mode, with 384 dimensions, a 512-token maximum, and recorded input hash. Its synthetic challenge result was 3/6 (50%), below the provisional 80% gate.
 - **Implemented:** the synthetic challenge has been run with `multilingual-e5-small` (50%) and `BAAI/bge-m3` (66.7%); neither clears the provisional 80% gate, so the pilot does not promote either score to a faithfulness claim.

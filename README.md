@@ -43,6 +43,17 @@ Raw downloads and generated reports are ignored by Git. The manifest in `sources
 records the edition URLs and licenses; verify snapshots and checksums before publishing
 derived data.
 
+Record and verify content hashes for downloaded source directories. The recording command
+also writes the tracked aggregate manifest at `source_snapshots.json`:
+
+```sh
+PYTHONPATH=src python3 scripts/record_snapshots.py
+PYTHONPATH=src python3 scripts/verify_snapshots.py
+```
+
+Future downloads write the same `snapshot.json` inventory automatically, including the
+archive hash when the source was obtained by `download_sources.py`.
+
 Embedding experiments are an optional offline step. Install the extra in an isolated
 environment, then run the model-specific builder. The output records the model ID,
 dimensions, input hash, prefix, and maximum sequence length alongside each score:
