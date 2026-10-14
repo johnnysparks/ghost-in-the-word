@@ -152,6 +152,8 @@ export type TranslationMatrix = {
 export type ScoreStats = {
   mean: number | null;
   median: number | null;
+  p25: number | null;
+  p75: number | null;
   max: number | null;
 };
 

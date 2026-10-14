@@ -186,6 +186,11 @@ function formatOverviewScore(score: number | null | undefined) {
   return score === null || score === undefined ? "—" : score.toFixed(3);
 }
 
+function formatScoreRange(score: { p25?: number | null; p75?: number | null } | undefined) {
+  if (score?.p25 === null || score?.p25 === undefined || score?.p75 === null || score?.p75 === undefined) return "—";
+  return `${formatOverviewScore(score.p25)}–${formatOverviewScore(score.p75)}`;
+}
+
 function AtlasOverview({
   manifest,
   selectedBook,
@@ -211,14 +216,14 @@ function AtlasOverview({
       <div className="atlas-overview-stats">
         <div><span>scored {unitPlural}</span><strong>{manifest.summary.scoredUnits.toLocaleString()}</strong></div>
         <div><span>coverage</span><strong>{Math.round((manifest.summary.coverage ?? 0) * 100)}%</strong></div>
-        <div><span>median distance</span><strong>{formatOverviewScore(manifest.summary.score?.median)}</strong></div>
+        <div><span>median distance</span><strong>{formatOverviewScore(manifest.summary.score?.median)}</strong><small className="distribution-range">middle 50% {formatScoreRange(manifest.summary.score)}</small></div>
         <div><span>highest distance</span><strong>{formatOverviewScore(manifest.summary.score?.max)}</strong></div>
       </div>
       <div className="atlas-books" role="list" aria-label="Book summaries">
         {manifest.books.map((book) => (
           <button className={book.id === selected?.id ? "atlas-book active" : "atlas-book"} key={book.id} onClick={() => onSelectBook(book.id)} role="listitem">
             <span className="atlas-book-name">{book.name}</span>
-            <span className="atlas-book-meta">{book.totalUnits.toLocaleString()} {unitPlural} · {Math.round(book.coverage * 100)}% · median {formatOverviewScore(book.score.median)}</span>
+            <span className="atlas-book-meta">{book.totalUnits.toLocaleString()} {unitPlural} · {Math.round(book.coverage * 100)}% · median {formatOverviewScore(book.score.median)} · middle {formatScoreRange(book.score)}</span>
             <span className="atlas-book-bar"><i style={{ width: `${Math.max(0, Math.min(100, book.coverage * 100))}%` }} /></span>
           </button>
         ))}
@@ -228,7 +233,7 @@ function AtlasOverview({
         <div className="chapter-summary-list" role="list" aria-label={`${selected.name} chapter summaries`}>
           {selected.chapters.map((chapter) => (
             <button key={chapter.chapter} onClick={() => onSelectChapter(selected.id, chapter.chapter)} role="listitem">
-              <span>ch {chapter.chapter}</span><strong>{formatOverviewScore(chapter.score.median)}</strong><small>{chapter.scoredUnits.toLocaleString()} scored · {Math.round(chapter.coverage * 100)}%</small>
+              <span>ch {chapter.chapter}</span><strong>{formatOverviewScore(chapter.score.median)}</strong><small>{chapter.scoredUnits.toLocaleString()} scored · {Math.round(chapter.coverage * 100)}% · middle {formatScoreRange(chapter.score)}</small>
             </button>
           ))}
         </div>
@@ -313,11 +318,25 @@ function parseInitialRange(): UnitRange | null {
   return { start, end };
 }
 
-function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string, range: UnitRange | null = null, unitMode = "verse") {
+function updateUrl(
+  pairId: string,
+  book: string,
+  unit: ComparisonUnit | undefined,
+  chapter: string,
+  search: string,
+  range: UnitRange | null = null,
+  unitMode = "verse",
+  metricId?: string,
+  runId?: string,
+) {
   const params = new URLSearchParams(window.location.search);
   params.set("pair", pairId);
   params.set("book", book);
   if (unit) params.set("ref", unit.id);
+  if (metricId) params.set("metric", metricId);
+  else params.delete("metric");
+  if (runId) params.set("run", runId);
+  else params.delete("run");
   if (unitMode === "verse") params.delete("unit");
   else params.set("unit", unitMode);
   if (chapter === "all") params.delete("chapter");
@@ -578,17 +597,19 @@ function App() {
   const selectedIndex = selected ? visibleUnits.findIndex((unit) => unit.id === selected.id) : -1;
   const previous = selectedIndex > 0 ? visibleUnits[selectedIndex - 1] : undefined;
   const next = selectedIndex >= 0 ? visibleUnits[selectedIndex + 1] : undefined;
+  const metricId = data?.metadata.metric.id;
+  const runId = data?.metadata.embeddingRun?.cacheKey ?? data?.metadata.embeddingRun?.inputHash ?? data?.metadata.embeddingRun?.modelRevision ?? data?.metadata.embeddingRun?.modelId;
 
   useEffect(() => {
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
-      updateUrl(pair.id, book, selected, chapter, search, brushRange, activeUnitMode);
+      updateUrl(pair.id, book, selected, chapter, search, brushRange, activeUnitMode, metricId, runId);
     }
-  }, [activeUnitMode, book, brushRange, chapter, pair.id, search, selected]);
+  }, [activeUnitMode, book, brushRange, chapter, metricId, pair.id, runId, search, selected]);
 
   const selectUnit = (unit: ComparisonUnit) => {
     setSelectedId(unit.id);
-    updateUrl(pair.id, book, unit, chapter, search, brushRange, activeUnitMode);
+    updateUrl(pair.id, book, unit, chapter, search, brushRange, activeUnitMode, metricId, runId);
   };
 
   const focusRange = (start: number, end: number) => {
@@ -706,7 +727,7 @@ function App() {
         <section className="panel ranked-panel">
           <div className="panel-heading"><div><p className="eyebrow">03 · RANKED DIFFERENCES</p><h2>Start with a lead.</h2></div></div>
           <p className="panel-intro">The largest {distanceLabel} values in the current view. Select one to sync the chart and reader.</p>
-          <div className="ranked-list">{ranked.map((unit, index) => <button className={unit.id === selected?.id ? "ranked-item active" : "ranked-item"} key={unit.id} onClick={() => selectUnit(unit)}><span className="rank-number">{String(index + 1).padStart(2, "0")}</span><span className="rank-ref">{unit.reference}<small>{unit.leftText?.slice(0, 68)}{(unit.leftText?.length ?? 0) > 68 ? "…" : ""}</small></span><strong>{formatScore(distanceFor(unit, distanceField))}</strong></button>)}{ranked.length === 0 && <p className="empty-state">No scored verses in this view.</p>}</div>
+          <div className="ranked-list">{ranked.map((unit, index) => <button className={unit.id === selected?.id ? "ranked-item active" : "ranked-item"} key={unit.id} onClick={() => selectUnit(unit)}><span className="rank-number">{String(index + 1).padStart(2, "0")}</span><span className="rank-ref">{unit.reference}<small>{unit.leftText?.slice(0, 68)}{(unit.leftText?.length ?? 0) > 68 ? "…" : ""}</small></span><strong>{formatScore(distanceFor(unit, distanceField))}</strong></button>)}{ranked.length === 0 && <p className="empty-state">No scored {unitPlural} in this view.</p>}</div>
         </section>
       </div>
 

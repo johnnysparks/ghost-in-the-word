@@ -261,6 +261,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(summary["overall"]["scoredUnits"], 2)
         self.assertEqual(summary["chapters"][0]["coverage"], 0.5)
 
+    def test_summary_reports_middle_fifty_percentile_bounds(self) -> None:
+        units = [
+            {"book": "JHN", "chapter": 3, "status": "matched", "lexicalDistance": 0.0},
+            {"book": "JHN", "chapter": 3, "status": "matched", "lexicalDistance": 0.2},
+            {"book": "JHN", "chapter": 3, "status": "matched", "lexicalDistance": 0.4},
+            {"book": "JHN", "chapter": 3, "status": "matched", "lexicalDistance": 0.6},
+            {"book": "JHN", "chapter": 3, "status": "missing-right", "lexicalDistance": None},
+        ]
+        score = summarize_units(units, "lexicalDistance")["overall"]["score"]
+        self.assertEqual(score["p25"], 0.15)
+        self.assertEqual(score["median"], 0.3)
+        self.assertEqual(score["p75"], 0.45)
+
     def test_embedding_primitives_are_deterministic(self) -> None:
         self.assertEqual(cosine_distance([1.0, 0.0], [1.0, 0.0]), 0.0)
         self.assertEqual(cosine_distance([1.0, 0.0], [0.0, 1.0]), 1.0)

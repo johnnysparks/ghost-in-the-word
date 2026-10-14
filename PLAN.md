@@ -186,6 +186,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** the default WEB↔BSB atlas now loads a 66-book partition manifest and one book payload at a time; the backend produces book/chapter coverage and score summaries.
 - **Implemented:** the WEB↔BSB atlas exposes verse and non-overlapping two-verse passage granularities as separate URL-addressable manifests; passage metadata and partitioning preserve the multi-verse scope and keep incomplete windows unresolved.
 - **Implemented:** the whole-corpus atlas overview exposes book-level score distributions, coverage/status counts, and chapter summaries before drilling into a selected book's verse points.
+- **Implemented:** book, chapter, and whole-corpus summaries expose deterministic median and middle-50% score bounds (alongside counts, coverage, and maximums) so distributions remain visible without treating missing units as zero.
 - **Implemented:** the atlas now supports chart drag-to-focus ranges, resettable linked filtering, URL restoration of the focused range, and richer hover/focus previews for both renderings.
 - **Implemented:** USFM footnotes are retained as separate cleaned note fields, excluded from text scoring, and available as expandable reader notes.
 - **Implemented:** the linked reader shows adjacent verse context cards alongside previous/next navigation, with the same selection synchronization and range focus.

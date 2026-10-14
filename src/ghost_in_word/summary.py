@@ -18,10 +18,24 @@ def _stats(units: list[Mapping[str, object]], distance_field: str) -> dict[str, 
         "score": {
             "mean": round(mean(scores), 6) if scores else None,
             "median": round(median(scores), 6) if scores else None,
+            "p25": _percentile(scores, 0.25),
+            "p75": _percentile(scores, 0.75),
             "max": round(max(scores), 6) if scores else None,
         },
         "statuses": dict(statuses),
     }
+
+
+def _percentile(values: list[float], fraction: float) -> float | None:
+    """Return a deterministic linearly interpolated percentile."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * fraction
+    lower = int(position)
+    upper = min(lower + 1, len(ordered) - 1)
+    weight = position - lower
+    return round(ordered[lower] + (ordered[upper] - ordered[lower]) * weight, 6)
 
 def summarize_units(units: Iterable[Mapping[str, object]], distance_field: str) -> dict[str, object]:
     """Aggregate comparison units without scoring missing passages."""
