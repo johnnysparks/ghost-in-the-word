@@ -21,6 +21,7 @@ from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 from ghost_in_word.windows import build_windows
 from scripts.evaluate_challenge import compare_to_baseline
+from scripts.render_review_form import render_review_form
 
 
 class PipelineTests(unittest.TestCase):
@@ -621,6 +622,37 @@ class PipelineTests(unittest.TestCase):
         packet["items"][0]["rank"] = 1
         with self.assertRaisesRegex(ValueError, "forbidden"):
             validate_review_packet(packet)
+
+    def test_review_form_contains_only_blind_packet_and_response_controls(self) -> None:
+        comparison = {
+            "metadata": {
+                "leftEdition": {"id": "a", "name": "Edition A"},
+                "rightEdition": {"id": "b", "name": "Edition B"},
+                "metric": {"id": "lexical-baseline", "label": "Lexical baseline", "description": "Fixture method."},
+            },
+            "units": [
+                {
+                    "id": "JHN-1-1",
+                    "reference": "JHN 1:1",
+                    "book": "JHN",
+                    "chapter": 1,
+                    "verse": "1",
+                    "status": "matched",
+                    "leftText": "A <word> & a phrase",
+                    "rightText": "A different phrase",
+                    "lexicalDistance": 0.9,
+                }
+            ],
+        }
+        packet = select_review_items(comparison, count=1, metric_field="lexicalDistance", seed=7)
+        rendered = render_review_form(packet, reviewer_id="reviewer-1")
+        self.assertIn("A &lt;word&gt; &amp; a phrase", rendered)
+        self.assertIn('data-field="differenceType"', rendered)
+        self.assertIn('data-field="evidence"', rendered)
+        self.assertIn('schemaVersion: 1, reviewerId, items: collect()', rendered)
+        self.assertNotIn('"lexicalDistance"', rendered)
+        self.assertNotIn('"rank"', rendered)
+        self.assertNotIn('"score"', rendered)
 
     def test_review_evaluation_checks_packet_ids_and_reports_gate_status(self) -> None:
         comparison = {

@@ -259,6 +259,23 @@ PYTHONPATH=src python3 scripts/evaluate_reviews.py \
   --output benchmarks/reports/natural-review.json
 ```
 
+For a browser-based handoff, render the blinded packet as a self-contained form. The
+form shows both renderings, captures the rubric fields, refuses to download an
+incomplete response, and never receives the private selection key:
+
+```sh
+PYTHONPATH=src python3 scripts/render_review_form.py \
+  benchmarks/review-packet.json \
+  --reviewer-id reviewer-1 \
+  --output /tmp/reviewer-1.html
+```
+
+Open the generated HTML file locally, choose **Download response JSON** when all
+required judgments are complete, and give the downloaded document to the evaluator.
+The downloaded response can be passed to the same `evaluate_reviews.py` command above.
+The form is a transport convenience; it does not add labels or infer a faithfulness
+grade.
+
 With a packet, the report also includes deterministic 95% bootstrap intervals for
 majority-useful rates. Resampling is clustered by book so several verses from one book
 do not masquerade as independent evidence; use `--bootstrap-samples 0` to omit the
