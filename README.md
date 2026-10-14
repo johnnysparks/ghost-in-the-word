@@ -355,7 +355,25 @@ PYTHONPATH=src python3 scripts/build_summary.py \
 ```
 
 The default atlas uses the partitioned WEB↔BSB corpus. Rebuild its one-book-at-a-time
-payloads from a full comparison artifact with:
+payloads from the reviewed full comparison artifact with:
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/webp data/raw/bsb \
+  --left-id webp --right-id bsb \
+  --mapping mappings/webp-bsb-reviewed.json \
+  --output data/derived/webp-bsb-reviewed-alignment.json \
+  --mapping-report data/derived/webp-bsb-mapping-review.json
+PYTHONPATH=src python3 scripts/build_comparison.py \
+  data/derived/webp-bsb-reviewed-alignment.json \
+  --left-id webp --right-id bsb \
+  --left-name "World English Bible Protestant Edition" \
+  --right-name "Berean Standard Bible" \
+  --manifest sources.json \
+  --output data/derived/webp-bsb-full.json
+```
+
+Then partition it with:
 
 ```sh
 PYTHONPATH=src python3 scripts/partition_comparison.py \

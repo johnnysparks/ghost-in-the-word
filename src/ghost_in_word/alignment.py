@@ -272,7 +272,9 @@ def alignment_method(units: Iterable[Mapping[str, object]]) -> str:
     """Describe whether a report used exact keys or reviewed mappings."""
 
     for unit in units:
-        if unit.get("mapping_method", "exact-reference") != "exact-reference" or unit.get("mapping_type", "one-to-one") != "one-to-one":
+        mapping_method = unit.get("mapping_method", unit.get("mappingMethod", "exact-reference"))
+        mapping_type = unit.get("mapping_type", unit.get("mappingType", "one-to-one"))
+        if mapping_method != "exact-reference" or mapping_type != "one-to-one":
             return "explicit-reviewed-mapping"
     return "exact-book-chapter-verse"
 

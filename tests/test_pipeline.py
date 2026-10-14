@@ -842,6 +842,13 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
         self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
 
+    def test_public_full_atlas_declares_reviewed_mapping_method(self) -> None:
+        manifest = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["comparison"]["alignment"]["method"], "explicit-reviewed-mapping")
+        rom = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/ROM.json").read_text(encoding="utf-8"))
+        bridge = next(unit for unit in rom["units"] if unit["reference"] == "ROM 14:24")
+        self.assertEqual(bridge["mappingMethod"], "reviewed-verse-bridge")
+
     def test_cross_language_fixture_suppresses_lexical_fields(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-rv1909-e5-small.json").read_text(encoding="utf-8"))
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
