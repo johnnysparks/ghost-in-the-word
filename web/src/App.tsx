@@ -14,7 +14,11 @@ type PairConfig = {
 
 function publicDataUrl(path: string) {
   const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
-  return `${base}${path.replace(/^\/+/, "")}`;
+  return new URL(path.replace(/^\/+/, ""), new URL(base, window.location.href)).toString();
+}
+
+function resolveDataUrl(path: string, baseUrl: string) {
+  return new URL(path, new URL(baseUrl, window.location.href)).toString();
 }
 
 const PAIRS: PairConfig[] = [
@@ -503,7 +507,7 @@ function App() {
           setBook(selectedBook.id);
           setBrushRange(null);
         }
-        const bookResponse = await fetch(selectedBook.dataUrl, { signal: controller.signal });
+        const bookResponse = await fetch(resolveDataUrl(selectedBook.dataUrl, pair.manifestUrl), { signal: controller.signal });
         if (!bookResponse.ok) throw new Error(`Could not load ${selectedBook.name} (${bookResponse.status})`);
         setData(await bookResponse.json() as ComparisonData);
       } else {
