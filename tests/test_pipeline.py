@@ -12,7 +12,13 @@ from ghost_in_word.assessment_attachment import attach_assessment_document
 from ghost_in_word.embeddings import cosine_distance, embedding_cache_key, embedding_storage_bytes, encode_texts, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
-from ghost_in_word.mapping_review import bind_snapshot, validate_mapping_document
+from ghost_in_word.mapping_review import (
+    bind_snapshot,
+    build_mapping_review_packet,
+    summarize_mapping_reviews,
+    validate_mapping_document,
+    validate_mapping_review_packet,
+)
 from ghost_in_word.review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
@@ -233,6 +239,59 @@ class PipelineTests(unittest.TestCase):
         records[0]["review"]["reviewers"] = ["reviewer-1"]
         with self.assertRaisesRegex(ValueError, "at least two"):
             validate_mapping_document(records, left, right, require_independent_review=True)
+
+    def test_mapping_review_packet_aggregates_unanimous_independent_acceptance(self) -> None:
+        left = [
+            TextSegment("a", "JHN", 1, "1", "In the beginning."),
+            TextSegment("a", "JHN", 1, "2", "He was in the beginning."),
+        ]
+        right = [TextSegment("b", "JHN", 1, "1", "In the beginning he was there.")]
+        packet = build_mapping_review_packet(
+            [{"left": ["JHN 1:1", "JHN 1:2"], "right": ["JHN 1:1"], "method": "candidate"}],
+            left,
+            right,
+            left_source={"edition": "a", "path": "/private/source/snapshot.json", "directorySha256": "abc"},
+            right_source={"edition": "b", "path": "/private/source/snapshot.json", "directorySha256": "def"},
+        )
+        self.assertEqual(validate_mapping_review_packet(packet)["itemCount"], 1)
+        self.assertNotIn("path", packet["source"]["leftSnapshot"])
+        item_id = packet["items"][0]["id"]
+        candidate_records = [{
+            "left": ["JHN 1:1", "JHN 1:2"],
+            "right": ["JHN 1:1"],
+            "status": "unresolved",
+            "method": "candidate-bridge",
+        }]
+        responses = [
+            {
+                "schemaVersion": 1,
+                "kind": "blind-mapping-review-response",
+                "reviewerId": reviewer,
+                "independence": "declared",
+                "items": [{"id": item_id, "decision": "accept", "evidence": f"{reviewer} checked both spans."}],
+            }
+            for reviewer in ("reviewer-1", "reviewer-2")
+        ]
+        report = summarize_mapping_reviews(responses, packet=packet, candidate_records=candidate_records)
+        self.assertTrue(report["gate"]["eligible"])
+        self.assertEqual(report["approvedMappingCount"], 1)
+        approved = report["approvedMappings"][0]
+        self.assertEqual(approved["status"], "unresolved")
+        self.assertEqual(approved["method"], "candidate-bridge")
+        self.assertEqual(approved["review"]["reviewers"], ["reviewer-1", "reviewer-2"])
+        self.assertEqual(approved["review"]["independence"], "declared")
+        applied_report = validate_mapping_document(
+            report["approvedMappings"],
+            left,
+            right,
+            require_independent_review=True,
+        )
+        self.assertTrue(applied_report["summary"]["independentReviewEligible"])
+
+        responses[1]["items"][0]["decision"] = "uncertain"
+        rejected = summarize_mapping_reviews(responses, packet=packet, candidate_records=candidate_records)
+        self.assertTrue(rejected["gate"]["eligible"])
+        self.assertEqual(rejected["approvedMappingCount"], 0)
 
     def test_mapping_snapshot_binding_requires_matching_inventory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

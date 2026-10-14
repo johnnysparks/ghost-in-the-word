@@ -84,6 +84,35 @@ Each mapping record must retain `reviewers` with at least two distinct IDs and
 requirement, not proof that the people were actually independent; the mapping report
 records both the declared panel count and whether every record met the gate.
 
+To create that independently reviewed mapping file without exposing existing review
+metadata, build a blind packet from the pinned source directories:
+
+```sh
+PYTHONPATH=src python3 scripts/build_mapping_review_packet.py \
+  data/raw/webp data/raw/bsb mappings/webp-bsb-candidates.json \
+  --left-id webp --right-id bsb \
+  --output /tmp/webp-bsb-mapping-packet.json
+```
+
+Each reviewer should return a document with `kind: "blind-mapping-review-response"`,
+their `reviewerId`, `independence: "declared"`, and one `accept`, `reject`, or
+`uncertain` decision plus evidence for each packet item. Aggregate those responses:
+
+```sh
+PYTHONPATH=src python3 scripts/evaluate_mapping_reviews.py \
+  --packet /tmp/webp-bsb-mapping-packet.json \
+  --mapping-candidates mappings/webp-bsb-candidates.json \
+  benchmarks/mapping-reviews/reviewer-1.json \
+  benchmarks/mapping-reviews/reviewer-2.json \
+  --output data/derived/webp-bsb-independent-review.json \
+  --mapping-output mappings/webp-bsb-independent.json
+```
+
+Only items unanimously accepted by the complete declared panel are written to the
+mapping output. The private `--mapping-candidates` input preserves each candidate's
+original method and unresolved/missing status; rejected or uncertain items remain in
+the report and are omitted from alignment application.
+
 Raw downloads and generated reports are ignored by Git. The manifest in `sources.json`
 records the edition URLs and licenses; verify snapshots and checksums before publishing
 derived data.
