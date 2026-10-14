@@ -13,6 +13,12 @@ class Edition:
     format: str
     license: str
     canon: str
+    revision: str = ""
+    versification: str = ""
+    role: str = "translation"
+    source_tradition: str = ""
+    family: str = ""
+    attribution: str = ""
 
 
 @dataclass(frozen=True)

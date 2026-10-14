@@ -1,0 +1,570 @@
+{
+  "schemaVersion": 1,
+  "kind": "blind-review-packet",
+  "source": {
+    "leftEdition": {
+      "id": "webp",
+      "name": "World English Bible Protestant Edition",
+      "language": "en"
+    },
+    "rightEdition": {
+      "id": "bsb",
+      "name": "Berean Standard Bible",
+      "language": "en"
+    },
+    "metric": {
+      "id": "lexical-baseline",
+      "label": "Lexical baseline",
+      "description": "Character n-gram cosine distance. This is a reproducible lexical baseline, not a semantic or faithfulness score."
+    }
+  },
+  "selection": {
+    "strategy": "top-half-plus-seeded-random",
+    "seed": 20261014,
+    "requestedCount": 60,
+    "selectedCount": 60,
+    "candidateCount": 31086
+  },
+  "items": [
+    {
+      "id": "1CH-21-29",
+      "reference": "1CH 21:29",
+      "book": "1CH",
+      "chapter": 21,
+      "verse": "29",
+      "leftText": "For the LORD’s tabernacle, which Moses made in the wilderness, and the altar of burnt offering, were at that time in the high place at Gibeon.",
+      "rightText": "For the tabernacle of the LORD that Moses had made in the wilderness and the altar of burnt offering were presently at the high place in Gibeon,"
+    },
+    {
+      "id": "PSA-129-1",
+      "reference": "PSA 129:1",
+      "book": "PSA",
+      "chapter": 129,
+      "verse": "1",
+      "leftText": "Many times they have afflicted me from my youth up.",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "PSA-120-1",
+      "reference": "PSA 120:1",
+      "book": "PSA",
+      "chapter": 120,
+      "verse": "1",
+      "leftText": "In my distress, I cried to the LORD.",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "JOB-37-12",
+      "reference": "JOB 37:12",
+      "book": "JOB",
+      "chapter": 37,
+      "verse": "12",
+      "leftText": "It is turned around by his guidance,",
+      "rightText": "They swirl about,"
+    },
+    {
+      "id": "PSA-103-1",
+      "reference": "PSA 103:1",
+      "book": "PSA",
+      "chapter": 103,
+      "verse": "1",
+      "leftText": "Praise the LORD, my soul!",
+      "rightText": "Of David."
+    },
+    {
+      "id": "NUM-32-26",
+      "reference": "NUM 32:26",
+      "book": "NUM",
+      "chapter": 32,
+      "verse": "26",
+      "leftText": "Our little ones, our wives, our flocks, and all our livestock shall be there in the cities of Gilead;",
+      "rightText": "Our children, our wives, our livestock, and all our animals will remain here in the cities of Gilead."
+    },
+    {
+      "id": "PRO-30-31",
+      "reference": "PRO 30:31",
+      "book": "PRO",
+      "chapter": 30,
+      "verse": "31",
+      "leftText": "the greyhound;",
+      "rightText": "a strutting rooster;"
+    },
+    {
+      "id": "PSA-127-1",
+      "reference": "PSA 127:1",
+      "book": "PSA",
+      "chapter": 127,
+      "verse": "1",
+      "leftText": "Unless the LORD builds the house,",
+      "rightText": "A song of ascents. Of Solomon."
+    },
+    {
+      "id": "MAT-22-8",
+      "reference": "MAT 22:8",
+      "book": "MAT",
+      "chapter": 22,
+      "verse": "8",
+      "leftText": "“Then he said to his servants, ‘The wedding is ready, but those who were invited weren’t worthy.",
+      "rightText": "Then he said to his servants, ‘The wedding banquet is ready, but those I invited were not worthy."
+    },
+    {
+      "id": "2CH-15-17",
+      "reference": "2CH 15:17",
+      "book": "2CH",
+      "chapter": 15,
+      "verse": "17",
+      "leftText": "But the high places were not taken away out of Israel; nevertheless the heart of Asa was perfect all his days.",
+      "rightText": "The high places were not removed from Israel, but Asa’s heart was fully devoted all his days."
+    },
+    {
+      "id": "LUK-5-1",
+      "reference": "LUK 5:1",
+      "book": "LUK",
+      "chapter": 5,
+      "verse": "1",
+      "leftText": "Now while the multitude pressed on him and heard the word of God, he was standing by the lake of Gennesaret.",
+      "rightText": "On one occasion, while Jesus was standing by the Lake of Gennesaret with the crowd pressing in on Him to hear the word of God,"
+    },
+    {
+      "id": "JDG-17-5",
+      "reference": "JDG 17:5",
+      "book": "JDG",
+      "chapter": 17,
+      "verse": "5",
+      "leftText": "The man Micah had a house of gods, and he made an ephod, and teraphim, and consecrated one of his sons, who became his priest.",
+      "rightText": "Now this man Micah had a shrine, and he made an ephod and some household idols, and ordained one of his sons as his priest."
+    },
+    {
+      "id": "PSA-131-1",
+      "reference": "PSA 131:1",
+      "book": "PSA",
+      "chapter": 131,
+      "verse": "1",
+      "leftText": "LORD, my heart isn’t arrogant, nor my eyes lofty;",
+      "rightText": "A song of ascents. Of David."
+    },
+    {
+      "id": "PSA-123-1",
+      "reference": "PSA 123:1",
+      "book": "PSA",
+      "chapter": 123,
+      "verse": "1",
+      "leftText": "I lift up my eyes to you,",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "SNG-5-13",
+      "reference": "SNG 5:13",
+      "book": "SNG",
+      "chapter": 5,
+      "verse": "13",
+      "leftText": "His cheeks are like a bed of spices with towers of perfumes.",
+      "rightText": "His cheeks are like beds of spice,"
+    },
+    {
+      "id": "PSA-138-1",
+      "reference": "PSA 138:1",
+      "book": "PSA",
+      "chapter": 138,
+      "verse": "1",
+      "leftText": "I will give you thanks with my whole heart.",
+      "rightText": "Of David."
+    },
+    {
+      "id": "PSA-144-1",
+      "reference": "PSA 144:1",
+      "book": "PSA",
+      "chapter": 144,
+      "verse": "1",
+      "leftText": "Blessed be the LORD, my rock,",
+      "rightText": "Of David."
+    },
+    {
+      "id": "PSA-133-1",
+      "reference": "PSA 133:1",
+      "book": "PSA",
+      "chapter": 133,
+      "verse": "1",
+      "leftText": "See how good and how pleasant it is",
+      "rightText": "A song of ascents. Of David."
+    },
+    {
+      "id": "EXO-32-6",
+      "reference": "EXO 32:6",
+      "book": "EXO",
+      "chapter": 32,
+      "verse": "6",
+      "leftText": "They rose up early on the next day, and offered burnt offerings, and brought peace offerings; and the people sat down to eat and to drink, and rose up to play.",
+      "rightText": "So the next day they arose, offered burnt offerings, and presented peace offerings. And the people sat down to eat and drink and got up to indulge in revelry."
+    },
+    {
+      "id": "JOB-9-19",
+      "reference": "JOB 9:19",
+      "book": "JOB",
+      "chapter": 9,
+      "verse": "19",
+      "leftText": "If it is a matter of strength, behold, he is mighty!",
+      "rightText": "If it is a matter of strength,"
+    },
+    {
+      "id": "NUM-3-36",
+      "reference": "NUM 3:36",
+      "book": "NUM",
+      "chapter": 3,
+      "verse": "36",
+      "leftText": "The appointed duty of the sons of Merari shall be the tabernacle’s boards, its bars, its pillars, its sockets, all its instruments, all its service,",
+      "rightText": "The duties assigned to the sons of Merari were the tabernacle’s frames, crossbars, posts, bases, and all its equipment— all the service for these items,"
+    },
+    {
+      "id": "PSA-132-1",
+      "reference": "PSA 132:1",
+      "book": "PSA",
+      "chapter": 132,
+      "verse": "1",
+      "leftText": "LORD, remember David and all his affliction,",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "LUK-21-32",
+      "reference": "LUK 21:32",
+      "book": "LUK",
+      "chapter": 21,
+      "verse": "32",
+      "leftText": "Most certainly I tell you, this generation will not pass away until all things are accomplished.",
+      "rightText": "Truly I tell you, this generation will not pass away until all these things have happened."
+    },
+    {
+      "id": "1KI-2-15",
+      "reference": "1KI 2:15",
+      "book": "1KI",
+      "chapter": 2,
+      "verse": "15",
+      "leftText": "He said, “You know that the kingdom was mine, and that all Israel set their faces on me, that I should reign. However, the kingdom is turned around, and has become my brother’s; for it was his from the LORD.",
+      "rightText": "“You know that the kingship was mine,” he said. “All Israel expected that I should reign, but the kingship has turned to my brother, for it has come to him from the LORD."
+    },
+    {
+      "id": "JOB-32-21",
+      "reference": "JOB 32:21",
+      "book": "JOB",
+      "chapter": 32,
+      "verse": "21",
+      "leftText": "Please don’t let me respect any man’s person,",
+      "rightText": "I will be partial to no one,"
+    },
+    {
+      "id": "PRO-13-12",
+      "reference": "PRO 13:12",
+      "book": "PRO",
+      "chapter": 13,
+      "verse": "12",
+      "leftText": "Hope deferred makes the heart sick,",
+      "rightText": "Hope deferred makes the heart sick,"
+    },
+    {
+      "id": "PSA-128-1",
+      "reference": "PSA 128:1",
+      "book": "PSA",
+      "chapter": 128,
+      "verse": "1",
+      "leftText": "Blessed is everyone who fears the LORD,",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "MRK-12-15",
+      "reference": "MRK 12:15",
+      "book": "MRK",
+      "chapter": 12,
+      "verse": "15",
+      "leftText": "Shall we give, or shall we not give?”",
+      "rightText": "But Jesus saw through their hypocrisy and said, “Why are you testing Me? Bring Me a denarius to inspect.”"
+    },
+    {
+      "id": "LAM-3-52",
+      "reference": "LAM 3:52",
+      "book": "LAM",
+      "chapter": 3,
+      "verse": "52",
+      "leftText": "They have chased me relentlessly like a bird,",
+      "rightText": "Without cause my enemies"
+    },
+    {
+      "id": "PSA-129-5",
+      "reference": "PSA 129:5",
+      "book": "PSA",
+      "chapter": 129,
+      "verse": "5",
+      "leftText": "Let them be disappointed and turned backward,",
+      "rightText": "May all who hate Zion"
+    },
+    {
+      "id": "1CH-21-14",
+      "reference": "1CH 21:14",
+      "book": "1CH",
+      "chapter": 21,
+      "verse": "14",
+      "leftText": "So the LORD sent a pestilence on Israel, and seventy thousand men of Israel fell.",
+      "rightText": "So the LORD sent a plague upon Israel, and seventy thousand men of Israel fell dead."
+    },
+    {
+      "id": "JOB-30-8",
+      "reference": "JOB 30:8",
+      "book": "JOB",
+      "chapter": 30,
+      "verse": "8",
+      "leftText": "They are children of fools, yes, children of wicked men.",
+      "rightText": "A senseless and nameless brood,"
+    },
+    {
+      "id": "PSA-126-1",
+      "reference": "PSA 126:1",
+      "book": "PSA",
+      "chapter": 126,
+      "verse": "1",
+      "leftText": "When the LORD brought back those who returned to Zion,",
+      "rightText": "A song of ascents."
+    },
+    {
+      "id": "PSA-9-7",
+      "reference": "PSA 9:7",
+      "book": "PSA",
+      "chapter": 9,
+      "verse": "7",
+      "leftText": "But the LORD reigns forever.",
+      "rightText": "But the LORD abides forever;"
+    },
+    {
+      "id": "PSA-106-1",
+      "reference": "PSA 106:1",
+      "book": "PSA",
+      "chapter": 106,
+      "verse": "1",
+      "leftText": "Praise the LORD!",
+      "rightText": "Hallelujah!"
+    },
+    {
+      "id": "JOB-14-15",
+      "reference": "JOB 14:15",
+      "book": "JOB",
+      "chapter": 14,
+      "verse": "15",
+      "leftText": "You would call, and I would answer you.",
+      "rightText": "You will call, and I will answer;"
+    },
+    {
+      "id": "MRK-3-27",
+      "reference": "MRK 3:27",
+      "book": "MRK",
+      "chapter": 3,
+      "verse": "27",
+      "leftText": "But no one can enter into the house of the strong man to plunder unless he first binds the strong man; then he will plunder his house.",
+      "rightText": "Indeed, no one can enter a strong man’s house to steal his possessions unless he first ties up the strong man. Then he can plunder his house."
+    },
+    {
+      "id": "JER-49-30",
+      "reference": "JER 49:30",
+      "book": "JER",
+      "chapter": 49,
+      "verse": "30",
+      "leftText": "Flee!",
+      "rightText": "Run! Escape quickly!"
+    },
+    {
+      "id": "2CH-13-20",
+      "reference": "2CH 13:20",
+      "book": "2CH",
+      "chapter": 13,
+      "verse": "20",
+      "leftText": "Jeroboam didn’t recover strength again in the days of Abijah. The LORD struck him, and he died.",
+      "rightText": "Jeroboam did not again recover his power during the days of Abijah, and the LORD struck him down and he died."
+    },
+    {
+      "id": "PSA-113-1",
+      "reference": "PSA 113:1",
+      "book": "PSA",
+      "chapter": 113,
+      "verse": "1",
+      "leftText": "Praise the LORD!",
+      "rightText": "Hallelujah!"
+    },
+    {
+      "id": "1CH-6-66",
+      "reference": "1CH 6:66",
+      "book": "1CH",
+      "chapter": 6,
+      "verse": "66",
+      "leftText": "Some of the families of the sons of Kohath had cities of their borders out of the tribe of Ephraim.",
+      "rightText": "And some of the clans of the Kohathites were given cities from the tribe of Ephraim for their territory:"
+    },
+    {
+      "id": "MAT-9-1",
+      "reference": "MAT 9:1",
+      "book": "MAT",
+      "chapter": 9,
+      "verse": "1",
+      "leftText": "He entered into a boat and crossed over, and came into his own city.",
+      "rightText": "Jesus got into a boat, crossed over, and came to His own town."
+    },
+    {
+      "id": "1SA-20-12",
+      "reference": "1SA 20:12",
+      "book": "1SA",
+      "chapter": 20,
+      "verse": "12",
+      "leftText": "Jonathan said to David, “By the LORD, the God of Israel, when I have sounded out my father about this time tomorrow, or the third day, behold, if there is good toward David, won’t I then send to you and disclose it to you?",
+      "rightText": "and Jonathan said, “By the LORD, the God of Israel, I will sound out my father by this time tomorrow or the next day. If he is favorable toward you, will I not send for you and tell you?"
+    },
+    {
+      "id": "EZK-38-1",
+      "reference": "EZK 38:1",
+      "book": "EZK",
+      "chapter": 38,
+      "verse": "1",
+      "leftText": "The LORD’s word came to me, saying,",
+      "rightText": "And the word of the LORD came to me, saying,"
+    },
+    {
+      "id": "MAT-21-39",
+      "reference": "MAT 21:39",
+      "book": "MAT",
+      "chapter": 21,
+      "verse": "39",
+      "leftText": "So they took him and threw him out of the vineyard, then killed him.",
+      "rightText": "So they seized him and threw him out of the vineyard and killed him."
+    },
+    {
+      "id": "PSA-135-1",
+      "reference": "PSA 135:1",
+      "book": "PSA",
+      "chapter": 135,
+      "verse": "1",
+      "leftText": "Praise the LORD!",
+      "rightText": "Hallelujah!"
+    },
+    {
+      "id": "PSA-139-1",
+      "reference": "PSA 139:1",
+      "book": "PSA",
+      "chapter": 139,
+      "verse": "1",
+      "leftText": "LORD, you have searched me,",
+      "rightText": "For the choirmaster. A Psalm of David."
+    },
+    {
+      "id": "JOS-10-11",
+      "reference": "JOS 10:11",
+      "book": "JOS",
+      "chapter": 10,
+      "verse": "11",
+      "leftText": "As they fled from before Israel, while they were at the descent of Beth Horon, the LORD hurled down great stones from the sky on them to Azekah, and they died. There were more who died from the hailstones than those whom the children of Israel killed with the sword.",
+      "rightText": "As they fled before Israel along the descent from Beth-horon to Azekah, the LORD cast down on them large hailstones from the sky, and more of them were killed by the hailstones than by the swords of the Israelites."
+    },
+    {
+      "id": "LEV-11-6",
+      "reference": "LEV 11:6",
+      "book": "LEV",
+      "chapter": 11,
+      "verse": "6",
+      "leftText": "The hare, because it chews the cud but doesn’t have a parted hoof, is unclean to you.",
+      "rightText": "The rabbit, though it chews the cud, does not have a divided hoof; it is unclean for you."
+    },
+    {
+      "id": "NUM-19-17",
+      "reference": "NUM 19:17",
+      "book": "NUM",
+      "chapter": 19,
+      "verse": "17",
+      "leftText": "“For the unclean, they shall take of the ashes of the burning of the sin offering; and running water shall be poured on them in a vessel.",
+      "rightText": "For the purification of the unclean person, take some of the ashes of the burnt sin offering, put them in a jar, and pour fresh water over them."
+    },
+    {
+      "id": "EZK-21-27",
+      "reference": "EZK 21:27",
+      "book": "EZK",
+      "chapter": 21,
+      "verse": "27",
+      "leftText": "I will overturn, overturn, overturn it. This also will be no more, until he comes whose right it is; and I will give it.”’",
+      "rightText": "A ruin, a ruin,"
+    },
+    {
+      "id": "HEB-10-37",
+      "reference": "HEB 10:37",
+      "book": "HEB",
+      "chapter": 10,
+      "verse": "37",
+      "leftText": "“In a very little while,",
+      "rightText": "For,"
+    },
+    {
+      "id": "NUM-27-1",
+      "reference": "NUM 27:1",
+      "book": "NUM",
+      "chapter": 27,
+      "verse": "1",
+      "leftText": "Then the daughters of Zelophehad, the son of Hepher, the son of Gilead, the son of Machir, the son of Manasseh, of the families of Manasseh the son of Joseph came near. These are the names of his daughters: Mahlah, Noah, Hoglah, Milcah, and Tirzah.",
+      "rightText": "Now the daughters of Zelophehad son of Hepher, the son of Gilead, the son of Machir, the son of Manasseh, belonged to the clans of Manasseh son of Joseph. These were the names of his daughters: Mahlah, Noah, Hoglah, Milcah, and Tirzah. They approached"
+    },
+    {
+      "id": "ACT-20-17",
+      "reference": "ACT 20:17",
+      "book": "ACT",
+      "chapter": 20,
+      "verse": "17",
+      "leftText": "From Miletus he sent to Ephesus and called to himself the elders of the assembly.",
+      "rightText": "From Miletus, Paul sent to Ephesus for the elders of the church."
+    },
+    {
+      "id": "2CO-6-18",
+      "reference": "2CO 6:18",
+      "book": "2CO",
+      "chapter": 6,
+      "verse": "18",
+      "leftText": "I will be to you a Father.",
+      "rightText": "And:"
+    },
+    {
+      "id": "ZEC-14-19",
+      "reference": "ZEC 14:19",
+      "book": "ZEC",
+      "chapter": 14,
+      "verse": "19",
+      "leftText": "This will be the punishment of Egypt and the punishment of all the nations that don’t go up to keep the feast of booths.",
+      "rightText": "This will be the punishment of Egypt and of all the nations that do not go up to celebrate the Feast of Tabernacles."
+    },
+    {
+      "id": "PSA-141-1",
+      "reference": "PSA 141:1",
+      "book": "PSA",
+      "chapter": 141,
+      "verse": "1",
+      "leftText": "LORD, I have called on you.",
+      "rightText": "A Psalm of David."
+    },
+    {
+      "id": "PSA-111-1",
+      "reference": "PSA 111:1",
+      "book": "PSA",
+      "chapter": 111,
+      "verse": "1",
+      "leftText": "Praise the LORD!",
+      "rightText": "Hallelujah!"
+    },
+    {
+      "id": "PSA-112-1",
+      "reference": "PSA 112:1",
+      "book": "PSA",
+      "chapter": 112,
+      "verse": "1",
+      "leftText": "Praise the LORD!",
+      "rightText": "Hallelujah!"
+    },
+    {
+      "id": "JHN-13-24",
+      "reference": "JHN 13:24",
+      "book": "JHN",
+      "chapter": 13,
+      "verse": "24",
+      "leftText": "Simon Peter therefore beckoned to him, and said to him, “Tell us who it is of whom he speaks.”",
+      "rightText": "So Simon Peter motioned to him to ask Jesus which one He was talking about."
+    }
+  ]
+}

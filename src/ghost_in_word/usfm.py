@@ -47,6 +47,29 @@ def parse_usfm(path: str | Path, edition_id: str) -> list[TextSegment]:
     book = ""
     chapter: int | None = None
     segments: list[TextSegment] = []
+    current_verse: str | None = None
+    current_parts: list[str] = []
+
+    def flush_current() -> None:
+        nonlocal current_verse, current_parts
+        if current_verse is None or not book or chapter is None:
+            current_verse = None
+            current_parts = []
+            return
+        raw_text = " ".join(part for part in current_parts if part)
+        segments.append(
+            TextSegment(
+                edition_id=edition_id,
+                book=book,
+                chapter=chapter,
+                verse=current_verse,
+                text=_clean_text(raw_text),
+                source_file=source_path.name,
+                notes=_extract_notes(raw_text),
+            )
+        )
+        current_verse = None
+        current_parts = []
 
     for raw_line in source_path.read_text(encoding="utf-8-sig").splitlines():
         line = raw_line.strip()
@@ -54,29 +77,30 @@ def parse_usfm(path: str | Path, edition_id: str) -> list[TextSegment]:
             continue
         book_match = _BOOK.search(line)
         if book_match:
+            flush_current()
             book = book_match.group(1).upper()
             continue
         chapter_match = _CHAPTER.search(line)
         if chapter_match:
+            flush_current()
             chapter = int(chapter_match.group(1))
             continue
         verse_matches = list(_VERSE.finditer(line))
-        if not verse_matches or not book or chapter is None:
+        if verse_matches and book and chapter is not None:
+            for verse_match in verse_matches:
+                flush_current()
+                current_verse = verse_match.group(1)
+                verse_text = verse_match.group(2).strip()
+                if verse_text:
+                    current_parts.append(verse_text)
             continue
-        for verse_match in verse_matches:
-            verse_text = verse_match.group(2)
-            segments.append(
-                TextSegment(
-                    edition_id=edition_id,
-                    book=book,
-                    chapter=chapter,
-                    verse=verse_match.group(1),
-                    text=_clean_text(verse_text),
-                    source_file=source_path.name,
-                    notes=_extract_notes(verse_text),
-                )
-            )
+        # Some valid USFM sources put the verse marker on its own line and
+        # place each word (often a \w field) on following lines. Keep those
+        # continuation lines with the open verse until the next marker.
+        if current_verse is not None:
+            current_parts.append(line)
 
+    flush_current()
     return segments
 
 

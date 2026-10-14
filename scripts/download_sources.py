@@ -25,12 +25,16 @@ def shutil_copyfileobj(source, destination, length: int = 1024 * 1024) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--edition", choices={"webp", "bsb", "asv"}, action="append")
+    parser.add_argument("--edition", action="append", help="Edition ID from sources.json; repeat for multiple editions")
     parser.add_argument("--output", type=Path, default=Path("data/raw"))
     args = parser.parse_args()
 
     manifest = json.loads(Path("sources.json").read_text(encoding="utf-8"))
-    selected = set(args.edition or [item["id"] for item in manifest["editions"]])
+    available = {str(item["id"]) for item in manifest["editions"]}
+    selected = set(args.edition or available)
+    unknown = selected - available
+    if unknown:
+        raise SystemExit(f"unknown edition(s): {', '.join(sorted(unknown))}")
     for edition in manifest["editions"]:
         if edition["id"] not in selected:
             continue

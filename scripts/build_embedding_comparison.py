@@ -23,6 +23,8 @@ def main() -> None:
     parser.add_argument("--right-language", default="en")
     parser.add_argument("--left-name", default="Translation A")
     parser.add_argument("--right-name", default="Translation B")
+    parser.add_argument("--left-role", default="translation")
+    parser.add_argument("--right-role", default="translation")
     parser.add_argument("--book", action="append")
     parser.add_argument("--batch-size", type=int, default=32)
     args = parser.parse_args()
@@ -93,8 +95,8 @@ def main() -> None:
     output = {
         "schemaVersion": 1,
         "metadata": {
-            "leftEdition": {"id": args.left_id, "name": args.left_name, "language": args.left_language},
-            "rightEdition": {"id": args.right_id, "name": args.right_name, "language": args.right_language},
+            "leftEdition": {"id": args.left_id, "name": args.left_name, "language": args.left_language, "role": args.left_role},
+            "rightEdition": {"id": args.right_id, "name": args.right_name, "language": args.right_language, "role": args.right_role},
             "scope": {"books": sorted({str(unit["book"]) for unit in scored}), "unit": "verse"},
             "alignment": {"method": alignment_method(scored), "statuses": statuses},
             "metric": {
@@ -104,7 +106,11 @@ def main() -> None:
                 "wordingField": "wordingDistance",
                 "description": "Cosine distance between normalized sentence embeddings. It is a model estimate of representational divergence, not a faithfulness grade.",
             },
-            "embeddingRun": run.to_dict(),
+            "embeddingRun": {
+                **run.to_dict(),
+                "leftInputHash": run.input_hash,
+                "rightInputHash": right_run.input_hash,
+            },
             "source": {"alignment": str(args.alignment)},
         },
         "units": scored,

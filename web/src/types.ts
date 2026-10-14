@@ -27,8 +27,8 @@ export type ComparisonUnit = {
 export type ComparisonData = {
   schemaVersion: number;
   metadata: {
-    leftEdition: { id: string; name: string; language?: string };
-    rightEdition: { id: string; name: string; language?: string };
+    leftEdition: { id: string; name: string; language?: string; role?: string };
+    rightEdition: { id: string; name: string; language?: string; role?: string };
     scope: { books: string[]; unit: string };
     alignment: { method: string; statuses: Record<string, number> };
     metric: {
@@ -44,6 +44,8 @@ export type ComparisonData = {
       maxSeqLength: number;
       inputHash: string;
       prefix: string;
+      leftInputHash?: string;
+      rightInputHash?: string;
     };
     source: { alignment: string };
   };
@@ -55,8 +57,8 @@ export type ComparisonManifest = {
   schemaVersion: number;
   kind: "comparison-partition-manifest";
   comparison: {
-    leftEdition: { id: string; name: string; language?: string };
-    rightEdition: { id: string; name: string; language?: string };
+    leftEdition: { id: string; name: string; language?: string; role?: string };
+    rightEdition: { id: string; name: string; language?: string; role?: string };
     metric: ComparisonData["metadata"]["metric"];
     alignment: ComparisonData["metadata"]["alignment"];
     scope: { books: string[]; unit: string };
@@ -79,7 +81,7 @@ export type TranslationMatrix = {
   schemaVersion: number;
   kind: "translation-distance-matrix";
   metadata: {
-    editions: Array<{ id: string; name: string; language?: string }>;
+    editions: Array<{ id: string; name: string; language?: string; role?: string }>;
     scope: { books: string[]; unit: string };
     metric: { id: string; label: string; description: string };
     sourceArtifacts?: string[];

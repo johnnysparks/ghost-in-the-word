@@ -3,8 +3,9 @@
 An interactive Bible translation comparison project exploring wording differences,
 embedding-based semantic distance, and the limits of automated faithfulness assessment.
 
-The project is currently in planning. See [the project plan](PLAN.md) for the proposed
-experience, corpus sources, evaluation approach, architecture, and delivery milestones.
+The project plan is now being exercised by a dependency-free corpus pipeline and a
+React/Vite atlas. See [the project plan](PLAN.md) for the research limits, evaluation
+approach, architecture, and remaining milestones.
 
 The first implementation milestone is a small, dependency-free corpus pipeline. Use the
 source tree directly, download the pinned USFM sources, and build an alignment report for
@@ -17,10 +18,23 @@ PYTHONPATH=src python3 scripts/build_alignment.py \
   --left-id webp --right-id bsb
 ```
 
+The checked-in `mappings/webp-bsb-reviewed.json` applies the known WEB/BSB verse
+bridges and edition omissions to the pinned snapshots. It contains only exceptions;
+unmentioned shared references still use exact alignment:
+
+```sh
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/webp data/raw/bsb \
+  --left-id webp --right-id bsb \
+  --mapping mappings/webp-bsb-reviewed.json \
+  --output data/derived/webp-bsb-reviewed-alignment.json
+```
+
 For a versification exception or a reviewed verse bridge, pass a JSON mapping file.
-Each mapping consumes one or more references on either side; omitted segments remain
-explicitly missing. A mapping marked `unresolved` is retained for review and receives
-no semantic score:
+Each mapping consumes one or more references on either side; unmentioned shared
+references still align by exact key, while one-sided segments remain explicitly
+missing. A mapping marked `unresolved` is retained for review and receives no semantic
+score:
 
 ```json
 [
@@ -51,6 +65,7 @@ Record and verify content hashes for downloaded source directories. The recordin
 also writes the tracked aggregate manifest at `source_snapshots.json`:
 
 ```sh
+PYTHONPATH=src python3 scripts/validate_sources.py
 PYTHONPATH=src python3 scripts/record_snapshots.py
 PYTHONPATH=src python3 scripts/verify_snapshots.py
 ```
@@ -58,11 +73,37 @@ PYTHONPATH=src python3 scripts/verify_snapshots.py
 Future downloads write the same `snapshot.json` inventory automatically, including the
 archive hash when the source was obtained by `download_sources.py`.
 
-Cross-language embedding artifacts carry both edition language codes. The embedding
-builder suppresses same-language lexical fields when those codes differ, and the web
-client hides token-diff highlighting and the wording scatterplot for that comparison.
+The manifest also includes the public-domain Spanish Reina Valera 1909 edition. Download
+it with `--edition rv1909` and build a John pilot alignment with the same parser. The
+checked-in `WEB ↔ RV1909 · E5 small` browser fixture is a real cross-language embedding
+run, not a lexical comparison. Cross-language embedding artifacts carry both edition
+language codes. The embedding builder suppresses same-language lexical fields when
+those codes differ, and the web client hides token-diff highlighting and the wording
+scatterplot for that comparison:
+
+```sh
+python3 scripts/download_sources.py --edition rv1909
+PYTHONPATH=src python3 scripts/build_alignment.py \
+  data/raw/webp data/raw/rv1909 \
+  --left-id webp --right-id rv1909 \
+  --output data/derived/webp-rv1909-alignment.json
+PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
+  data/derived/webp-rv1909-alignment.json --book JHN \
+  --left-id webp --right-id rv1909 --left-language en --right-language es \
+  --model intfloat/multilingual-e5-small \
+  --output data/derived/john-webp-rv1909-e5-small.json
+```
+
+The cross-language run is still a model-estimated representational distance; it is not
+evidence that either edition is more faithful to a source text.
 The lexical builder refuses cross-language input rather than producing a misleading
 English token baseline.
+
+The browser also includes a source-text pilot pairing WEB with the CNTR Statistical
+Restoration Greek New Testament. The source manifest records its CC BY 4.0 license and
+required attribution. Source-role metadata is shown in the reader and provenance panel;
+the source comparison remains an exploratory reference point, not an automatic
+faithfulness grade.
 
 Embedding experiments are an optional offline step. Install the extra in an isolated
 environment, then run the model-specific builder. The output records the model ID,
@@ -160,6 +201,11 @@ retains per-item votes, disagreement, and uncertain judgments, and reports usefu
 and agreement by selection bucket. It does not convert review usefulness into a
 translation-faithfulness grade.
 
+`benchmarks/natural-review-packet.example.json` is a checked-in, score-blinded 60-item
+packet generated from the full WEB/BSB corpus. Its private selection key is deliberately
+kept outside the repository; independent reviewers and the evaluator must receive it
+through separate channels.
+
 Source-conditioned judgments use a separate validated schema so the source edition,
 reviewer/model origin, evidence, uncertainty, and disagreement remain attached to each
 record. The checked-in file is a fixture only; it is not a judgment about Scripture:
@@ -232,3 +278,15 @@ PYTHONPATH=src python3 scripts/build_comparison.py \
   --right-name "Berean Standard Bible" \
   --output web/public/data/john-webp-bsb.json
 ```
+
+## Deployment
+
+The repository includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
+Pull requests run the Python checks and production web build. A successful push to
+`main` builds `web/dist` and deploys it to GitHub Pages; the workflow does not download
+raw corpora or run embedding models.
+
+For the first deployment, open the repository's **Settings → Pages** and set **Source**
+to **GitHub Actions**. The published project site will then be available at the
+repository's GitHub Pages URL. The workflow exposes that URL in the deployment job's
+environment output.

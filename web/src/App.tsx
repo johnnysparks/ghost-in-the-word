@@ -36,6 +36,20 @@ const PAIRS: PairConfig[] = [
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
   },
+  {
+    id: "webp-rv1909-e5-small",
+    label: "WEB ↔ RV1909 · E5 small",
+    dataUrl: "/data/john-webp-rv1909-e5-small.json",
+    leftSource: "https://ebible.org/find/details.php?id=engwebp",
+    rightSource: "https://ebible.org/find/details.php?id=spaRV1909",
+  },
+  {
+    id: "webp-srgrc-e5-small",
+    label: "WEB ↔ SR Greek source · E5 small",
+    dataUrl: "/data/john-webp-srgrc-e5-small.json",
+    leftSource: "https://ebible.org/find/details.php?id=engwebp",
+    rightSource: "https://github.com/Center-for-New-Testament-Restoration/SR",
+  },
 ];
 
 const bookNames: Record<string, string> = {
@@ -539,6 +553,9 @@ function App() {
   const metric = data.metadata.metric;
   const bookName = displayBook(book);
   const sameLanguage = Boolean(data.metadata.leftEdition.language && data.metadata.leftEdition.language === data.metadata.rightEdition.language);
+  const sourceMode = data.metadata.leftEdition.role === "source" || data.metadata.rightEdition.role === "source";
+  const leftRole = data.metadata.leftEdition.role === "source" ? "source text A" : "translation A";
+  const rightRole = data.metadata.rightEdition.role === "source" ? "source text B" : "translation B";
   const alignmentNote = data.metadata.alignment.method === "exact-book-chapter-verse"
     ? "The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches."
     : "The chart preserves missing and unresolved passages as gaps and only scores reviewed mappings marked matched.";
@@ -573,9 +590,9 @@ function App() {
 
       <section className="controls panel">
         <div className="translation-pair">
-          <label><span>translation A</span><strong>{leftName}</strong></label>
+          <label><span>{leftRole}</span><strong>{leftName}</strong></label>
           <span className="pair-arrow">→</span>
-          <label><span>translation B</span><strong>{rightName}</strong></label>
+          <label><span>{rightRole}</span><strong>{rightName}</strong></label>
         </div>
         <div className="filter-grid">
           <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
@@ -603,8 +620,8 @@ function App() {
           {selected ? <>
             <div className="reference-line"><span>{displayBook(selected.book)} · chapter {selected.chapter} · verse {selected.verse}</span><span className={`alignment-status ${selected.status}`}>{selected.status === "matched" ? "matched" : selected.status.replace("missing-", "missing ")}</span></div>
             <div className="translation-columns">
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.leftNotes} /></article>
-              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.rightNotes} /></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}{data.metadata.leftEdition.role === "source" ? " · source text" : ""}</div><p><MarkedText text={selected.leftText} other={selected.rightText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.leftNotes} /></article>
+              <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}{data.metadata.rightEdition.role === "source" ? " · source text" : ""}</div><p><MarkedText text={selected.rightText} other={selected.leftText} sameLanguage={sameLanguage} /></p><TranslationNotes notes={selected.rightNotes} /></article>
             </div>
             {matrix && <TranslationDistanceMatrix matrix={matrix} selectedId={selected.id} />}
             {(previous || next) && <div className="reader-context" aria-label="Adjacent verse context">
@@ -630,7 +647,7 @@ function App() {
 
       <ResultsTable units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} sameLanguage={sameLanguage} />
 
-      <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd>{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd></>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
+      <section className="method-note"><div className="method-icon">i</div><div className="method-copy"><strong>What this score means</strong><p>{metric.description} {alignmentNote} {sourceMode ? "A source edition is shown as a textual reference point; this does not produce a faithfulness grade." : ""} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p><details className="provenance-details"><summary>Show provenance</summary><dl><dt>Metric</dt><dd>{metric.id}</dd><dt>Alignment</dt><dd>{data.metadata.alignment.method}</dd><dt>Languages</dt><dd>{data.metadata.leftEdition.language ?? "unknown"} → {data.metadata.rightEdition.language ?? "unknown"}</dd><dt>Roles</dt><dd>{data.metadata.leftEdition.role ?? "translation"} → {data.metadata.rightEdition.role ?? "translation"}</dd>{data.metadata.embeddingRun && <><dt>Model</dt><dd>{data.metadata.embeddingRun.modelId} · {data.metadata.embeddingRun.dimensions} dimensions · max {data.metadata.embeddingRun.maxSeqLength} tokens</dd><dt>Input hash</dt><dd>{data.metadata.embeddingRun.inputHash}</dd>{data.metadata.embeddingRun.leftInputHash && <><dt>Left input hash</dt><dd>{data.metadata.embeddingRun.leftInputHash}</dd><dt>Right input hash</dt><dd>{data.metadata.embeddingRun.rightInputHash}</dd></>}</>}</dl></details></div><div className="method-actions"><button className="share-button" onClick={() => exportCurrentView("json")}>Download JSON</button><button className="share-button" onClick={() => exportCurrentView("csv")}>Download CSV</button><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></div></section>
 
       <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>

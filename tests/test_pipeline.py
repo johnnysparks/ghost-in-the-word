@@ -11,6 +11,7 @@ from ghost_in_word.matrix import build_translation_matrix
 from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
+from ghost_in_word.sources import load_editions
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
 from ghost_in_word.windows import build_windows
@@ -54,6 +55,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(len(segments[0].notes), 1)
         self.assertIn("A translator note.", segments[0].notes[0])
 
+    def test_usfm_parser_supports_verse_markers_on_separate_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "JHN.SFM"
+            path.write_text(
+                '\\id JHN\n\\c 1\n\\p\n\\v 1\n\\w Ἐν|lemma="ἐν"\\w* \\w ἀρχῇ|lemma="ἀρχή"\\w*\n\\v 2\n\\w Οὗτος|lemma="οὗτος"\\w* ἦν.\n',
+                encoding="utf-8",
+            )
+            segments = parse_usfm(path, "srgrc")
+
+        self.assertEqual([segment.verse for segment in segments], ["1", "2"])
+        self.assertEqual(segments[0].text, "Ἐν ἀρχῇ")
+        self.assertEqual(segments[1].text, "Οὗτος ἦν.")
+
     def test_alignment_exposes_missing_references(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
         right = [TextSegment("b", "JHN", 3, "17", "For God did not send the Son.")]
@@ -91,6 +105,35 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(units[0].status, "matched")
         self.assertIn("He sent his Son.", units[0].left_text)
         self.assertEqual(alignment_method([units[0].to_dict()]), "explicit-reviewed-mapping")
+
+    def test_reviewed_exception_file_keeps_unmentioned_exact_references(self) -> None:
+        left = [
+            TextSegment("a", "JHN", 3, "16", "For God so loved the world."),
+            TextSegment("a", "JHN", 3, "17", "He sent his Son."),
+        ]
+        right = [
+            TextSegment("b", "JHN", 3, "16", "For God loved the world."),
+            TextSegment("b", "JHN", 3, "17", "He sent his Son."),
+        ]
+        units = align_with_mappings(
+            left,
+            right,
+            [
+                AlignmentMapping(
+                    (left[0].key,),
+                    (right[0].key,),
+                    method="reviewed-verse-bridge",
+                    review={"evidence": "reviewed"},
+                )
+            ],
+        )
+
+        self.assertEqual(len(units), 2)
+        exact = next(unit for unit in units if unit.reference == "JHN 3:17")
+        self.assertEqual(exact.status, "matched")
+        self.assertEqual(exact.mapping_method, "exact-reference")
+        reviewed = next(unit for unit in units if unit.reference == "JHN 3:16")
+        self.assertEqual(reviewed.mapping_method, "reviewed-verse-bridge")
 
     def test_reviewed_mapping_preserves_review_evidence(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
@@ -358,6 +401,26 @@ class PipelineTests(unittest.TestCase):
         self.assertNotIn("left_text", unit)
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
         self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
+
+    def test_cross_language_fixture_suppresses_lexical_fields(self) -> None:
+        fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-rv1909-e5-small.json").read_text(encoding="utf-8"))
+        self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
+        self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "es")
+        self.assertEqual(fixture["metadata"]["metric"]["distanceField"], "embeddingDistance")
+        self.assertIsNone(fixture["units"][0]["wordingDistance"])
+        self.assertIsNone(fixture["units"][0]["lexicalDistance"])
+        self.assertIsInstance(fixture["units"][0]["embeddingDistance"], float)
+
+        source_fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-srgrc-e5-small.json").read_text(encoding="utf-8"))
+        self.assertEqual(source_fixture["metadata"]["rightEdition"]["role"], "source")
+        self.assertEqual(source_fixture["metadata"]["rightEdition"]["language"], "grc")
+        self.assertLess(source_fixture["summary"]["scoredUnits"], source_fixture["summary"]["totalUnits"])
+
+    def test_source_manifest_validates_roles_and_attribution(self) -> None:
+        editions = load_editions(Path(__file__).parents[1] / "sources.json")
+        self.assertEqual(editions["rv1909"].language, "es")
+        self.assertEqual(editions["srgrc"].role, "source")
+        self.assertIn("Center for New Testament Restoration", editions["srgrc"].attribution)
 
     def test_atlas_manifest_exposes_book_and_chapter_summaries(self) -> None:
         manifest = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/manifest.json").read_text(encoding="utf-8"))

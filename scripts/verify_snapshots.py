@@ -12,11 +12,17 @@ from snapshot_utils import verify_snapshot
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--edition", choices={"webp", "bsb", "asv"}, action="append")
+    parser.add_argument("--edition", action="append", help="Edition ID from the manifest; repeat for multiple editions")
     parser.add_argument("--raw", type=Path, default=Path("data/raw"))
+    parser.add_argument("--manifest", type=Path, default=Path("sources.json"))
     args = parser.parse_args()
 
-    selected = args.edition or ["webp", "bsb", "asv"]
+    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+    available = {str(item["id"]) for item in manifest["editions"]}
+    selected = args.edition or sorted(available)
+    unknown = set(selected) - available
+    if unknown:
+        raise SystemExit(f"unknown edition(s): {', '.join(sorted(unknown))}")
     failures = {}
     for edition in selected:
         root = args.raw / edition

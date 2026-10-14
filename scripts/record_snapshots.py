@@ -12,14 +12,18 @@ from snapshot_utils import snapshot_directory, write_snapshot
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--edition", choices={"webp", "bsb", "asv"}, action="append")
+    parser.add_argument("--edition", action="append", help="Edition ID from the manifest; repeat for multiple editions")
     parser.add_argument("--raw", type=Path, default=Path("data/raw"))
     parser.add_argument("--manifest", type=Path, default=Path("sources.json"))
     parser.add_argument("--output", type=Path, default=Path("source_snapshots.json"))
     args = parser.parse_args()
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    selected = set(args.edition or [item["id"] for item in manifest["editions"]])
+    available = {str(item["id"]) for item in manifest["editions"]}
+    selected = set(args.edition or available)
+    unknown = selected - available
+    if unknown:
+        raise SystemExit(f"unknown edition(s): {', '.join(sorted(unknown))}")
     snapshots: dict[str, object] = {}
     for edition in manifest["editions"]:
         if edition["id"] not in selected:

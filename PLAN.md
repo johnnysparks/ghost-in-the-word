@@ -178,7 +178,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 
 ## Current implementation status
 
-- **Implemented:** pinned edition manifest and source downloader for WEB, BSB, and ASV; content-addressed source snapshot inventories and verification; USFM parsing; explicit exact-reference alignment with missing statuses; lexical wording and character n-gram baselines; browser comparison schema; optional sentence-transformers embedding runner; synthetic challenge format and review rubric.
+- **Implemented:** pinned edition manifest and source downloader for WEB, BSB, ASV, public-domain Spanish Reina Valera 1909, and the CC BY 4.0 CNTR Statistical Restoration Greek New Testament; content-addressed source snapshot inventories and verification; USFM parsing; explicit exact-reference alignment with missing statuses; lexical wording and character n-gram baselines; browser comparison schema; optional sentence-transformers embedding runner; synthetic challenge format and review rubric.
 - **Implemented:** John pilot UI with pair selection, chapter/search filters, divergence chart, wording/distance scatterplot, ranked differences, linked reader, token highlights, previous/next navigation, provenance links, and URL state.
 - **Implemented:** one `multilingual-e5-small` John pilot run is available as a separate UI mode, with 384 dimensions, a 512-token maximum, and recorded input hash. Its synthetic challenge result was 3/6 (50%), below the provisional 80% gate.
 - **Implemented:** the synthetic challenge has been run with `multilingual-e5-small` (50%) and `BAAI/bge-m3` (66.7%); neither clears the provisional 80% gate, so the pilot does not promote either score to a faithfulness claim.
@@ -198,4 +198,8 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** held-out synthetic reports for E5-small (4/8) and BGE-M3 (7/8); the BGE-M3 result clears the provisional synthetic ranking gate in this slice only.
 - **Implemented:** an offline latent-reference estimator that excludes the compared editions, normalizes a weighted panel centroid, caps related-family weight, reports a medoid and dispersion, and retains per-edition and pairwise panel distances so clustering remains inspectable.
 - **Implemented:** a validated source-conditioned assessment schema and CLI that retain source-edition identity, human/model origin, evidence, uncertainty, disagreement, and version without producing an automatic faithfulness grade.
-- **Pending:** held-out natural evaluation; independently reviewed natural-difference benchmark; applying reviewed mappings to source snapshots; cross-language and source-text modes.
+- **Implemented:** a reviewed WEB/BSB exception mapping grounded in the pinned USFM snapshots; shared references remain exact-aligned, verse bridges carry review evidence, and edition omissions or empty markers remain explicit unresolved/missing units.
+- **Implemented:** a real WEB↔Reina Valera 1909 John pilot using `multilingual-e5-small`; cross-language artifacts suppress lexical fields and the UI hides same-language wording aids while retaining embedding provenance.
+- **Implemented:** a real WEB↔CNTR Greek source John pilot using `multilingual-e5-small`; source-role metadata, attribution, language, and separate input hashes are visible in the reader provenance panel, with missing source passages preserved as gaps.
+- **Implemented:** a score-blinded 60-item natural review packet with a separate private selection key; independent labels and aggregation remain intentionally external to the repository.
+- **Pending:** held-out natural evaluation; independently reviewed natural-difference benchmark; applying independently reviewed mappings to source snapshots.

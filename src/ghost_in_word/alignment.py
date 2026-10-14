@@ -123,9 +123,11 @@ def align_with_mappings(
 ) -> list[AlignmentUnit]:
     """Apply explicit one-to-many/many-to-one mappings.
 
-    Every segment must be consumed by at most one mapping. Unmentioned
-    segments become explicit missing units, while mappings marked unresolved
-    remain visible but receive no score downstream.
+    Every segment must be consumed by at most one mapping. After explicit
+    mappings are applied, remaining shared references use the exact
+    book/chapter/verse mapping; remaining one-sided segments become explicit
+    missing units. Mappings marked unresolved remain visible but receive no
+    score downstream.
     """
 
     left_by_key = _index(left)
@@ -169,6 +171,32 @@ def align_with_mappings(
                 left_notes=tuple(note for segment in left_segments for note in segment.notes),
                 right_notes=tuple(note for segment in right_segments for note in segment.notes),
                 review=mapping.review,
+            )
+        )
+
+    # A reviewed mapping file normally contains only exceptions. Preserve the
+    # ordinary exact-reference alignment for every shared segment that was not
+    # explicitly consumed, so a small bridge file cannot accidentally turn the
+    # rest of a corpus into thousands of missing records.
+    for key in sorted(set(left_by_key) & set(right_by_key), key=lambda item: (item[0], item[1], _verse_sort_key(item[2]))):
+        if key in consumed_left or key in consumed_right:
+            continue
+        left_segment = left_by_key[key]
+        right_segment = right_by_key[key]
+        consumed_left.add(key)
+        consumed_right.add(key)
+        units.append(
+            AlignmentUnit(
+                book=left_segment.book,
+                chapter=left_segment.chapter,
+                verse=left_segment.verse,
+                left_edition=left_edition,
+                right_edition=right_edition,
+                left_text=left_segment.text,
+                right_text=right_segment.text,
+                status="matched",
+                left_notes=left_segment.notes,
+                right_notes=right_segment.notes,
             )
         )
 

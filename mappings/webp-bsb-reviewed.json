@@ -1,0 +1,219 @@
+[
+  {
+    "left": ["ACT 8:37"],
+    "right": [],
+    "status": "unresolved",
+    "method": "edition-omission-empty-marker",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB USFM snapshot contains an empty verse marker; the pinned BSB snapshot has no ACT 8:37 record. Preserve the variant as unresolved rather than scoring it."
+    }
+  },
+  {
+    "left": ["ACT 15:34"],
+    "right": [],
+    "status": "unresolved",
+    "method": "edition-omission-empty-marker",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB USFM snapshot contains an empty verse marker; the pinned BSB snapshot has no ACT 15:34 record. Preserve the variant as unresolved rather than scoring it."
+    }
+  },
+  {
+    "left": ["ACT 24:7"],
+    "right": [],
+    "status": "unresolved",
+    "method": "edition-omission-empty-marker",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB USFM snapshot contains an empty verse marker; the pinned BSB snapshot has no ACT 24:7 record. Preserve the variant as unresolved rather than scoring it."
+    }
+  },
+  {
+    "left": ["ACT 28:29"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has ACT 28:29 text and the pinned BSB snapshot has no ACT 28:29 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["JHN 5:4"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has JHN 5:4 text and the pinned BSB snapshot has no JHN 5:4 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["LUK 17:36"],
+    "right": [],
+    "status": "unresolved",
+    "method": "edition-omission-empty-marker",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB USFM snapshot contains an empty verse marker; the pinned BSB snapshot has no LUK 17:36 record. Preserve the variant as unresolved rather than scoring it."
+    }
+  },
+  {
+    "left": ["LUK 23:17"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has LUK 23:17 text and the pinned BSB snapshot has no LUK 23:17 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MAT 17:21"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MAT 17:21 text and the pinned BSB snapshot has no MAT 17:21 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MAT 18:11"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MAT 18:11 text and the pinned BSB snapshot has no MAT 18:11 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MAT 23:14"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MAT 23:14 text and the pinned BSB snapshot has no MAT 23:14 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MRK 7:16"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MRK 7:16 text and the pinned BSB snapshot has no MRK 7:16 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MRK 9:44"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MRK 9:44 text and the pinned BSB snapshot has no MRK 9:44 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MRK 9:46"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MRK 9:46 text and the pinned BSB snapshot has no MRK 9:46 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MRK 11:26"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MRK 11:26 text and the pinned BSB snapshot has no MRK 11:26 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["MRK 15:28"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has MRK 15:28 text and the pinned BSB snapshot has no MRK 15:28 record. Keep the edition omission explicit."
+    }
+  },
+  {
+    "left": ["ROM 14:24"],
+    "right": ["ROM 16:25"],
+    "method": "reviewed-verse-bridge",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The WEB ROM 14:26 footnote states that TR places ROM 14:24-26 after ROM 16:24 as ROM 16:25-27; the pinned BSB snapshot uses the latter numbering."
+    }
+  },
+  {
+    "left": ["ROM 14:25"],
+    "right": ["ROM 16:26"],
+    "method": "reviewed-verse-bridge",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The WEB ROM 14:26 footnote states that TR places ROM 14:24-26 after ROM 16:24 as ROM 16:25-27; the pinned BSB snapshot uses the latter numbering."
+    }
+  },
+  {
+    "left": ["ROM 14:26"],
+    "right": ["ROM 16:27"],
+    "method": "reviewed-verse-bridge",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The WEB ROM 14:26 footnote states that TR places ROM 14:24-26 after ROM 16:24 as ROM 16:25-27; the pinned BSB snapshot uses the latter numbering."
+    }
+  },
+  {
+    "left": ["ROM 16:24"],
+    "right": [],
+    "status": "missing-right",
+    "method": "edition-omission",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot has ROM 16:24 text and the pinned BSB snapshot has no ROM 16:24 record; the following BSB verses are consumed by the reviewed bridge above."
+    }
+  },
+  {
+    "left": ["ROM 16:25"],
+    "right": [],
+    "status": "unresolved",
+    "method": "empty-marker",
+    "review": {
+      "reviewer": "corpus-maintainer",
+      "reviewType": "snapshot-comparison",
+      "evidence": "The pinned WEB snapshot retains an empty ROM 16:25 marker containing the numbering footnote; it is not a displayable verse after the reviewed bridge."
+    }
+  }
+]
