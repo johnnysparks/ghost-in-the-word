@@ -16,6 +16,7 @@ export type ComparisonUnit = {
   leftReferences?: string[];
   rightReferences?: string[];
   mappingMethod?: string;
+  review?: Record<string, unknown>;
   leftNotes?: string[];
   rightNotes?: string[];
   wordingDistance: number | null;

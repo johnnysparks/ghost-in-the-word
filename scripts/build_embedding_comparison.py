@@ -69,6 +69,8 @@ def main() -> None:
             record["leftNotes"] = unit["left_notes"]
         if "right_notes" in unit:
             record["rightNotes"] = unit["right_notes"]
+        if "review" in unit:
+            record["review"] = unit["review"]
         record["id"] = f"{unit['book']}-{unit['chapter']}-{unit['verse']}"
         record["order"] = index
         if unit["status"] == "matched" and unit["left_text"] and unit["right_text"]:

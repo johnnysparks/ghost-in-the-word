@@ -3,7 +3,7 @@ import unittest
 import json
 from pathlib import Path
 
-from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings
+from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.review import select_review_items, summarize_reviews
@@ -89,6 +89,21 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(units[0].status, "matched")
         self.assertIn("He sent his Son.", units[0].left_text)
         self.assertEqual(alignment_method([units[0].to_dict()]), "explicit-reviewed-mapping")
+
+    def test_reviewed_mapping_preserves_review_evidence(self) -> None:
+        left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]
+        right = [TextSegment("b", "JHN", 3, "16", "For God loved the world.")]
+        mapping = mapping_from_dict(
+            {
+                "left": ["JHN 3:16"],
+                "right": ["JHN 3:16"],
+                "method": "reviewed-verse-bridge",
+                "review": {"reviewer": "source-reviewer-1", "evidence": "Reference checked against the edition notes."},
+            }
+        )
+        unit = align_with_mappings(left, right, [mapping])[0]
+        self.assertEqual(unit.review["reviewer"], "source-reviewer-1")
+        self.assertEqual(unit.to_dict()["review"]["evidence"], "Reference checked against the edition notes.")
 
     def test_reviewed_mapping_with_one_side_empty_is_missing(self) -> None:
         left = [TextSegment("a", "JHN", 3, "16", "For God so loved the world.")]

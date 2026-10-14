@@ -27,7 +27,11 @@ no semantic score:
   {
     "left": ["JHN 3:16", "JHN 3:17"],
     "right": ["JHN 3:16"],
-    "method": "reviewed-verse-bridge"
+    "method": "reviewed-verse-bridge",
+    "review": {
+      "reviewer": "source-reviewer-1",
+      "evidence": "Reference checked against the edition notes."
+    }
   }
 ]
 ```

@@ -31,6 +31,7 @@ class AlignmentUnit:
     mapping_method: str = "exact-reference"
     left_notes: tuple[str, ...] = ()
     right_notes: tuple[str, ...] = ()
+    review: Mapping[str, object] | None = None
 
     @property
     def reference(self) -> str:
@@ -59,6 +60,8 @@ class AlignmentUnit:
             )
         if self.left_notes or self.right_notes:
             record.update({"left_notes": list(self.left_notes), "right_notes": list(self.right_notes)})
+        if self.review is not None:
+            record["review"] = dict(self.review)
         return record
 
 
@@ -70,6 +73,7 @@ class AlignmentMapping:
     right: tuple[ReferenceKey, ...]
     status: str = "matched"
     method: str = "curated"
+    review: Mapping[str, object] | None = None
 
 
 def align_segments(left: Iterable[TextSegment], right: Iterable[TextSegment]) -> list[AlignmentUnit]:
@@ -164,6 +168,7 @@ def align_with_mappings(
                 mapping_method=mapping.method,
                 left_notes=tuple(note for segment in left_segments for note in segment.notes),
                 right_notes=tuple(note for segment in right_segments for note in segment.notes),
+                review=mapping.review,
             )
         )
 
@@ -214,11 +219,15 @@ def mapping_from_dict(record: Mapping[str, object]) -> AlignmentMapping:
             raise ValueError("mapping left/right values must be lists")
         return tuple(parse_reference(str(reference)) for reference in value)
 
+    review = record.get("review")
+    if review is not None and not isinstance(review, Mapping):
+        raise ValueError("mapping review must be an object when supplied")
     return AlignmentMapping(
         left=parse_many(record.get("left", [])),
         right=parse_many(record.get("right", [])),
         status=str(record.get("status", "matched")),
         method=str(record.get("method", "curated")),
+        review=dict(review) if review is not None else None,
     )
 
 

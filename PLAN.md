@@ -190,7 +190,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** comparison metadata now carries language codes; lexical builds reject cross-language pairs, while embedding builds and the UI suppress same-language wording metrics and highlighting when languages differ.
 - **Implemented:** the focused atlas view can export JSON or CSV and exposes metric, alignment, language, and embedding-run provenance in the reader.
 - **Implemented:** a separate multi-verse window builder supports explicit window size and stride, joins text only within book/chapter, and preserves incomplete windows as unresolved rather than substituting them for verse scores.
-- **Implemented:** explicit reviewed one-to-many, many-to-one, and many-to-many alignment mappings, with unresolved and unmapped statuses preserved without semantic scores.
+- **Implemented:** explicit reviewed one-to-many, many-to-one, and many-to-many alignment mappings, with reviewer/evidence provenance, unresolved and unmapped statuses preserved without semantic scores.
 - **Implemented:** seeded blind-review packet selection and review aggregation that preserves per-item disagreement, abstentions, evidence fields, and reviewer-level counts.
 - **Implemented:** a separate held-out synthetic set with genre slices, changed-versus-preserved margins, and reproducible report output for model regression checks.
 - **Implemented:** held-out synthetic reports for E5-small (4/8) and BGE-M3 (7/8); the BGE-M3 result clears the provisional synthetic ranking gate in this slice only.
