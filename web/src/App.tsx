@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { ComparisonData, ComparisonManifest, ComparisonUnit } from "./types";
 
 type PairConfig = {
@@ -84,7 +85,17 @@ function MarkedText({ text, other }: { text: string | null; other: string | null
   );
 }
 
-function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string) {
+type UnitRange = { start: number; end: number };
+
+function parseInitialRange(): UnitRange | null {
+  const value = new URLSearchParams(window.location.search).get("range");
+  if (!value) return null;
+  const [start, end] = value.split("-").map(Number);
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) return null;
+  return { start, end };
+}
+
+function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string, range: UnitRange | null = null) {
   const params = new URLSearchParams(window.location.search);
   params.set("pair", pairId);
   params.set("book", book);
@@ -93,6 +104,8 @@ function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefine
   else params.set("chapter", chapter);
   if (search) params.set("q", search);
   else params.delete("q");
+  if (range) params.set("range", `${range.start}-${range.end}`);
+  else params.delete("range");
   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
 }
 
@@ -104,6 +117,9 @@ function DivergenceChart({
   distanceField,
   distanceLabel,
   bookName,
+  onBrush,
+  onClearBrush,
+  rangeActive,
 }: {
   units: ComparisonUnit[];
   selectedId: string | undefined;
@@ -112,7 +128,12 @@ function DivergenceChart({
   distanceField: string;
   distanceLabel: string;
   bookName: string;
+  onBrush: (start: number, end: number) => void;
+  onClearBrush: () => void;
+  rangeActive: boolean;
 }) {
+  const [brushStart, setBrushStart] = useState<number | null>(null);
+  const [brushEnd, setBrushEnd] = useState<number | null>(null);
   const width = 1000;
   const height = 292;
   const padding = { left: 56, right: 22, top: 22, bottom: 42 };
@@ -123,10 +144,46 @@ function DivergenceChart({
   const xFor = (unit: ComparisonUnit) => padding.left + ((visibleIndex.get(unit.id) ?? 0) / Math.max(1, units.length - 1)) * plotWidth;
   const yFor = (unit: ComparisonUnit) => padding.top + (1 - (distanceFor(unit, distanceField) ?? 0) / maxScore) * plotHeight;
   const gridValues = [0, maxScore / 2, maxScore];
+  const indexForPoint = (event: ReactPointerEvent<SVGSVGElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const svgX = ((event.clientX - bounds.left) / bounds.width) * width;
+    const fraction = (svgX - padding.left) / plotWidth;
+    return Math.max(0, Math.min(units.length - 1, Math.round(fraction * Math.max(1, units.length - 1))));
+  };
+  const brushLow = brushStart !== null && brushEnd !== null ? Math.min(brushStart, brushEnd) : null;
+  const brushHigh = brushStart !== null && brushEnd !== null ? Math.max(brushStart, brushEnd) : null;
+  const brushX = brushLow === null ? 0 : padding.left + (brushLow / Math.max(1, units.length - 1)) * plotWidth;
+  const brushWidth = brushHigh === null || brushLow === null ? 0 : ((brushHigh - brushLow) / Math.max(1, units.length - 1)) * plotWidth;
+  const finishBrush = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (brushStart === null || brushEnd === null) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    const start = Math.min(brushStart, brushEnd);
+    const end = Math.max(brushStart, brushEnd);
+    setBrushStart(null);
+    setBrushEnd(null);
+    if (end > start) onBrush(start, end);
+  };
 
   return (
     <div className="chart-shell">
-      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="divergence-title divergence-description">
+      <svg
+        className="chart"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-labelledby="divergence-title divergence-description"
+        onPointerDown={(event) => {
+          if ((event.target as Element).tagName.toLowerCase() === "circle" || units.length < 2) return;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          const index = indexForPoint(event);
+          setBrushStart(index);
+          setBrushEnd(index);
+        }}
+        onPointerMove={(event) => {
+          if (brushStart !== null) setBrushEnd(indexForPoint(event));
+        }}
+        onPointerUp={finishBrush}
+        onPointerCancel={() => { setBrushStart(null); setBrushEnd(null); }}
+      >
         <title id="divergence-title">Distance across the selected book</title>
         <desc id="divergence-description">Each point is a matched verse. Higher points have more divergence according to the selected comparison metric.</desc>
         {gridValues.map((value) => {
@@ -140,6 +197,8 @@ function DivergenceChart({
         })}
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
+        <rect className="brush-surface" x={padding.left} y={padding.top} width={plotWidth} height={plotHeight} />
+        {brushLow !== null && brushHigh !== null && <rect className="brush-selection" x={brushX} y={padding.top} width={Math.max(2, brushWidth)} height={plotHeight} />}
         <text className="axis-title" x={padding.left} y={height - 10}>{bookName} · verse order</text>
         <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => {
@@ -167,7 +226,7 @@ function DivergenceChart({
           );
         })}
       </svg>
-      <div className="chart-note"><span className="legend-dot" /> matched verse <span className="legend-ring" /> selected verse <span className="chart-count">{valid.length} scored units</span></div>
+      <div className="chart-note"><span className="legend-dot" /> matched verse <span className="legend-ring" /> selected verse <span className="brush-hint">Drag to focus a range</span>{rangeActive && <button className="clear-range" onClick={onClearBrush}>Reset range</button>}<span className="chart-count">{valid.length} scored units</span></div>
     </div>
   );
 }
@@ -227,6 +286,7 @@ function App() {
   const [chapter, setChapter] = useState(new URLSearchParams(window.location.search).get("chapter") ?? "all");
   const [search, setSearch] = useState(new URLSearchParams(window.location.search).get("q") ?? "");
   const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
+  const [brushRange, setBrushRange] = useState<UnitRange | null>(parseInitialRange());
 
   const pair = PAIRS.find((candidate) => candidate.id === pairId) ?? PAIRS[0];
 
@@ -242,7 +302,10 @@ function App() {
         setManifest(nextManifest);
         const selectedBook = nextManifest.books.find((entry) => entry.id === book) ?? nextManifest.books[0];
         if (!selectedBook) throw new Error("Comparison manifest has no books");
-        if (selectedBook.id !== book) setBook(selectedBook.id);
+        if (selectedBook.id !== book) {
+          setBook(selectedBook.id);
+          setBrushRange(null);
+        }
         const bookResponse = await fetch(selectedBook.dataUrl, { signal: controller.signal });
         if (!bookResponse.ok) throw new Error(`Could not load ${selectedBook.name} (${bookResponse.status})`);
         setData(await bookResponse.json() as ComparisonData);
@@ -268,25 +331,38 @@ function App() {
       return inChapter && inSearch;
     });
   }, [chapter, data, search]);
-  const selected = filtered.find((unit) => unit.id === selectedId) ?? filtered.find((unit) => unit.status === "matched") ?? filtered[0];
+  const visibleUnits = useMemo(() => {
+    if (!brushRange || !filtered.length) return filtered;
+    const start = Math.max(0, Math.min(brushRange.start, filtered.length - 1));
+    const end = Math.max(start, Math.min(brushRange.end, filtered.length - 1));
+    return filtered.slice(start, end + 1);
+  }, [brushRange, filtered]);
+  const selected = visibleUnits.find((unit) => unit.id === selectedId) ?? visibleUnits.find((unit) => unit.status === "matched") ?? visibleUnits[0];
   const distanceField = data?.metadata.metric.distanceField ?? "lexicalDistance";
   const distanceLabel = data?.metadata.metric.label.toLocaleLowerCase().replace("baseline", "distance") ?? "distance";
-  const maxScore = Math.max(0.1, ...filtered.map((unit) => distanceFor(unit, distanceField) ?? 0));
-  const ranked = [...filtered].filter((unit) => distanceFor(unit, distanceField) !== null).sort((a, b) => (distanceFor(b, distanceField) ?? 0) - (distanceFor(a, distanceField) ?? 0)).slice(0, 8);
-  const selectedIndex = selected ? data?.units.findIndex((unit) => unit.id === selected.id) ?? -1 : -1;
-  const previous = data && selectedIndex > 0 ? data.units[selectedIndex - 1] : undefined;
-  const next = data && selectedIndex >= 0 ? data.units[selectedIndex + 1] : undefined;
+  const maxScore = Math.max(0.1, ...visibleUnits.map((unit) => distanceFor(unit, distanceField) ?? 0));
+  const ranked = [...visibleUnits].filter((unit) => distanceFor(unit, distanceField) !== null).sort((a, b) => (distanceFor(b, distanceField) ?? 0) - (distanceFor(a, distanceField) ?? 0)).slice(0, 8);
+  const selectedIndex = selected ? visibleUnits.findIndex((unit) => unit.id === selected.id) : -1;
+  const previous = selectedIndex > 0 ? visibleUnits[selectedIndex - 1] : undefined;
+  const next = selectedIndex >= 0 ? visibleUnits[selectedIndex + 1] : undefined;
 
   useEffect(() => {
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
-      updateUrl(pair.id, book, selected, chapter, search);
+      updateUrl(pair.id, book, selected, chapter, search, brushRange);
     }
-  }, [book, chapter, pair.id, search, selected]);
+  }, [book, brushRange, chapter, pair.id, search, selected]);
 
   const selectUnit = (unit: ComparisonUnit) => {
     setSelectedId(unit.id);
-    updateUrl(pair.id, book, unit, chapter, search);
+    updateUrl(pair.id, book, unit, chapter, search, brushRange);
+  };
+
+  const focusRange = (start: number, end: number) => {
+    const nextRange = { start: Math.min(start, end), end: Math.max(start, end) };
+    setBrushRange(nextRange);
+    const firstScored = visibleUnits.slice(nextRange.start, nextRange.end + 1).find((unit) => distanceFor(unit, distanceField) !== null);
+    if (firstScored) setSelectedId(firstScored.id);
   };
 
   if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
@@ -323,15 +399,15 @@ function App() {
           <label><span>translation B</span><strong>{rightName}</strong></label>
         </div>
         <div className="filter-grid">
-          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
-          <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name} · {entry.totalUnits.toLocaleString()} · {Math.round(entry.coverage * 100)}%</option>)}</select></label>
-          <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => setChapter(event.target.value)}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
-          <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Reference or phrase" /></label>
+          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
+          <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); setBrushRange(null); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name} · {entry.totalUnits.toLocaleString()} · {Math.round(entry.coverage * 100)}%</option>)}</select></label>
+          <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => { setChapter(event.target.value); setSelectedId(undefined); setBrushRange(null); }}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
+          <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => { setSearch(event.target.value); setBrushRange(null); }} placeholder="Reference or phrase" /></label>
         </div>
       </section>
 
       <section className="summary-grid">
-        <div className="summary-card"><span className="summary-label">scope</span><strong>{filtered.length.toLocaleString()}</strong><span>visible verses</span></div>
+        <div className="summary-card"><span className="summary-label">scope</span><strong>{visibleUnits.length.toLocaleString()}</strong><span>{brushRange ? "focused verses" : "visible verses"}</span></div>
         <div className="summary-card"><span className="summary-label">highest distance</span><strong>{formatScore(ranked[0] ? distanceFor(ranked[0], distanceField) : null)}</strong><span>{ranked[0]?.reference ?? "No match"}</span></div>
         <div className="summary-card summary-card-wide"><span className="summary-label">alignment coverage</span><div className="coverage-bar"><i style={{ width: `${(data.summary.matchedUnits / data.summary.totalUnits) * 100}%` }} /></div><span>{data.summary.matchedUnits.toLocaleString()} matched · {data.summary.totalUnits.toLocaleString()} total</span></div>
       </section>
@@ -339,7 +415,7 @@ function App() {
       <section className="panel chart-panel">
         <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS {bookName.toUpperCase()}</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
         <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
-        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} />
+        <DivergenceChart units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} onBrush={focusRange} onClearBrush={() => setBrushRange(null)} rangeActive={Boolean(brushRange)} />
       </section>
 
       <div className="two-column">
@@ -365,7 +441,7 @@ function App() {
       <section className="panel scatter-panel">
         <div className="panel-heading"><div><p className="eyebrow">04 · WORDING / DISTANCE</p><h2>Different words don’t always mean different things.</h2></div></div>
         <p className="panel-intro">The same comparison shown two ways: horizontal movement is wording distance; vertical movement is the selected comparison metric. Use this as an investigation map, not a classification.</p>
-        <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
+        <ScatterPlot units={visibleUnits} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>
 
       <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} {alignmentNote} Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>

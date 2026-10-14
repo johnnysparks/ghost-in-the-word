@@ -183,6 +183,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** one `multilingual-e5-small` John pilot run is available as a separate UI mode, with 384 dimensions, a 512-token maximum, and recorded input hash. Its synthetic challenge result was 3/6 (50%), below the provisional 80% gate.
 - **Implemented:** the synthetic challenge has been run with `multilingual-e5-small` (50%) and `BAAI/bge-m3` (66.7%); neither clears the provisional 80% gate, so the pilot does not promote either score to a faithfulness claim.
 - **Implemented:** the default WEB↔BSB atlas now loads a 66-book partition manifest and one book payload at a time; the backend produces book/chapter coverage and score summaries.
+- **Implemented:** the atlas now supports chart drag-to-focus ranges, resettable linked filtering, URL restoration of the focused range, and richer hover/focus previews for both renderings.
 - **Implemented:** explicit reviewed one-to-many, many-to-one, and many-to-many alignment mappings, with unresolved and unmapped statuses preserved without semantic scores.
 - **Implemented:** seeded blind-review packet selection and review aggregation that preserves per-item disagreement, abstentions, evidence fields, and reviewer-level counts.
 - **Implemented:** a separate held-out synthetic set with genre slices, changed-versus-preserved margins, and reproducible report output for model regression checks.

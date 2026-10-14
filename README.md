@@ -127,8 +127,10 @@ PYTHONPATH=src python3 scripts/partition_comparison.py \
   --output-dir web/public/data/webp-bsb
 ```
 
-The first interactive slice is in `web/`. It serves a committed John pilot fixture and
-keeps the selected comparison pair, verse, chapter, search, and reader state in the URL.
+The first interactive slice is in `web/`. It serves a committed John pilot fixture,
+loads the full WEB↔BSB atlas one book at a time, and keeps the selected comparison pair,
+verse, chapter, search, brush range, and reader state in the URL. Drag across the main
+chart to focus a verse range; the reader, ranked list, and scatterplot follow that focus.
 The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded
 `multilingual-e5-small` WEB↔BSB run:
 

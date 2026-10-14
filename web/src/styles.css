@@ -38,3 +38,4 @@ a { color: inherit; }
 .filter-grid { grid-template-columns: 150px 110px 130px minmax(190px, 240px); width: min(100%, 660px); }
 @media (max-width: 900px) { .filter-grid { width: 100%; grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .filter-grid { grid-template-columns: 1fr; } }
+.brush-surface { fill: transparent; cursor: crosshair; }.brush-selection { fill: rgba(127,193,181,.16); stroke: var(--teal); stroke-width: 1; pointer-events: none; }.brush-hint { margin-left: 10px; color: var(--muted); }.clear-range { border: 0; padding: 0; background: transparent; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; text-underline-offset: 3px; }.clear-range:hover { color: var(--ink); }
