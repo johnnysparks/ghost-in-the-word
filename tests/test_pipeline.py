@@ -222,12 +222,22 @@ class PipelineTests(unittest.TestCase):
             embedding_cache_key(["one"], "model", model_revision="rev-a"),
             embedding_cache_key(["one"], "model", model_revision="rev-b"),
         )
+        self.assertNotEqual(
+            embedding_cache_key(["one"], "model", context_strategy="verse-only"),
+            embedding_cache_key(["one"], "model", context_strategy="chapter-window"),
+        )
         self.assertEqual(embedding_storage_bytes(10, 3, 384), 46080)
 
     def test_embedding_cache_reuses_exact_recipe_and_invalidates_inputs(self) -> None:
         class FakeModel:
             calls = 0
-            max_seq_length = 512
+            max_seq_length = 2
+
+            class Tokenizer:
+                def __call__(self, texts, **kwargs):
+                    return {"input_ids": [[0] * (len(text.split()) + 1) for text in texts]}
+
+            tokenizer = Tokenizer()
 
             def __init__(self, model_id: str) -> None:
                 self.model_id = model_id
@@ -279,6 +289,9 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(first_run.cache_key, second_run.cache_key)
         self.assertFalse(first_run.cache_hit)
         self.assertTrue(second_run.cache_hit)
+        self.assertEqual(first_run.input_count, 2)
+        self.assertEqual(first_run.truncated_inputs, 2)
+        self.assertEqual(second_run.truncated_inputs, 2)
         self.assertFalse(changed_run.cache_hit)
         self.assertNotEqual(first_run.cache_key, changed_run.cache_key)
         self.assertNotEqual(first_vectors, changed_vectors)

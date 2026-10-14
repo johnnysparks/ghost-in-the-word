@@ -25,6 +25,9 @@ class EmbeddingRun:
     preprocessing_version: str = "1"
     cache_key: str | None = None
     cache_hit: bool = False
+    context_strategy: str = "verse-only"
+    input_count: int = 0
+    truncated_inputs: int | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -37,6 +40,9 @@ class EmbeddingRun:
             "preprocessingVersion": self.preprocessing_version,
             "cacheKey": self.cache_key,
             "cacheHit": self.cache_hit,
+            "contextStrategy": self.context_strategy,
+            "inputCount": self.input_count,
+            "truncatedInputCount": self.truncated_inputs,
         }
 
 
@@ -55,6 +61,7 @@ def embedding_cache_key(
     prefix: str = "query: ",
     model_revision: str | None = None,
     preprocessing_version: str = "1",
+    context_strategy: str = "verse-only",
 ) -> str:
     """Return a stable key for one exact embedding input and recipe.
 
@@ -69,6 +76,7 @@ def embedding_cache_key(
         "modelRevision": model_revision or model_id,
         "preprocessingVersion": preprocessing_version,
         "prefix": prefix,
+        "contextStrategy": context_strategy,
         "inputHash": input_hash(texts),
         "count": len(texts),
     }
@@ -89,6 +97,7 @@ def _read_cached_embeddings(
     prefix: str,
     model_revision: str,
     preprocessing_version: str,
+    context_strategy: str,
 ) -> tuple[list[list[float]], EmbeddingRun] | None:
     """Read a cache entry only when every recipe field still matches."""
 
@@ -107,6 +116,7 @@ def _read_cached_embeddings(
         "modelRevision": model_revision,
         "preprocessingVersion": preprocessing_version,
         "prefix": prefix,
+        "contextStrategy": context_strategy,
         "inputHash": input_hash(texts),
         "count": len(texts),
     }
@@ -134,6 +144,12 @@ def _read_cached_embeddings(
     max_seq_length = metadata.get("maxSeqLength")
     if max_seq_length is not None and not isinstance(max_seq_length, int):
         return None
+    input_count = metadata.get("inputCount")
+    if not isinstance(input_count, int) or input_count != len(texts):
+        return None
+    truncated_inputs = metadata.get("truncatedInputCount")
+    if truncated_inputs is not None and not isinstance(truncated_inputs, int):
+        return None
     return normalized, EmbeddingRun(
         model_id=model_id,
         dimensions=dimensions or 0,
@@ -144,6 +160,9 @@ def _read_cached_embeddings(
         preprocessing_version=preprocessing_version,
         cache_key=key,
         cache_hit=True,
+        context_strategy=context_strategy,
+        input_count=input_count,
+        truncated_inputs=truncated_inputs,
     )
 
 
@@ -166,12 +185,15 @@ def _write_cached_embeddings(
             "modelRevision": run.model_revision or run.model_id,
             "preprocessingVersion": run.preprocessing_version,
             "prefix": run.prefix,
+            "contextStrategy": run.context_strategy,
             "inputHash": run.input_hash,
             "count": len(texts),
         },
         "embeddingRun": {
             "dimensions": run.dimensions,
             "maxSeqLength": run.max_seq_length,
+            "inputCount": run.input_count,
+            "truncatedInputCount": run.truncated_inputs,
         },
         "vectors": vectors,
     }
@@ -215,6 +237,29 @@ def cosine_distance(left: Sequence[float], right: Sequence[float]) -> float:
     return round(max(0.0, min(2.0, 1.0 - similarity)), 6)
 
 
+def _count_truncated_inputs(model: object, texts: Sequence[str], prefix: str, max_seq_length: int | None) -> int | None:
+    """Count inputs beyond the model limit when its tokenizer is available."""
+
+    tokenizer = getattr(model, "tokenizer", None)
+    if tokenizer is None or max_seq_length is None:
+        return None
+    try:
+        tokenized = tokenizer(
+            [f"{prefix}{text}" for text in texts],
+            add_special_tokens=True,
+            truncation=False,
+            padding=False,
+        )
+        input_ids = tokenized.get("input_ids") if isinstance(tokenized, dict) else None
+        if not isinstance(input_ids, list):
+            return None
+        return sum(1 for ids in input_ids if isinstance(ids, list) and len(ids) > max_seq_length)
+    except Exception:
+        # Truncation reporting is provenance metadata; an unusual tokenizer API
+        # must not prevent an otherwise valid embedding run.
+        return None
+
+
 def encode_texts(
     texts: Sequence[str],
     model_id: str,
@@ -224,6 +269,7 @@ def encode_texts(
     cache_dir: str | Path | None = None,
     model_revision: str | None = None,
     preprocessing_version: str = "1",
+    context_strategy: str = "verse-only",
 ) -> tuple[list[list[float]], EmbeddingRun]:
     """Encode texts with sentence-transformers, kept optional by design."""
 
@@ -231,6 +277,8 @@ def encode_texts(
         raise ValueError("batch_size must be positive")
     if not texts:
         raise ValueError("cannot encode an empty text sequence")
+    if not context_strategy.strip():
+        raise ValueError("context_strategy must not be empty")
     resolved_model_revision = model_revision or model_id
     key = embedding_cache_key(
         texts,
@@ -238,6 +286,7 @@ def encode_texts(
         prefix=prefix,
         model_revision=resolved_model_revision,
         preprocessing_version=preprocessing_version,
+        context_strategy=context_strategy,
     )
     path = _cache_path(Path(cache_dir), key) if cache_dir is not None else None
     if path is not None:
@@ -249,6 +298,7 @@ def encode_texts(
             prefix=prefix,
             model_revision=resolved_model_revision,
             preprocessing_version=preprocessing_version,
+            context_strategy=context_strategy,
         )
         if cached is not None:
             return cached
@@ -271,16 +321,21 @@ def encode_texts(
     )
     vectors = [[float(value) for value in row] for row in encoded.tolist()]
     max_seq_length = getattr(model, "max_seq_length", None)
+    max_seq_length = int(max_seq_length) if max_seq_length is not None else None
     dimensions = len(vectors[0]) if vectors else 0
+    truncated_inputs = _count_truncated_inputs(model, texts, prefix, max_seq_length)
     run = EmbeddingRun(
         model_id=model_id,
         dimensions=dimensions,
-        max_seq_length=int(max_seq_length) if max_seq_length is not None else None,
+        max_seq_length=max_seq_length,
         input_hash=input_hash(texts),
         prefix=prefix,
         model_revision=resolved_model_revision,
         preprocessing_version=preprocessing_version,
         cache_key=key,
+        context_strategy=context_strategy,
+        input_count=len(texts),
+        truncated_inputs=truncated_inputs,
     )
     if path is not None:
         _write_cached_embeddings(path, key=key, texts=texts, vectors=vectors, run=run)

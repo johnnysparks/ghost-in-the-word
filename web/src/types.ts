@@ -85,6 +85,9 @@ export type ComparisonData = {
       rightCacheKey?: string | null;
       leftCacheHit?: boolean;
       rightCacheHit?: boolean;
+      contextStrategy?: string;
+      inputCount?: number;
+      truncatedInputCount?: number | null;
     };
     source: { alignment: string };
     assessmentAttachment?: {

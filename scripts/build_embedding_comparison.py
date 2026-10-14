@@ -40,6 +40,11 @@ def main() -> None:
         help="Version of the text preprocessing recipe; change it to invalidate the cache",
     )
     parser.add_argument("--prefix", default="query: ", help="Prefix passed to the embedding model")
+    parser.add_argument(
+        "--context-strategy",
+        default="verse-only",
+        help="Context recipe recorded in the run and included in cache identity",
+    )
     args = parser.parse_args()
 
     try:
@@ -77,6 +82,7 @@ def main() -> None:
             cache_dir=args.cache_dir,
             model_revision=args.model_revision,
             preprocessing_version=args.preprocessing_version,
+            context_strategy=args.context_strategy,
         )
         right_vectors, right_run = encode_texts(
             right_texts,
@@ -86,6 +92,7 @@ def main() -> None:
             cache_dir=args.cache_dir,
             model_revision=args.model_revision,
             preprocessing_version=args.preprocessing_version,
+            context_strategy=args.context_strategy,
         )
     except EmbeddingBackendUnavailable as exc:
         raise SystemExit(str(exc)) from exc

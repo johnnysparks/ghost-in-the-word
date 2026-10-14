@@ -26,6 +26,7 @@ def main() -> None:
     parser.add_argument("--model-revision", help="Immutable model revision for cache identity")
     parser.add_argument("--preprocessing-version", default="1")
     parser.add_argument("--prefix", default="query: ")
+    parser.add_argument("--context-strategy", default="synthetic-triplet")
     args = parser.parse_args()
     cases = json.loads(args.challenge.read_text(encoding="utf-8"))
 
@@ -42,6 +43,7 @@ def main() -> None:
                 model_revision=args.model_revision,
                 preprocessing_version=args.preprocessing_version,
                 prefix=args.prefix,
+                context_strategy=args.context_strategy,
             )
         except EmbeddingBackendUnavailable as exc:
             raise SystemExit(str(exc)) from exc

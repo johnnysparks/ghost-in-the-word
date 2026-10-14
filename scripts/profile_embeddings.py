@@ -25,6 +25,7 @@ def main() -> None:
     parser.add_argument("--target-units", type=int, help="Corpus unit count for projection; defaults to comparison totalUnits")
     parser.add_argument("--edition-count", type=int, default=3)
     parser.add_argument("--prefix", default="query: ")
+    parser.add_argument("--context-strategy", default="verse-only")
     args = parser.parse_args()
     if args.batch_size < 1:
         raise SystemExit("--batch-size must be positive")
@@ -103,6 +104,7 @@ def main() -> None:
             "dimensions": dimensions,
             "maxSeqLength": max_seq_length,
             "prefix": args.prefix,
+            "contextStrategy": args.context_strategy,
             "inputHash": input_hash(texts),
         },
         "tokens": {

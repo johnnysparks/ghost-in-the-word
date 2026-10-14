@@ -123,7 +123,9 @@ PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
 
 Embedding experiments are an optional offline step. Install the extra in an isolated
 environment, then run the model-specific builder. The output records the model ID,
-dimensions, input hash, prefix, and maximum sequence length alongside each score:
+immutable revision, dimensions, input hash, prefix, context strategy, input count,
+tokenizer truncation count when available, and maximum sequence length alongside each
+score:
 
 ```sh
 python3 -m pip install -e '.[embeddings]'
@@ -133,12 +135,13 @@ PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   --manifest sources.json \
   --model intfloat/multilingual-e5-small \
   --cache-dir .embedding-cache \
+  --context-strategy verse-only \
   --output data/derived/john-e5-small.json
 ```
 
 The optional cache stores vectors outside Git. Its key includes the exact ordered
-input-text hash, model ID and immutable model revision, prefix, and preprocessing
-version. A changed input, model revision, or recipe creates a new entry; interrupted
+input-text hash, model ID and immutable model revision, prefix, context strategy, and
+preprocessing version. A changed input, model revision, or recipe creates a new entry; interrupted
 writes cannot replace a valid entry. Pass `--model-revision` with a pinned model commit
 when using a mutable local path, and increment `--preprocessing-version` whenever the
 text preparation recipe changes.
