@@ -266,6 +266,24 @@ PYTHONPATH=src python3 scripts/build_natural_benchmark.py \
   --key-output /tmp/natural-review-key.json
 ```
 
+Keep a final evaluation independent from development selections by scoping a new
+packet to a declared set of held-out books, or by excluding books used during metric
+development. The scope is recorded in both the blinded packet and its private key; use
+enough books to preserve the genre strata when requesting the 200-item layout:
+
+```sh
+PYTHONPATH=src python3 scripts/build_natural_benchmark.py \
+  data/derived/webp-bsb-full.json --count 200 --seed 20261015 \
+  --exclude-book JHN --exclude-book GEN \
+  --output benchmarks/natural-review-heldout.example.json \
+  --key-output /tmp/natural-heldout-key.json
+```
+
+The checked-in `benchmarks/natural-review-heldout.example.json` is this score-blinded
+candidate. It excludes Genesis and John from the selection scope so a reviewer can use
+it as a separate handoff from the development packet; it remains a candidate until
+independent labels are collected.
+
 The private selection key is deliberately kept outside the repository; independent
 reviewers and the evaluator must receive it through separate channels. The checked-in
 packet is a review candidate, not evidence that any item is useful until independent

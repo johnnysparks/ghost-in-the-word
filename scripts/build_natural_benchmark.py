@@ -18,6 +18,9 @@ def main() -> None:
     parser.add_argument("--count", type=int, default=200)
     parser.add_argument("--seed", type=int, default=20261014)
     parser.add_argument("--metric", default="lexicalDistance")
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument("--book", action="append", help="Restrict candidates to one or more books (repeatable)")
+    scope.add_argument("--exclude-book", action="append", help="Exclude one or more books from candidates (repeatable)")
     args = parser.parse_args()
 
     comparison = json.loads(args.comparison.read_text(encoding="utf-8"))
@@ -26,6 +29,8 @@ def main() -> None:
         count=args.count,
         metric_field=args.metric,
         seed=args.seed,
+        books=args.book,
+        exclude_books=args.exclude_book,
     )
     validate_review_packet(packet)
     args.output.parent.mkdir(parents=True, exist_ok=True)

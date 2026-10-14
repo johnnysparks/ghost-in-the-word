@@ -178,6 +178,8 @@ def select_natural_benchmark(
     count: int = 200,
     metric_field: str = "lexicalDistance",
     seed: int = 20261014,
+    books: Iterable[str] | None = None,
+    exclude_books: Iterable[str] | None = None,
 ) -> tuple[dict[str, object], dict[str, object]]:
     """Select a natural benchmark packet and its private rank key.
 
@@ -194,7 +196,18 @@ def select_natural_benchmark(
     metadata = metadata if isinstance(metadata, Mapping) else {}
     metric = metadata.get("metric")
     metric = metric if isinstance(metric, Mapping) else {}
+    included_books = {str(book).upper() for book in books} if books else None
+    excluded_books = {str(book).upper() for book in exclude_books} if exclude_books else set()
+    if included_books and excluded_books.intersection(included_books):
+        overlap = ", ".join(sorted(excluded_books.intersection(included_books)))
+        raise ValueError(f"books cannot be both included and excluded: {overlap}")
     all_candidates = _review_candidates(comparison, metric_field)
+    if included_books is not None:
+        all_candidates = [unit for unit in all_candidates if str(unit.get("book", "")).upper() in included_books]
+    if excluded_books:
+        all_candidates = [unit for unit in all_candidates if str(unit.get("book", "")).upper() not in excluded_books]
+    if not all_candidates:
+        raise ValueError("book scope contains no eligible review candidates")
     if len(all_candidates) < count:
         raise ValueError(f"comparison has only {len(all_candidates)} eligible review candidates; need {count}")
     ranked_all = sorted(all_candidates, key=lambda unit: (-float(unit[metric_field]), str(unit["id"])))
@@ -254,6 +267,10 @@ def select_natural_benchmark(
             "topCount": top_count,
             "backgroundCount": background_count,
             "genres": {genre: quota for genre, quota in quotas.items()},
+            "scope": {
+                "includeBooks": sorted(included_books) if included_books is not None else None,
+                "excludeBooks": sorted(excluded_books),
+            },
         },
         "items": packet_items,
     }
@@ -280,6 +297,10 @@ def select_natural_benchmark(
             "selectedCount": len(packet_items),
             "candidateCount": len(all_candidates),
             "topCount": top_count,
+            "scope": {
+                "includeBooks": sorted(included_books) if included_books is not None else None,
+                "excludeBooks": sorted(excluded_books),
+            },
         },
         "items": key_items,
     }

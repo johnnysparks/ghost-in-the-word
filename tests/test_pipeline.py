@@ -12,7 +12,7 @@ from ghost_in_word.assessment_attachment import attach_assessment_document
 from ghost_in_word.embeddings import cosine_distance, embedding_cache_key, embedding_storage_bytes, encode_texts, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.matrix import build_translation_matrix
-from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews, validate_review_packet
+from ghost_in_word.review import build_review_key, select_natural_benchmark, select_review_items, summarize_reviews, validate_review_packet
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.sources import comparison_edition_metadata, load_editions
@@ -591,6 +591,41 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(packet["selection"]["topCount"], 30)
         self.assertEqual(packet["selection"]["backgroundCount"], 170)
         self.assertTrue(all(not set(item).intersection({"rank", "score", "lexicalDistance", "embeddingDistance", "wordingDistance"}) for item in packet["items"]))
+
+    def test_natural_benchmark_can_scope_to_held_out_books(self) -> None:
+        comparison = {
+            "metadata": {
+                "leftEdition": {"id": "a"},
+                "rightEdition": {"id": "b"},
+                "metric": {"id": "lexical-baseline", "label": "Lexical", "description": "fixture"},
+            },
+            "units": [
+                {
+                    "id": f"JHN-1-{index}",
+                    "reference": f"JHN 1:{index}",
+                    "book": "JHN",
+                    "chapter": 1,
+                    "verse": str(index),
+                    "status": "matched",
+                    "leftText": f"left {index}",
+                    "rightText": f"right {index}",
+                    "lexicalDistance": index / 100,
+                }
+                for index in range(1, 31)
+            ],
+        }
+        packet, key = select_natural_benchmark(comparison, count=30, books=["jhn"])
+        self.assertEqual(packet["selection"]["scope"]["includeBooks"], ["JHN"])
+        self.assertEqual(key["selection"]["scope"]["includeBooks"], ["JHN"])
+        self.assertEqual(validate_review_packet(packet)["itemCount"], 30)
+
+    def test_committed_natural_holdout_packet_excludes_development_books(self) -> None:
+        packet = json.loads(
+            (Path(__file__).parents[1] / "benchmarks/natural-review-heldout.example.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(validate_review_packet(packet)["itemCount"], 200)
+        self.assertEqual(packet["selection"]["scope"]["excludeBooks"], ["GEN", "JHN"])
+        self.assertTrue(all(item["book"] not in {"GEN", "JHN"} for item in packet["items"]))
 
     def test_committed_browser_fixture_uses_public_schema(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-bsb.json").read_text(encoding="utf-8"))
