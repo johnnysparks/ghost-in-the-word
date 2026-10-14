@@ -646,6 +646,10 @@ def _summarize_selection(
             if isinstance(item, Mapping) and item.get("id") and item.get("book")
         }
     buckets: dict[str, list[dict[str, object]]] = defaultdict(list)
+    dimensions: dict[str, dict[str, list[dict[str, object]]]] = {
+        "genre": defaultdict(list),
+        "lengthBand": defaultdict(list),
+    }
     for item in key_items:
         if not isinstance(item, Mapping):
             raise ValueError("selection key contains a non-object item")
@@ -655,7 +659,17 @@ def _summarize_selection(
             raise ValueError("selection key item needs a non-empty id")
         if bucket not in {"top-ranked", "seeded-random"}:
             raise ValueError(f"invalid selection bucket for {item_id!r}: {bucket!r}")
-        buckets[str(bucket)].append({"id": item_id, "rank": item.get("rank")})
+        normalized = {
+            "id": item_id,
+            "rank": item.get("rank"),
+            "genre": item.get("genre"),
+            "lengthBand": item.get("lengthBand"),
+        }
+        buckets[str(bucket)].append(normalized)
+        for dimension in dimensions:
+            value = item.get(dimension)
+            if isinstance(value, str) and value:
+                dimensions[dimension][value].append(normalized)
 
     selection = selection_key.get("selection")
     selection = dict(selection) if isinstance(selection, Mapping) else {}
@@ -695,6 +709,13 @@ def _summarize_selection(
         "metric": selection.get("metric"),
         "topRanked": summarize_bucket(buckets.get("top-ranked", []), 0),
         "seededRandom": summarize_bucket(buckets.get("seeded-random", []), 1),
+        "breakdowns": {
+            dimension: {
+                value: summarize_bucket(group, index + 2)
+                for index, (value, group) in enumerate(sorted(groups.items()))
+            }
+            for dimension, groups in dimensions.items()
+        },
     }
 
 

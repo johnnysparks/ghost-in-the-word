@@ -650,11 +650,15 @@ class PipelineTests(unittest.TestCase):
             "selection": {"strategy": "fixture", "selectedCount": 4, "candidateCount": 4},
             "items": items,
         }
+        genres = {"GEN-1-1": "narrative", "PSA-1-1": "poetry", "LEV-1-1": "law", "ROM-1-1": "argument"}
         key = {
             "schemaVersion": 1,
             "kind": "blind-review-key",
             "selection": {"seed": 19, "metric": "lexicalDistance"},
-            "items": [{"id": item["id"], "rank": index + 1, "bucket": "top-ranked"} for index, item in enumerate(items)],
+            "items": [
+                {"id": item["id"], "rank": index + 1, "bucket": "top-ranked", "genre": genres[item["id"]], "lengthBand": "short"}
+                for index, item in enumerate(items)
+            ],
         }
         responses = [
             {
@@ -671,6 +675,8 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(interval["unit"], "book")
         self.assertEqual(interval["samples"], 25)
         self.assertEqual(interval["seed"], 19)
+        self.assertEqual(report["selection"]["breakdowns"]["genre"]["poetry"]["majorityUsefulRate"], 1.0)
+        self.assertEqual(report["selection"]["breakdowns"]["lengthBand"]["short"]["selectedCount"], 4)
         repeat = summarize_reviews(responses, selection_key=key, packet=packet, bootstrap_samples=25)
         self.assertEqual(interval, repeat["selection"]["topRanked"]["majorityUsefulRate95CI"])
 
