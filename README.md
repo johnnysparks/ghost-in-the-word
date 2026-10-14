@@ -45,7 +45,9 @@ PYTHONPATH=src python3 scripts/evaluate_challenge.py benchmarks/challenge.json
 ```
 
 The first interactive slice is in `web/`. It serves a committed John pilot fixture and
-keeps the selected verse, chapter, search, and reader state in the URL:
+keeps the selected comparison pair, verse, chapter, search, and reader state in the URL.
+The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded
+`multilingual-e5-small` WEB↔BSB run:
 
 ```sh
 cd web

@@ -24,6 +24,13 @@ const PAIRS: PairConfig[] = [
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://ebible.org/find/details.php?id=eng-asv",
   },
+  {
+    id: "webp-bsb-e5-small",
+    label: "WEB ↔ BSB · E5 small",
+    dataUrl: "/data/john-e5-small-webp-bsb.json",
+    leftSource: "https://ebible.org/find/details.php?id=engwebp",
+    rightSource: "https://berean.bible/downloads.htm",
+  },
 ];
 
 const bookNames: Record<string, string> = {
@@ -111,8 +118,8 @@ function DivergenceChart({
   return (
     <div className="chart-shell">
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="divergence-title divergence-description">
-        <title id="divergence-title">Lexical divergence across the selected book</title>
-        <desc id="divergence-description">Each point is a matched verse. Higher points have less character n-gram overlap between the selected editions.</desc>
+        <title id="divergence-title">Distance across the selected book</title>
+        <desc id="divergence-description">Each point is a matched verse. Higher points have more divergence according to the selected comparison metric.</desc>
         {gridValues.map((value) => {
           const y = padding.top + (1 - value / maxScore) * plotHeight;
           return (
@@ -166,8 +173,8 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
   return (
     <div className="chart-shell compact-chart">
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="scatter-title scatter-description">
-        <title id="scatter-title">Wording change compared with lexical distance</title>
-        <desc id="scatter-description">Each point is a verse. Points farther right use less shared vocabulary; points higher have less character n-gram overlap.</desc>
+        <title id="scatter-title">Wording change compared with comparison distance</title>
+        <desc id="scatter-description">Each point is a verse. Points farther right use less shared vocabulary; points higher have more divergence according to the selected comparison metric.</desc>
         {[0, 0.5, 1].map((value) => <line className="grid-line" key={`h-${value}`} x1={padding.left} x2={width - padding.right} y1={padding.top + (1 - value) * plotHeight} y2={padding.top + (1 - value) * plotHeight} />)}
         {[0, 0.5, 1].map((value) => <line className="grid-line" key={`v-${value}`} x1={padding.left + value * plotWidth} x2={padding.left + value * plotWidth} y1={padding.top} y2={height - padding.bottom} />)}
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
@@ -296,7 +303,7 @@ function App() {
 
       <section className="panel chart-panel">
         <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS JOHN</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
-        <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have less character n-gram overlap. This is a lexical baseline for navigation—not a semantic or faithfulness score.</p>
+        <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
         <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} />
       </section>
 
@@ -326,7 +333,7 @@ function App() {
         <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>
 
-      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Embedding runs will be added as a separately identified metric after model evaluation.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
+      <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Each run is identified in the comparison artifact so model estimates remain distinct from lexical baselines.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>
 
       <footer><span>GHOST IN THE WORD · PILOT 01</span><span>Sources: <a href={pair.leftSource} target="_blank" rel="noreferrer">A</a> + <a href={pair.rightSource} target="_blank" rel="noreferrer">B</a></span><span>{metric.id}</span></footer>
     </main>
