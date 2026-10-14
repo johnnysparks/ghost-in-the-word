@@ -44,15 +44,16 @@ def main() -> None:
     for book, units in grouped.items():
         metadata = copy.deepcopy(comparison["metadata"])
         metadata["scope"] = {"books": [book], "unit": "verse"}
-        summary = summarize_units(units, distance_field)["overall"]
+        book_report = summarize_units(units, distance_field)
+        summary = book_report["overall"]
         payload = {
             "schemaVersion": comparison["schemaVersion"],
             "metadata": metadata,
             "units": units,
             "summary": {
                 "totalUnits": summary["totalUnits"],
-                "matchedUnits": summary["matchedUnits"],
-                "scoredUnits": summary["scoredUnits"],
+            "matchedUnits": summary["matchedUnits"],
+            "scoredUnits": summary["scoredUnits"],
             },
         }
         filename = f"{book}.json"
@@ -64,8 +65,23 @@ def main() -> None:
             "totalUnits": summary["totalUnits"],
             "matchedUnits": summary["matchedUnits"],
             "coverage": summary["coverage"],
+            "score": summary["score"],
+            "statuses": summary["statuses"],
+            "chapters": [
+                {
+                    "chapter": chapter["chapter"],
+                    "totalUnits": chapter["totalUnits"],
+                    "matchedUnits": chapter["matchedUnits"],
+                    "scoredUnits": chapter["scoredUnits"],
+                    "coverage": chapter["coverage"],
+                    "score": chapter["score"],
+                    "statuses": chapter["statuses"],
+                }
+                for chapter in book_report["chapters"]
+            ],
         })
 
+    overall = summarize_units(comparison["units"], distance_field)["overall"]
     manifest = {
         "schemaVersion": comparison["schemaVersion"],
         "kind": "comparison-partition-manifest",
@@ -76,7 +92,14 @@ def main() -> None:
             "alignment": comparison["metadata"]["alignment"],
             "scope": {"books": [book["id"] for book in books], "unit": "verse"},
         },
-        "summary": comparison["summary"],
+        "summary": {
+            "totalUnits": overall["totalUnits"],
+            "matchedUnits": overall["matchedUnits"],
+            "scoredUnits": overall["scoredUnits"],
+            "coverage": overall["coverage"],
+            "score": overall["score"],
+            "statuses": overall["statuses"],
+        },
         "books": books,
     }
     book_order = {book: index for index, book in enumerate(BOOK_NAMES)}

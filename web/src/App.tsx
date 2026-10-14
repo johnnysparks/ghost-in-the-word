@@ -110,6 +110,59 @@ function TranslationNotes({ notes }: { notes?: string[] }) {
   );
 }
 
+function formatOverviewScore(score: number | null | undefined) {
+  return score === null || score === undefined ? "—" : score.toFixed(3);
+}
+
+function AtlasOverview({
+  manifest,
+  selectedBook,
+  onSelectBook,
+  onSelectChapter,
+}: {
+  manifest: ComparisonManifest;
+  selectedBook: string;
+  onSelectBook: (book: string) => void;
+  onSelectChapter: (book: string, chapter: number) => void;
+}) {
+  const selected = manifest.books.find((book) => book.id === selectedBook) ?? manifest.books[0];
+  const metricLabel = manifest.comparison.metric.label;
+  return (
+    <section className="panel atlas-overview" aria-labelledby="atlas-overview-title">
+      <div className="panel-heading">
+        <div><p className="eyebrow">ATLAS OVERVIEW · {manifest.books.length} BOOKS</p><h2 id="atlas-overview-title">See the shape of the corpus.</h2></div>
+        <span className="metric-chip">{metricLabel.toUpperCase()}</span>
+      </div>
+      <p className="panel-intro">Book and chapter summaries keep the full corpus navigable. Select a book or chapter to load its verse points; scores describe this translation pair and metric only.</p>
+      <div className="atlas-overview-stats">
+        <div><span>scored verses</span><strong>{manifest.summary.scoredUnits.toLocaleString()}</strong></div>
+        <div><span>coverage</span><strong>{Math.round((manifest.summary.coverage ?? 0) * 100)}%</strong></div>
+        <div><span>median distance</span><strong>{formatOverviewScore(manifest.summary.score?.median)}</strong></div>
+        <div><span>highest distance</span><strong>{formatOverviewScore(manifest.summary.score?.max)}</strong></div>
+      </div>
+      <div className="atlas-books" role="list" aria-label="Book summaries">
+        {manifest.books.map((book) => (
+          <button className={book.id === selected?.id ? "atlas-book active" : "atlas-book"} key={book.id} onClick={() => onSelectBook(book.id)} role="listitem">
+            <span className="atlas-book-name">{book.name}</span>
+            <span className="atlas-book-meta">{book.totalUnits.toLocaleString()} verses · {Math.round(book.coverage * 100)}% · median {formatOverviewScore(book.score.median)}</span>
+            <span className="atlas-book-bar"><i style={{ width: `${Math.max(0, Math.min(100, book.coverage * 100))}%` }} /></span>
+          </button>
+        ))}
+      </div>
+      {selected && <div className="atlas-chapters">
+        <div className="atlas-chapters-heading"><span>{selected.name} chapters</span><small>click a chapter to drill in · {selected.matchedUnits.toLocaleString()} matched of {selected.totalUnits.toLocaleString()}</small></div>
+        <div className="chapter-summary-list" role="list" aria-label={`${selected.name} chapter summaries`}>
+          {selected.chapters.map((chapter) => (
+            <button key={chapter.chapter} onClick={() => onSelectChapter(selected.id, chapter.chapter)} role="listitem">
+              <span>ch {chapter.chapter}</span><strong>{formatOverviewScore(chapter.score.median)}</strong><small>{chapter.scoredUnits.toLocaleString()} scored · {Math.round(chapter.coverage * 100)}%</small>
+            </button>
+          ))}
+        </div>
+      </div>}
+    </section>
+  );
+}
+
 type UnitRange = { start: number; end: number };
 
 function parseInitialRange(): UnitRange | null {
@@ -390,6 +443,20 @@ function App() {
     if (firstScored) setSelectedId(firstScored.id);
   };
 
+  const selectBook = (nextBook: string) => {
+    setBook(nextBook);
+    setChapter("all");
+    setSelectedId(undefined);
+    setBrushRange(null);
+  };
+
+  const selectChapter = (nextBook: string, nextChapter: number) => {
+    setBook(nextBook);
+    setChapter(String(nextChapter));
+    setSelectedId(undefined);
+    setBrushRange(null);
+  };
+
   if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
   if (!data) return <main className="app loading-state"><div className="loading-orb" /><p>Loading the comparison atlas…</p></main>;
 
@@ -427,6 +494,8 @@ function App() {
         </div>
         <div className="hero-stamp"><span>01</span><span>{bookName.toUpperCase()}</span><span>·</span><span>VERSE</span><span>MAP</span></div>
       </section>
+
+      {manifest && <AtlasOverview manifest={manifest} selectedBook={book} onSelectBook={selectBook} onSelectChapter={selectChapter} />}
 
       <section className="controls panel">
         <div className="translation-pair">

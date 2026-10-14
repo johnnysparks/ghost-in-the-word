@@ -245,6 +245,16 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(fixture["metadata"]["leftEdition"]["language"], "en")
         self.assertEqual(fixture["metadata"]["rightEdition"]["language"], "en")
 
+    def test_atlas_manifest_exposes_book_and_chapter_summaries(self) -> None:
+        manifest = json.loads((Path(__file__).parents[1] / "web/public/data/webp-bsb/manifest.json").read_text(encoding="utf-8"))
+        self.assertIn("score", manifest["summary"])
+        self.assertIn("statuses", manifest["summary"])
+        genesis = next(book for book in manifest["books"] if book["id"] == "GEN")
+        self.assertIn("score", genesis)
+        self.assertGreater(len(genesis["chapters"]), 1)
+        self.assertIn("coverage", genesis["chapters"][0])
+        self.assertIn("score", genesis["chapters"][0])
+
     def test_multi_verse_windows_are_separate_and_preserve_gaps(self) -> None:
         units = [
             {"id": "JHN-1-1", "order": 0, "book": "JHN", "chapter": 1, "verse": "1", "reference": "JHN 1:1", "status": "matched", "leftText": "In the beginning.", "rightText": "At the start."},

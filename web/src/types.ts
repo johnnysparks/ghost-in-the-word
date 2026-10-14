@@ -60,7 +60,7 @@ export type ComparisonManifest = {
     alignment: ComparisonData["metadata"]["alignment"];
     scope: { books: string[]; unit: string };
   };
-  summary: { totalUnits: number; matchedUnits: number; scoredUnits: number };
+  summary: SummaryStats;
   books: Array<{
     id: string;
     name: string;
@@ -68,5 +68,33 @@ export type ComparisonManifest = {
     totalUnits: number;
     matchedUnits: number;
     coverage: number;
+    score: ScoreStats;
+    statuses: Record<string, number>;
+    chapters: Array<ChapterSummary>;
   }>;
+};
+
+export type ScoreStats = {
+  mean: number | null;
+  median: number | null;
+  max: number | null;
+};
+
+export type ChapterSummary = {
+  chapter: number;
+  totalUnits: number;
+  matchedUnits: number;
+  scoredUnits: number;
+  coverage: number;
+  score: ScoreStats;
+  statuses: Record<string, number>;
+};
+
+export type SummaryStats = {
+  totalUnits: number;
+  matchedUnits: number;
+  scoredUnits: number;
+  coverage?: number;
+  score?: ScoreStats;
+  statuses?: Record<string, number>;
 };

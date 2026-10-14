@@ -187,6 +187,8 @@ The first interactive slice is in `web/`. It serves a committed John pilot fixtu
 loads the full WEB↔BSB atlas one book at a time, and keeps the selected comparison pair,
 verse, chapter, search, brush range, and reader state in the URL. Drag across the main
 chart to focus a verse range; the reader, ranked list, and scatterplot follow that focus.
+The full-corpus view also shows book and chapter score summaries with coverage and status
+counts before loading a book's verse points.
 Footnotes are removed from analysis text but retained as expandable notes in the reader.
 The current focus can be downloaded as JSON or CSV, and the provenance panel exposes
 the metric, alignment, language pair, and embedding run metadata.
