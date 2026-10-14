@@ -192,6 +192,7 @@ All research links were inspected on October 14, 2026. Downloads, source snapsho
 - **Implemented:** the linked reader shows adjacent verse context cards alongside previous/next navigation, with the same selection synchronization and range focus.
 - **Implemented:** the John reader can show a three-edition WEB/BSB/ASV pairwise distance matrix for the selected passage, with explicit panel-relative interpretation.
 - **Implemented:** a semantic, keyboard-friendly results table mirrors the active filters and synchronizes row selection with the chart and linked reader.
+- **Implemented:** the divergence and wording charts expose each scored point as a named, keyboard-selectable control while the results table remains the complete tabular fallback.
 - **Implemented:** comparison metadata now carries language codes; lexical builds reject cross-language pairs, while embedding builds and the UI suppress same-language wording metrics and highlighting when languages differ.
 - **Implemented:** the focused atlas view can export JSON or CSV and exposes metric, alignment, language, and embedding-run provenance in the reader.
 - **Implemented:** a separate multi-verse window builder supports explicit window size and stride, joins text only within book/chapter, and preserves incomplete windows as unresolved rather than substituting them for verse scores.

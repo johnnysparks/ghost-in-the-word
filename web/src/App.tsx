@@ -410,7 +410,8 @@ function DivergenceChart({
       <svg
         className="chart"
         viewBox={`0 0 ${width} ${height}`}
-        role="img"
+        role="group"
+        aria-roledescription="interactive divergence chart"
         aria-labelledby="divergence-title divergence-description"
         onPointerDown={(event) => {
           if ((event.target as Element).tagName.toLowerCase() === "circle" || units.length < 2) return;
@@ -483,7 +484,7 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
   const yFor = (unit: ComparisonUnit) => padding.top + (1 - (distanceFor(unit, distanceField) ?? 0) / maxScore) * plotHeight;
   return (
     <div className="chart-shell compact-chart">
-      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="scatter-title scatter-description">
+      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="group" aria-roledescription="interactive wording chart" aria-labelledby="scatter-title scatter-description">
         <title id="scatter-title">Wording change compared with comparison distance</title>
         <desc id="scatter-description">Each point is a {unitLabel}. Points farther right use less shared vocabulary; points higher have more divergence according to the selected comparison metric.</desc>
         {[0, 0.5, 1].map((value) => <line className="grid-line" key={`h-${value}`} x1={padding.left} x2={width - padding.right} y1={padding.top + (1 - value) * plotHeight} y2={padding.top + (1 - value) * plotHeight} />)}
