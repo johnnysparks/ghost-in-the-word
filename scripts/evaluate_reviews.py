@@ -14,10 +14,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("reviews", nargs="+", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--key", type=Path, help="Private selection key created alongside the blind packet")
     args = parser.parse_args()
 
     documents = [json.loads(path.read_text(encoding="utf-8")) for path in args.reviews]
-    report = summarize_reviews(documents)
+    selection_key = json.loads(args.key.read_text(encoding="utf-8")) if args.key else None
+    report = summarize_reviews(documents, selection_key=selection_key)
     encoded = json.dumps(report, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

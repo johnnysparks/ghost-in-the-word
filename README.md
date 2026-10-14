@@ -139,8 +139,9 @@ ranks from the reviewer-facing payload:
 ```sh
 PYTHONPATH=src python3 scripts/select_review_sample.py \
   web/public/data/john-webp-bsb.json \
-  --metric lexicalDistance --count 30 --seed 20261014 \
-  --output benchmarks/review-packet.json
+  --metric lexicalDistance --count 60 --seed 20261014 \
+  --output benchmarks/review-packet.json \
+  --key-output benchmarks/review-key.json
 ```
 
 Reviewers should return one JSON document each with `reviewerId` and an `items` array
@@ -149,11 +150,15 @@ using the fields in `benchmarks/REVIEW_RUBRIC.md`. Aggregate those documents wit
 ```sh
 PYTHONPATH=src python3 scripts/evaluate_reviews.py \
   benchmarks/reviews/reviewer-1.json benchmarks/reviews/reviewer-2.json \
+  --key benchmarks/review-key.json \
   --output benchmarks/reports/natural-review.json
 ```
 
-The report retains per-item votes, disagreement, and uncertain judgments. It does not
-convert review usefulness into a translation-faithfulness grade.
+Keep the key private: it lets the evaluator separate the highest-ranked 30 items from
+the seeded random sample without exposing that selection to reviewers. The report
+retains per-item votes, disagreement, and uncertain judgments, and reports usefulness
+and agreement by selection bucket. It does not convert review usefulness into a
+translation-faithfulness grade.
 
 Book/chapter aggregates can be generated from any comparison artifact for a future
 whole-Bible overview. Missing units stay in coverage counts and are excluded from score

@@ -6,7 +6,7 @@ from pathlib import Path
 from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_segments, align_with_mappings, mapping_from_dict
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
-from ghost_in_word.review import select_review_items, summarize_reviews
+from ghost_in_word.review import build_review_key, select_review_items, summarize_reviews
 from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.summary import summarize_units
@@ -227,6 +227,31 @@ class PipelineTests(unittest.TestCase):
         ]
         camel_packet = select_review_items(comparison, count=1, metric_field="lexicalDistance", seed=7)
         self.assertEqual(camel_packet["items"][0]["leftText"], "one")
+
+    def test_review_key_keeps_rank_private_and_enables_bucket_summary(self) -> None:
+        comparison = {
+            "metadata": {"metric": {"id": "lexical-baseline", "label": "Lexical"}},
+            "units": [
+                {"id": "a", "status": "matched", "leftText": "one", "rightText": "uno", "lexicalDistance": 0.9},
+                {"id": "b", "status": "matched", "leftText": "two", "rightText": "dos", "lexicalDistance": 0.8},
+                {"id": "c", "status": "matched", "leftText": "three", "rightText": "tres", "lexicalDistance": 0.1},
+            ],
+        }
+        packet = select_review_items(comparison, count=2, metric_field="lexicalDistance", seed=7)
+        key = build_review_key(comparison, count=2, metric_field="lexicalDistance", seed=7)
+        self.assertTrue(all("rank" not in item for item in packet["items"]))
+        self.assertEqual(key["selection"]["topCount"], 1)
+        report = summarize_reviews(
+            [
+                {"reviewerId": "r1", "items": [
+                    {"id": item["id"], "useful": "yes", "differenceType": "wording", "confidence": "high", "evidence": "evidence"}
+                    for item in packet["items"]
+                ]}
+            ],
+            selection_key=key,
+        )
+        self.assertEqual(report["selection"]["topRanked"]["majorityUsefulRate"], 1.0)
+        self.assertEqual(report["selection"]["seededRandom"]["reviewedCount"], 1)
 
     def test_review_summary_preserves_uncertainty_and_disagreement(self) -> None:
         report = summarize_reviews(
