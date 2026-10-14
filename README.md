@@ -231,6 +231,13 @@ The original challenge reports for E5-small and BGE-M3 are kept in
 `benchmarks/reports/`; both are below the provisional gate and therefore remain
 research evidence rather than product labels.
 
+Possible Bible exposure in pretrained models is tracked in
+`benchmarks/model_exposure.json`. The current status is explicitly `unknown`: the
+holdout packet protects against reusing this repository's development labels, but it
+cannot establish that a pretrained model never saw Bible text. Record an immutable model
+revision and the model maintainer's dated training-data disclosure before making a
+scientific claim from a future run.
+
 Generate a blinded review packet from a scored comparison. The selector mixes the
 highest-scoring matched passages with a seeded random sample, then removes scores and
 ranks from the reviewer-facing payload:

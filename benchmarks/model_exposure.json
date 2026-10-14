@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "model-exposure-record",
+  "asOf": "2026-10-14",
+  "status": "unknown",
+  "models": [
+    {
+      "id": "intfloat/multilingual-e5-small",
+      "modelCard": "https://huggingface.co/intfloat/multilingual-e5-small",
+      "revision": null,
+      "bibleExposure": "unknown",
+      "trainingCorpusDisclosure": "No exhaustive Bible-corpus disclosure was independently established for this project."
+    },
+    {
+      "id": "BAAI/bge-m3",
+      "modelCard": "https://huggingface.co/BAAI/bge-m3",
+      "revision": null,
+      "bibleExposure": "unknown",
+      "trainingCorpusDisclosure": "No exhaustive Bible-corpus disclosure was independently established for this project."
+    }
+  ],
+  "interpretation": "Synthetic and natural benchmark results must not be described as contamination-free model evaluation. A held-out Bible book reduces development leakage from this repository, but cannot remove possible pretraining exposure.",
+  "requiredBeforeScientificClaim": [
+    "Record an immutable model revision for every run.",
+    "Check the model maintainer's current training-data disclosure and retain its date.",
+    "Treat any unverified Bible exposure as a limitation in evaluation reports."
+  ]
+}

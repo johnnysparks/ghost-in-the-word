@@ -725,6 +725,14 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(packet["selection"]["scope"]["excludeBooks"], ["GEN", "JHN"])
         self.assertTrue(all(item["book"] not in {"GEN", "JHN"} for item in packet["items"]))
 
+    def test_model_exposure_record_does_not_claim_clean_pretraining(self) -> None:
+        record = json.loads(
+            (Path(__file__).parents[1] / "benchmarks/model_exposure.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(record["kind"], "model-exposure-record")
+        self.assertEqual(record["status"], "unknown")
+        self.assertTrue(all(model["bibleExposure"] == "unknown" for model in record["models"]))
+
     def test_committed_browser_fixture_uses_public_schema(self) -> None:
         fixture = json.loads((Path(__file__).parents[1] / "web/public/data/john-webp-bsb.json").read_text(encoding="utf-8"))
         unit = fixture["units"][0]
