@@ -19,6 +19,11 @@ function formatScore(score: number | null) {
   return score === null ? "—" : score.toFixed(3);
 }
 
+function distanceFor(unit: ComparisonUnit, field: string) {
+  const value = unit[field as keyof ComparisonUnit];
+  return typeof value === "number" ? value : null;
+}
+
 function normalizedWords(text: string) {
   return text.toLocaleLowerCase().match(/[\p{L}\p{N}’'-]+/gu) ?? [];
 }
@@ -55,20 +60,24 @@ function DivergenceChart({
   selectedId,
   onSelect,
   maxScore,
+  distanceField,
+  distanceLabel,
 }: {
   units: ComparisonUnit[];
   selectedId: string | undefined;
   onSelect: (unit: ComparisonUnit) => void;
   maxScore: number;
+  distanceField: string;
+  distanceLabel: string;
 }) {
   const width = 1000;
   const height = 292;
   const padding = { left: 56, right: 22, top: 22, bottom: 42 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
-  const valid = units.filter((unit) => unit.lexicalDistance !== null);
+  const valid = units.filter((unit) => distanceFor(unit, distanceField) !== null);
   const xFor = (unit: ComparisonUnit) => padding.left + (unit.order / Math.max(1, units.length - 1)) * plotWidth;
-  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (unit.lexicalDistance ?? 0) / maxScore) * plotHeight;
+  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (distanceFor(unit, distanceField) ?? 0) / maxScore) * plotHeight;
   const gridValues = [0, maxScore / 2, maxScore];
 
   return (
@@ -88,7 +97,7 @@ function DivergenceChart({
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <text className="axis-title" x={padding.left} y={height - 10}>John · verse order</text>
-        <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>lexical distance</text>
+        <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => {
           const selected = unit.id === selectedId;
           return (
@@ -100,7 +109,7 @@ function DivergenceChart({
               r={selected ? 6 : 3.8}
               tabIndex={0}
               role="button"
-              aria-label={`${unit.reference}, lexical distance ${formatScore(unit.lexicalDistance)}`}
+              aria-label={`${unit.reference}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}`}
               onClick={() => onSelect(unit)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -117,15 +126,15 @@ function DivergenceChart({
   );
 }
 
-function ScatterPlot({ units, selectedId, onSelect }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void }) {
+function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel, maxScore }: { units: ComparisonUnit[]; selectedId: string | undefined; onSelect: (unit: ComparisonUnit) => void; distanceField: string; distanceLabel: string; maxScore: number }) {
   const width = 1000;
   const height = 266;
   const padding = { left: 58, right: 24, top: 20, bottom: 42 };
   const plotWidth = width - padding.left - padding.right;
   const plotHeight = height - padding.top - padding.bottom;
-  const valid = units.filter((unit) => unit.lexicalDistance !== null && unit.wordingDistance !== null);
+  const valid = units.filter((unit) => distanceFor(unit, distanceField) !== null && unit.wordingDistance !== null);
   const xFor = (unit: ComparisonUnit) => padding.left + (unit.wordingDistance ?? 0) * plotWidth;
-  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (unit.lexicalDistance ?? 0)) * plotHeight;
+  const yFor = (unit: ComparisonUnit) => padding.top + (1 - (distanceFor(unit, distanceField) ?? 0) / maxScore) * plotHeight;
   return (
     <div className="chart-shell compact-chart">
       <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby="scatter-title scatter-description">
@@ -136,7 +145,7 @@ function ScatterPlot({ units, selectedId, onSelect }: { units: ComparisonUnit[];
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
         <text className="axis-title" x={width / 2} y={height - 10} textAnchor="middle">wording distance</text>
-        <text className="axis-title" x={17} y={height / 2} transform={`rotate(-90 17 ${height / 2})`}>lexical distance</text>
+        <text className="axis-title" x={17} y={height / 2} transform={`rotate(-90 17 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => (
           <circle
             className={unit.id === selectedId ? "point selected-point" : "point scatter-point"}
@@ -146,7 +155,7 @@ function ScatterPlot({ units, selectedId, onSelect }: { units: ComparisonUnit[];
             r={unit.id === selectedId ? 6 : 3.6}
             tabIndex={0}
             role="button"
-            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, lexical distance ${formatScore(unit.lexicalDistance)}`}
+            aria-label={`${unit.reference}, wording distance ${formatScore(unit.wordingDistance)}, ${distanceLabel} ${formatScore(distanceFor(unit, distanceField))}`}
             onClick={() => onSelect(unit)}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
@@ -189,8 +198,10 @@ function App() {
     });
   }, [chapter, data, search]);
   const selected = filtered.find((unit) => unit.id === selectedId) ?? filtered.find((unit) => unit.status === "matched") ?? filtered[0];
-  const maxScore = Math.max(0.1, ...filtered.map((unit) => unit.lexicalDistance ?? 0));
-  const ranked = [...filtered].filter((unit) => unit.lexicalDistance !== null).sort((a, b) => (b.lexicalDistance ?? 0) - (a.lexicalDistance ?? 0)).slice(0, 8);
+  const distanceField = data?.metadata.metric.distanceField ?? "lexicalDistance";
+  const distanceLabel = data?.metadata.metric.label.toLocaleLowerCase().replace("baseline", "distance") ?? "distance";
+  const maxScore = Math.max(0.1, ...filtered.map((unit) => distanceFor(unit, distanceField) ?? 0));
+  const ranked = [...filtered].filter((unit) => distanceFor(unit, distanceField) !== null).sort((a, b) => (distanceFor(b, distanceField) ?? 0) - (distanceFor(a, distanceField) ?? 0)).slice(0, 8);
   const selectedIndex = selected ? data?.units.findIndex((unit) => unit.id === selected.id) ?? -1 : -1;
   const previous = data && selectedIndex > 0 ? data.units[selectedIndex - 1] : undefined;
   const next = data && selectedIndex >= 0 ? data.units[selectedIndex + 1] : undefined;
@@ -245,14 +256,14 @@ function App() {
 
       <section className="summary-grid">
         <div className="summary-card"><span className="summary-label">scope</span><strong>{filtered.length.toLocaleString()}</strong><span>visible verses</span></div>
-        <div className="summary-card"><span className="summary-label">highest distance</span><strong>{formatScore(ranked[0]?.lexicalDistance ?? null)}</strong><span>{ranked[0]?.reference ?? "No match"}</span></div>
+        <div className="summary-card"><span className="summary-label">highest distance</span><strong>{formatScore(ranked[0] ? distanceFor(ranked[0], distanceField) : null)}</strong><span>{ranked[0]?.reference ?? "No match"}</span></div>
         <div className="summary-card summary-card-wide"><span className="summary-label">alignment coverage</span><div className="coverage-bar"><i style={{ width: `${(data.summary.matchedUnits / data.summary.totalUnits) * 100}%` }} /></div><span>{data.summary.matchedUnits.toLocaleString()} matched · {data.summary.totalUnits.toLocaleString()} total</span></div>
       </section>
 
       <section className="panel chart-panel">
         <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS JOHN</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
         <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have less character n-gram overlap. This is a lexical baseline for navigation—not a semantic or faithfulness score.</p>
-        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} />
+        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} />
       </section>
 
       <div className="two-column">
@@ -264,7 +275,7 @@ function App() {
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-a" />{leftName}</div><p><MarkedText text={selected.leftText} other={selected.rightText} /></p></article>
               <article className="translation-card"><div className="translation-label"><span className="edition-dot dot-b" />{rightName}</div><p><MarkedText text={selected.rightText} other={selected.leftText} /></p></article>
             </div>
-            <div className="score-row"><div><span>lexical distance</span><strong>{formatScore(selected.lexicalDistance)}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
+            <div className="score-row"><div><span>{distanceLabel}</span><strong>{formatScore(distanceFor(selected, distanceField))}</strong></div><div><span>wording distance</span><strong>{formatScore(selected.wordingDistance)}</strong></div><div className="score-explainer">Highlighted words are a token-level reading aid. They do not explain the score.</div></div>
           </> : <p className="empty-state">No verses match this filter.</p>}
         </section>
 
@@ -277,8 +288,8 @@ function App() {
 
       <section className="panel scatter-panel">
         <div className="panel-heading"><div><p className="eyebrow">04 · WORDING / DISTANCE</p><h2>Different words don’t always mean different things.</h2></div></div>
-        <p className="panel-intro">The same baseline shown two ways: horizontal movement is token overlap; vertical movement is character n-gram overlap. Use this as an investigation map, not a classification.</p>
-        <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} />
+        <p className="panel-intro">The same comparison shown two ways: horizontal movement is wording distance; vertical movement is the selected comparison metric. Use this as an investigation map, not a classification.</p>
+        <ScatterPlot units={filtered} selectedId={selected?.id} onSelect={selectUnit} distanceField={distanceField} distanceLabel={distanceLabel} maxScore={maxScore} />
       </section>
 
       <section className="method-note"><div className="method-icon">i</div><div><strong>What this score means</strong><p>{metric.description} The chart preserves missing passages as gaps and only scores exact book/chapter/verse matches. Embedding runs will be added as a separately identified metric after model evaluation.</p></div><button className="share-button" onClick={() => navigator.clipboard?.writeText(window.location.href)}>Copy this view <span>↗</span></button></section>

@@ -14,6 +14,7 @@ export type ComparisonUnit = {
   status: UnitStatus;
   wordingDistance: number | null;
   lexicalDistance: number | null;
+  embeddingDistance?: number | null;
 };
 
 export type ComparisonData = {
@@ -26,7 +27,7 @@ export type ComparisonData = {
     metric: {
       id: string;
       label: string;
-      distanceField: keyof ComparisonUnit;
+      distanceField: string;
       wordingField: keyof ComparisonUnit;
       description: string;
     };

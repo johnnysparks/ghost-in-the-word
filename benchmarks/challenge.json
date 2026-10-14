@@ -1,0 +1,44 @@
+[
+  {
+    "id": "negation",
+    "kind": "controlled-meaning-change",
+    "anchor": "The messenger entered the city.",
+    "meaning_preserving": "The envoy went into the town.",
+    "meaning_changed": "The messenger did not enter the city."
+  },
+  {
+    "id": "participant",
+    "kind": "controlled-meaning-change",
+    "anchor": "Miriam carried the water to Eli.",
+    "meaning_preserving": "Miriam brought Eli the water.",
+    "meaning_changed": "Eli carried the water to Miriam."
+  },
+  {
+    "id": "quantity",
+    "kind": "controlled-meaning-change",
+    "anchor": "He gave the farmer three silver coins.",
+    "meaning_preserving": "He handed the farmer three coins of silver.",
+    "meaning_changed": "He gave the farmer thirty silver coins."
+  },
+  {
+    "id": "register",
+    "kind": "meaning-preserving-paraphrase",
+    "anchor": "Do not be afraid, for I am with you.",
+    "meaning_preserving": "Fear not, because I am beside you.",
+    "meaning_changed": "Be afraid, for I am against you."
+  },
+  {
+    "id": "speaker",
+    "kind": "controlled-meaning-change",
+    "anchor": "The teacher said, I will return tomorrow.",
+    "meaning_preserving": "The instructor said that he would come back the next day.",
+    "meaning_changed": "The student said, I will return tomorrow."
+  },
+  {
+    "id": "synonym",
+    "kind": "meaning-preserving-paraphrase",
+    "anchor": "The people rejoiced at the news.",
+    "meaning_preserving": "The crowd celebrated when they heard the report.",
+    "meaning_changed": "The people mourned at the news."
+  }
+]

@@ -7,9 +7,6 @@ import argparse
 import json
 from pathlib import Path
 
-from ghost_in_word.scoring import score_units
-
-
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("alignment", type=Path)

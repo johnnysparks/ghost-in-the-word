@@ -9,5 +9,8 @@ description = "Corpus and alignment tools for Bible translation comparison"
 requires-python = ">=3.9"
 dependencies = []
 
+[project.optional-dependencies]
+embeddings = ["sentence-transformers>=3.0,<6"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
