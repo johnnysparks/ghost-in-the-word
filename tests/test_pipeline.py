@@ -7,6 +7,7 @@ from ghost_in_word.alignment import AlignmentMapping, alignment_method, align_se
 from ghost_in_word.embeddings import cosine_distance, input_hash
 from ghost_in_word.models import TextSegment
 from ghost_in_word.review import select_review_items, summarize_reviews
+from ghost_in_word.reference import distance_to_reference, estimate_reference
 from ghost_in_word.scoring import lexical_distance, score_units, wording_distance
 from ghost_in_word.summary import summarize_units
 from ghost_in_word.usfm import parse_usfm
@@ -153,6 +154,39 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(cosine_distance([1.0, 0.0], [0.0, 1.0]), 1.0)
         self.assertEqual(input_hash(["one", "two"]), input_hash(["one", "two"]))
         self.assertNotEqual(input_hash(["one", "two"]), input_hash(["two", "one"]))
+
+    def test_reference_estimate_excludes_pair_and_caps_related_family(self) -> None:
+        estimate = estimate_reference(
+            {
+                "webp": [1.0, 0.0],
+                "bsb": [0.99, 0.1],
+                "asv": [1.0, 0.0],
+                "nlt": [0.0, 1.0],
+            },
+            exclude={"webp", "bsb"},
+            families={"asv": "older", "nlt": "modern"},
+            family_cap=1.0,
+        )
+        self.assertEqual(estimate.included_editions, ("asv", "nlt"))
+        self.assertEqual(estimate.excluded_editions, ("bsb", "webp"))
+        self.assertEqual(dict(estimate.weights), {"asv": 1.0, "nlt": 1.0})
+        self.assertEqual(estimate.medoid_edition, "asv")
+        self.assertGreater(estimate.dispersion, 0.0)
+        self.assertEqual(estimate.pairwise_distances, (("asv", "nlt", 1.0),))
+        self.assertEqual(distance_to_reference([1.0, 0.0], [1.0, 0.0]), 0.0)
+
+    def test_reference_estimate_limits_duplicate_family_weight(self) -> None:
+        estimate = estimate_reference(
+            {"a": [1.0, 0.0], "b": [1.0, 0.0], "c": [0.0, 1.0]},
+            families={"a": "family-a", "b": "family-a", "c": "family-c"},
+            family_cap=1.0,
+        )
+        self.assertEqual(dict(estimate.weights), {"a": 0.5, "b": 0.5, "c": 1.0})
+        self.assertEqual(estimate.vector, (0.707106781, 0.707106781))
+
+    def test_reference_estimate_rejects_empty_panel_after_exclusion(self) -> None:
+        with self.assertRaisesRegex(ValueError, "leaves no reference panel"):
+            estimate_reference({"a": [1.0, 0.0]}, exclude={"a"})
 
     def test_review_sample_hides_rank_and_is_seeded(self) -> None:
         comparison = {

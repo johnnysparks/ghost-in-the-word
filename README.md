@@ -73,6 +73,23 @@ PYTHONPATH=src python3 scripts/build_embedding_comparison.py \
   --output data/derived/john-e5-small.json
 ```
 
+For a named panel experiment, provide one vector per edition and passage in a
+`passages[].vectors` object, then build an offline latent-reference artifact. Exclude
+the two editions under comparison; the estimator reports the normalized weighted
+centroid, the closest actual panel rendering (medoid), panel dispersion, and each
+included edition's distance to the reference. Related editions can share a family cap
+so revisions do not dominate the panel; pairwise panel distances are retained to make
+distinct interpretive clusters inspectable. These distances are panel-relative research
+measurements, not faithfulness grades:
+
+```sh
+PYTHONPATH=src python3 scripts/build_reference_panel.py \
+  data/derived/reference-vectors.json \
+  --exclude webp --exclude bsb \
+  --family asv=older --family nwt=modern \
+  --output data/derived/reference-estimates.json
+```
+
 The synthetic challenge set and reviewer instructions live in `benchmarks/`. It is an
 evaluation scaffold, not a substitute for independent human judgments on Scripture. The
 lexical baseline is expected to perform poorly on the challenge because a meaning change

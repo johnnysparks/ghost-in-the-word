@@ -4,6 +4,7 @@ from .alignment import AlignmentMapping, AlignmentUnit, alignment_method, align_
 from .embeddings import EmbeddingBackendUnavailable, EmbeddingRun, cosine_distance, encode_texts, input_hash
 from .models import Edition, TextSegment
 from .review import select_review_items, summarize_reviews
+from .reference import ReferenceEstimate, distance_to_reference, estimate_reference
 from .scoring import lexical_distance, score_units, tokenize, wording_distance
 from .summary import summarize_units
 from .usfm import parse_usfm
@@ -15,6 +16,7 @@ __all__ = [
     "Edition",
     "EmbeddingBackendUnavailable",
     "EmbeddingRun",
+    "ReferenceEstimate",
     "TextSegment",
     "align_segments",
     "align_with_mappings",
@@ -22,6 +24,8 @@ __all__ = [
     "cosine_distance",
     "encode_texts",
     "input_hash",
+    "estimate_reference",
+    "distance_to_reference",
     "lexical_distance",
     "mapping_from_dict",
     "parse_usfm",

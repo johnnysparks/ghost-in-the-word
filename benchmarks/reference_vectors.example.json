@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "metadata": {
+    "model": "fixture-model",
+    "panel": ["webp", "bsb", "asv", "nwt"]
+  },
+  "passages": [
+    {
+      "id": "JHN-1-1",
+      "reference": "JHN 1:1",
+      "vectors": {
+        "webp": [1.0, 0.0, 0.0],
+        "bsb": [0.98, 0.02, 0.0],
+        "asv": [0.94, 0.06, 0.0],
+        "nwt": [0.88, 0.12, 0.0]
+      }
+    },
+    {
+      "id": "JHN-1-2",
+      "reference": "JHN 1:2",
+      "vectors": {
+        "webp": [0.0, 1.0, 0.0],
+        "bsb": [0.0, 0.98, 0.02],
+        "asv": [0.0, 0.96, 0.04]
+      }
+    }
+  ]
+}
