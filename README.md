@@ -57,6 +57,15 @@ PYTHONPATH=src python3 scripts/build_summary.py \
   --output data/derived/webp-bsb-summary.json
 ```
 
+The default atlas uses the partitioned WEB↔BSB corpus. Rebuild its one-book-at-a-time
+payloads from a full comparison artifact with:
+
+```sh
+PYTHONPATH=src python3 scripts/partition_comparison.py \
+  data/derived/webp-bsb-full.json \
+  --output-dir web/public/data/webp-bsb
+```
+
 The first interactive slice is in `web/`. It serves a committed John pilot fixture and
 keeps the selected comparison pair, verse, chapter, search, and reader state in the URL.
 The pair menu includes WEB↔BSB and WEB↔ASV lexical baselines, plus the recorded

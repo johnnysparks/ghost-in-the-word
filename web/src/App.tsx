@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ComparisonData, ComparisonUnit } from "./types";
+import type { ComparisonData, ComparisonManifest, ComparisonUnit } from "./types";
 
 type PairConfig = {
   id: string;
   label: string;
-  dataUrl: string;
+  dataUrl?: string;
+  manifestUrl?: string;
   leftSource: string;
   rightSource: string;
 };
@@ -13,7 +14,7 @@ const PAIRS: PairConfig[] = [
   {
     id: "webp-bsb",
     label: "WEB ↔ BSB",
-    dataUrl: "/data/john-webp-bsb.json",
+    manifestUrl: "/data/webp-bsb/manifest.json",
     leftSource: "https://ebible.org/find/details.php?id=engwebp",
     rightSource: "https://berean.bible/downloads.htm",
   },
@@ -34,7 +35,7 @@ const PAIRS: PairConfig[] = [
 ];
 
 const bookNames: Record<string, string> = {
-  JHN: "John",
+  GEN: "Genesis", EXO: "Exodus", LEV: "Leviticus", NUM: "Numbers", DEU: "Deuteronomy", JOS: "Joshua", JDG: "Judges", RUT: "Ruth", "1SA": "1 Samuel", "2SA": "2 Samuel", "1KI": "1 Kings", "2KI": "2 Kings", "1CH": "1 Chronicles", "2CH": "2 Chronicles", EZR: "Ezra", NEH: "Nehemiah", EST: "Esther", JOB: "Job", PSA: "Psalms", PRO: "Proverbs", ECC: "Ecclesiastes", SNG: "Song of Solomon", ISA: "Isaiah", JER: "Jeremiah", LAM: "Lamentations", EZK: "Ezekiel", DAN: "Daniel", HOS: "Hosea", JOL: "Joel", AMO: "Amos", OBA: "Obadiah", JON: "Jonah", MIC: "Micah", NAM: "Nahum", HAB: "Habakkuk", ZEP: "Zephaniah", HAG: "Haggai", ZEC: "Zechariah", MAL: "Malachi", MAT: "Matthew", MRK: "Mark", LUK: "Luke", JHN: "John", ACT: "Acts", ROM: "Romans", "1CO": "1 Corinthians", "2CO": "2 Corinthians", GAL: "Galatians", EPH: "Ephesians", PHP: "Philippians", COL: "Colossians", "1TH": "1 Thessalonians", "2TH": "2 Thessalonians", "1TI": "1 Timothy", "2TI": "2 Timothy", TIT: "Titus", PHM: "Philemon", HEB: "Hebrews", JAS: "James", "1PE": "1 Peter", "2PE": "2 Peter", "1JN": "1 John", "2JN": "2 John", "3JN": "3 John", JUD: "Jude", REV: "Revelation",
 };
 
 function displayBook(book: string) {
@@ -47,6 +48,10 @@ function parseInitialRef() {
 
 function parseInitialPair() {
   return new URLSearchParams(window.location.search).get("pair") ?? PAIRS[0].id;
+}
+
+function parseInitialBook() {
+  return new URLSearchParams(window.location.search).get("book") ?? "JHN";
 }
 
 function formatScore(score: number | null) {
@@ -79,9 +84,10 @@ function MarkedText({ text, other }: { text: string | null; other: string | null
   );
 }
 
-function updateUrl(pairId: string, unit: ComparisonUnit | undefined, chapter: string, search: string) {
+function updateUrl(pairId: string, book: string, unit: ComparisonUnit | undefined, chapter: string, search: string) {
   const params = new URLSearchParams(window.location.search);
   params.set("pair", pairId);
+  params.set("book", book);
   if (unit) params.set("ref", unit.id);
   if (chapter === "all") params.delete("chapter");
   else params.set("chapter", chapter);
@@ -97,6 +103,7 @@ function DivergenceChart({
   maxScore,
   distanceField,
   distanceLabel,
+  bookName,
 }: {
   units: ComparisonUnit[];
   selectedId: string | undefined;
@@ -104,6 +111,7 @@ function DivergenceChart({
   maxScore: number;
   distanceField: string;
   distanceLabel: string;
+  bookName: string;
 }) {
   const width = 1000;
   const height = 292;
@@ -131,7 +139,7 @@ function DivergenceChart({
         })}
         <line className="axis-line" x1={padding.left} x2={padding.left} y1={padding.top} y2={height - padding.bottom} />
         <line className="axis-line" x1={padding.left} x2={width - padding.right} y1={height - padding.bottom} y2={height - padding.bottom} />
-        <text className="axis-title" x={padding.left} y={height - 10}>John · verse order</text>
+        <text className="axis-title" x={padding.left} y={height - 10}>{bookName} · verse order</text>
         <text className="axis-title" x={16} y={height / 2} transform={`rotate(-90 16 ${height / 2})`}>{distanceLabel}</text>
         {valid.map((unit) => {
           const selected = unit.id === selectedId;
@@ -207,8 +215,10 @@ function ScatterPlot({ units, selectedId, onSelect, distanceField, distanceLabel
 
 function App() {
   const [data, setData] = useState<ComparisonData | null>(null);
+  const [manifest, setManifest] = useState<ComparisonManifest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pairId, setPairId] = useState(parseInitialPair());
+  const [book, setBook] = useState(parseInitialBook());
   const [chapter, setChapter] = useState(new URLSearchParams(window.location.search).get("chapter") ?? "all");
   const [search, setSearch] = useState(new URLSearchParams(window.location.search).get("q") ?? "");
   const [selectedId, setSelectedId] = useState<string | undefined>(parseInitialRef() ?? undefined);
@@ -216,18 +226,34 @@ function App() {
   const pair = PAIRS.find((candidate) => candidate.id === pairId) ?? PAIRS[0];
 
   useEffect(() => {
+    const controller = new AbortController();
     setData(null);
     setError(null);
-    fetch(pair.dataUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error(`Could not load comparison data (${response.status})`);
-        return response.json() as Promise<ComparisonData>;
-      })
-      .then(setData)
-      .catch((reason: Error) => setError(reason.message));
-  }, [pair.dataUrl]);
+    const load = async () => {
+      const response = await fetch(pair.manifestUrl ?? pair.dataUrl ?? "", { signal: controller.signal });
+      if (!response.ok) throw new Error(`Could not load comparison data (${response.status})`);
+      if (pair.manifestUrl) {
+        const nextManifest = await response.json() as ComparisonManifest;
+        setManifest(nextManifest);
+        const selectedBook = nextManifest.books.find((entry) => entry.id === book) ?? nextManifest.books[0];
+        if (!selectedBook) throw new Error("Comparison manifest has no books");
+        if (selectedBook.id !== book) setBook(selectedBook.id);
+        const bookResponse = await fetch(selectedBook.dataUrl, { signal: controller.signal });
+        if (!bookResponse.ok) throw new Error(`Could not load ${selectedBook.name} (${bookResponse.status})`);
+        setData(await bookResponse.json() as ComparisonData);
+      } else {
+        setManifest(null);
+        setData(await response.json() as ComparisonData);
+      }
+    };
+    load().catch((reason: Error) => {
+      if (reason.name !== "AbortError") setError(reason.message);
+    });
+    return () => controller.abort();
+  }, [book, pair.dataUrl, pair.manifestUrl]);
 
   const chapters = useMemo(() => data ? [...new Set(data.units.map((unit) => unit.chapter))].sort((a, b) => a - b) : [], [data]);
+  const books = manifest?.books ?? [{ id: "JHN", name: "John", dataUrl: "", totalUnits: data?.summary.totalUnits ?? 0, matchedUnits: data?.summary.matchedUnits ?? 0, coverage: data && data.summary.totalUnits ? data.summary.matchedUnits / data.summary.totalUnits : 0 }];
   const filtered = useMemo(() => {
     if (!data) return [];
     const query = search.trim().toLocaleLowerCase();
@@ -249,13 +275,13 @@ function App() {
   useEffect(() => {
     if (selected) {
       setSelectedId((current) => current ?? selected.id);
-      updateUrl(pair.id, selected, chapter, search);
+      updateUrl(pair.id, book, selected, chapter, search);
     }
-  }, [chapter, pair.id, search, selected]);
+  }, [book, chapter, pair.id, search, selected]);
 
   const selectUnit = (unit: ComparisonUnit) => {
     setSelectedId(unit.id);
-    updateUrl(pair.id, unit, chapter, search);
+    updateUrl(pair.id, book, unit, chapter, search);
   };
 
   if (error) return <main className="app error-state"><p className="eyebrow">Ghost in the Word</p><h1>Couldn’t load this comparison.</h1><p>{error}</p></main>;
@@ -264,6 +290,7 @@ function App() {
   const leftName = data.metadata.leftEdition.name;
   const rightName = data.metadata.rightEdition.name;
   const metric = data.metadata.metric;
+  const bookName = displayBook(book);
 
   return (
     <main className="app">
@@ -276,9 +303,9 @@ function App() {
         <div className="hero-copy">
           <p className="eyebrow">TRANSLATION ATLAS · PILOT</p>
           <h1>Where the words<br /><em>move apart.</em></h1>
-          <p className="lede">A verse-by-verse view of how {leftName} and {rightName} render John. Find an unusual point, then read the text that made it move.</p>
+          <p className="lede">A verse-by-verse view of how {leftName} and {rightName} render {bookName}. Find an unusual point, then read the text that made it move.</p>
         </div>
-        <div className="hero-stamp"><span>01</span><span>JOHN</span><span>·</span><span>VERSE</span><span>MAP</span></div>
+        <div className="hero-stamp"><span>01</span><span>{bookName.toUpperCase()}</span><span>·</span><span>VERSE</span><span>MAP</span></div>
       </section>
 
       <section className="controls panel">
@@ -288,8 +315,8 @@ function App() {
           <label><span>translation B</span><strong>{rightName}</strong></label>
         </div>
         <div className="filter-grid">
-          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setSelectedId(undefined); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
-          <label className="field"><span>book</span><select value="JHN" aria-label="Book"><option value="JHN">John</option></select></label>
+          <label className="field"><span>comparison</span><select value={pair.id} onChange={(event) => { setPairId(event.target.value); setBook("JHN"); setSelectedId(undefined); }} aria-label="Comparison pair">{PAIRS.map((candidate) => <option value={candidate.id} key={candidate.id}>{candidate.label}</option>)}</select></label>
+          <label className="field"><span>book</span><select value={book} onChange={(event) => { setBook(event.target.value); setChapter("all"); setSelectedId(undefined); }} aria-label="Book">{books.map((entry) => <option value={entry.id} key={entry.id}>{entry.name}</option>)}</select></label>
           <label className="field"><span>chapter</span><select value={chapter} onChange={(event) => setChapter(event.target.value)}><option value="all">All chapters</option>{chapters.map((item) => <option key={item} value={item}>Chapter {item}</option>)}</select></label>
           <label className="field search-field"><span>find a passage</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Reference or phrase" /></label>
         </div>
@@ -302,9 +329,9 @@ function App() {
       </section>
 
       <section className="panel chart-panel">
-        <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS JOHN</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
+        <div className="panel-heading"><div><p className="eyebrow">01 · DIVERGENCE ACROSS {bookName.toUpperCase()}</p><h2>Find the verses that drift.</h2></div><span className="metric-chip">{metric.label.toUpperCase()}</span></div>
         <p className="panel-intro">Each point is a matched verse in canonical order. Higher points have more divergence according to the selected metric. {metric.description}</p>
-        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} />
+        <DivergenceChart units={filtered} selectedId={selected?.id} onSelect={selectUnit} maxScore={maxScore} distanceField={distanceField} distanceLabel={distanceLabel} bookName={bookName} />
       </section>
 
       <div className="two-column">
@@ -322,8 +349,8 @@ function App() {
 
         <section className="panel ranked-panel">
           <div className="panel-heading"><div><p className="eyebrow">03 · RANKED DIFFERENCES</p><h2>Start with a lead.</h2></div></div>
-          <p className="panel-intro">The largest baseline distances in the current view. Select one to sync the chart and reader.</p>
-          <div className="ranked-list">{ranked.map((unit, index) => <button className={unit.id === selected?.id ? "ranked-item active" : "ranked-item"} key={unit.id} onClick={() => selectUnit(unit)}><span className="rank-number">{String(index + 1).padStart(2, "0")}</span><span className="rank-ref">{unit.reference}<small>{unit.leftText?.slice(0, 68)}{(unit.leftText?.length ?? 0) > 68 ? "…" : ""}</small></span><strong>{formatScore(unit.lexicalDistance)}</strong></button>)}{ranked.length === 0 && <p className="empty-state">No scored verses in this view.</p>}</div>
+          <p className="panel-intro">The largest {distanceLabel} values in the current view. Select one to sync the chart and reader.</p>
+          <div className="ranked-list">{ranked.map((unit, index) => <button className={unit.id === selected?.id ? "ranked-item active" : "ranked-item"} key={unit.id} onClick={() => selectUnit(unit)}><span className="rank-number">{String(index + 1).padStart(2, "0")}</span><span className="rank-ref">{unit.reference}<small>{unit.leftText?.slice(0, 68)}{(unit.leftText?.length ?? 0) > 68 ? "…" : ""}</small></span><strong>{formatScore(distanceFor(unit, distanceField))}</strong></button>)}{ranked.length === 0 && <p className="empty-state">No scored verses in this view.</p>}</div>
         </section>
       </div>
 

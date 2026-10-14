@@ -36,3 +36,23 @@ export type ComparisonData = {
   units: ComparisonUnit[];
   summary: { totalUnits: number; matchedUnits: number; scoredUnits: number };
 };
+
+export type ComparisonManifest = {
+  schemaVersion: number;
+  kind: "comparison-partition-manifest";
+  comparison: {
+    leftEdition: { id: string; name: string };
+    rightEdition: { id: string; name: string };
+    metric: ComparisonData["metadata"]["metric"];
+    alignment: ComparisonData["metadata"]["alignment"];
+    scope: { books: string[]; unit: string };
+  };
+  books: Array<{
+    id: string;
+    name: string;
+    dataUrl: string;
+    totalUnits: number;
+    matchedUnits: number;
+    coverage: number;
+  }>;
+};
