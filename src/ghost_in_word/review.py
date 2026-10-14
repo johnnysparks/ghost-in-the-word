@@ -23,6 +23,7 @@ FORBIDDEN_BLIND_FIELDS = {
     "embeddingDistance",
     "wordingDistance",
 }
+REVIEW_RESPONSE_FIELDS = {"id", "useful", "differenceType", "confidence", "evidence"}
 
 NATURAL_GENRE_BOOKS = {
     "narrative": {
@@ -448,6 +449,9 @@ def summarize_reviews(
             leaked = FORBIDDEN_BLIND_FIELDS.intersection(item)
             if leaked:
                 raise ValueError(f"reviewer {reviewer!r} response exposes forbidden score/rank fields: {', '.join(sorted(leaked))}")
+            unknown = set(item) - REVIEW_RESPONSE_FIELDS
+            if unknown:
+                raise ValueError(f"reviewer {reviewer!r} response contains unsupported fields: {', '.join(sorted(unknown))}")
             item_id = item.get("id")
             if not isinstance(item_id, str) or not item_id:
                 raise ValueError(f"reviewer {reviewer!r} has an item without an id")

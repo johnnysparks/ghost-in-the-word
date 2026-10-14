@@ -506,6 +506,10 @@ class PipelineTests(unittest.TestCase):
         response["items"][0]["id"] = "outside-packet"
         with self.assertRaisesRegex(ValueError, "unknown packet item"):
             summarize_reviews([response], selection_key=key, packet=packet)
+        response["items"][0]["id"] = packet["items"][0]["id"]
+        response["items"][0]["modelOutput"] = "leak"
+        with self.assertRaisesRegex(ValueError, "unsupported fields"):
+            summarize_reviews([response], selection_key=key, packet=packet)
 
     def test_committed_natural_benchmark_is_score_blinded(self) -> None:
         packet = json.loads(
