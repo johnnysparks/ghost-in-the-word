@@ -99,8 +99,17 @@ The recorded held-out runs are `e5-small-heldout.json` (4/8) and
 this small slice; these are still zero-shot synthetic checks and do not replace
 held-out natural translation judgments by independent reviewers.
 
-Recorded E5-small and BGE-M3 reports are kept in `benchmarks/reports/`; both are below
-the provisional gate and therefore remain research evidence rather than product labels.
+Reports include seeded case-level bootstrap intervals for the pass rate and mean
+margin. To add the same uncertainty summary to an older saved report:
+
+```sh
+PYTHONPATH=src python3 scripts/add_report_bootstrap.py \
+  benchmarks/reports/bge-m3-heldout.json
+```
+
+The original challenge reports for E5-small and BGE-M3 are kept in
+`benchmarks/reports/`; both are below the provisional gate and therefore remain
+research evidence rather than product labels.
 
 Generate a blinded review packet from a scored comparison. The selector mixes the
 highest-scoring matched passages with a seeded random sample, then removes scores and

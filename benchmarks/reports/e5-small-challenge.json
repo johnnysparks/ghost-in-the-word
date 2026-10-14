@@ -10,44 +10,84 @@
   "cases": [
     {
       "id": "negation",
+      "genre": "unspecified",
+      "kind": "controlled-meaning-change",
       "preservedDistance": 0.064643,
       "changedDistance": 0.061375,
+      "margin": -0.003268,
       "changedRanksFarther": false
     },
     {
       "id": "participant",
+      "genre": "unspecified",
+      "kind": "controlled-meaning-change",
       "preservedDistance": 0.005852,
       "changedDistance": 0.002185,
+      "margin": -0.003667,
       "changedRanksFarther": false
     },
     {
       "id": "quantity",
+      "genre": "unspecified",
+      "kind": "controlled-meaning-change",
       "preservedDistance": 0.007257,
       "changedDistance": 0.021943,
+      "margin": 0.014686,
       "changedRanksFarther": true
     },
     {
       "id": "register",
+      "genre": "unspecified",
+      "kind": "meaning-preserving-paraphrase",
       "preservedDistance": 0.031569,
       "changedDistance": 0.063125,
+      "margin": 0.031556,
       "changedRanksFarther": true
     },
     {
       "id": "speaker",
+      "genre": "unspecified",
+      "kind": "controlled-meaning-change",
       "preservedDistance": 0.05105,
       "changedDistance": 0.019465,
+      "margin": -0.031585,
       "changedRanksFarther": false
     },
     {
       "id": "synonym",
+      "genre": "unspecified",
+      "kind": "meaning-preserving-paraphrase",
       "preservedDistance": 0.086667,
       "changedDistance": 0.088506,
+      "margin": 0.001839,
       "changedRanksFarther": true
     }
   ],
   "passed": 3,
   "total": 6,
   "passRate": 0.5,
+  "meanMargin": 0.001594,
+  "byGenre": {
+    "unspecified": {
+      "passed": 3,
+      "total": 6,
+      "passRate": 0.5,
+      "meanMargin": 0.001594
+    }
+  },
+  "bootstrap": {
+    "samples": 2000,
+    "seed": 20261014,
+    "unit": "challenge-case",
+    "passRate95CI": [
+      0.166667,
+      0.833333
+    ],
+    "meanMargin95CI": [
+      -0.013356,
+      0.01725
+    ]
+  },
   "threshold": 0.8,
   "gatePassed": false,
   "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."

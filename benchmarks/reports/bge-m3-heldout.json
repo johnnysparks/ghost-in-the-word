@@ -111,6 +111,19 @@
       "meanMargin": 0.145938
     }
   },
+  "bootstrap": {
+    "samples": 2000,
+    "seed": 20261014,
+    "unit": "challenge-case",
+    "passRate95CI": [
+      0.625,
+      1.0
+    ],
+    "meanMargin95CI": [
+      0.039603,
+      0.129041
+    ]
+  },
   "threshold": 0.8,
   "gatePassed": true,
   "interpretation": "A synthetic ranking check only; this does not establish translation faithfulness or model quality on Scripture."
